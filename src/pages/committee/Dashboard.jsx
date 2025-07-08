@@ -6,6 +6,7 @@ const Dashboard = () => {
     <div>
       <h1 className="text-2xl font-bold">Committee Dashboard</h1>
     </div>
+    
   );
 };
 
