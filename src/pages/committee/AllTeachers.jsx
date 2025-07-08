@@ -81,6 +81,7 @@ const AllTeachers = () => {
       console.error("Error assigning cell: ", error);
     }
   };
+  
 
   return (
     <div>
