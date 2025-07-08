@@ -6,6 +6,7 @@ const CellMembers = () => {
   const [cells, setCells] = useState({});
   
   useEffect(() => {
+    
     const fetchCells = async () => {
       const db = getFirestore();
       const querySnapshot = await getDocs(collection(db, 'researchCells'));
