@@ -4,53 +4,75 @@ import { getFirestore, collection, getDocs, query, where } from 'firebase/firest
 const CellMembers = () => {
   const [teachers, setTeachers] = useState([]);
   const [cells, setCells] = useState({});
-  
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    
-    const fetchCells = async () => {
+    const fetchData = async () => {
       const db = getFirestore();
-      const querySnapshot = await getDocs(collection(db, 'researchCells'));
-      const cellsMap = {};
-      querySnapshot.docs.forEach((doc) => {
-        cellsMap[doc.id] = doc.data().title;
-      });
-      setCells(cellsMap);
+      try {
+        // 1. Fetch all research cells and create a map of ID to title
+        const cellsSnapshot = await getDocs(collection(db, 'researchCells'));
+        const cellsMap = {};
+        cellsSnapshot.forEach((doc) => {
+          cellsMap[doc.id] = doc.data().title;
+        });
+        setCells(cellsMap);
+
+        // 2. Fetch all supervisors (teachers)
+        const teachersQuery = query(collection(db, 'users'), where('role', '==', 'supervisor'));
+        const teachersSnapshot = await getDocs(teachersQuery);
+        
+        const teachersList = teachersSnapshot.docs
+          .map(doc => {
+            const data = doc.data();
+            let researchCells = data.researchCells || [];
+            // If old singular researchCell exists and researchCells array is empty, convert it
+            if (data.researchCell && researchCells.length === 0) {
+              researchCells = [data.researchCell];
+            }
+            return { id: doc.id, ...data, researchCells: researchCells };
+          })
+          // 3. Filter for teachers who are actually assigned to one or more cells
+          .filter(teacher => teacher.researchCells && teacher.researchCells.length > 0);
+
+        setTeachers(teachersList);
+      } catch (error) {
+        console.error("Error fetching cell members: ", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const fetchTeachers = async () => {
-      const db = getFirestore();
-      const q = query(collection(db, 'users'), where('role', '==', 'supervisor'), where('researchCell', '!=', null));
-      const querySnapshot = await getDocs(q);
-      const teachersList = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setTeachers(teachersList);
-    };
-
-    fetchCells();
-    fetchTeachers();
+    fetchData();
   }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Cell Members</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {teachers.map((teacher) => (
-          <div key={teacher.id} className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
-            <div>
-              <p className="text-lg font-semibold">{teacher.name}</p>
-              <p className="text-sm text-gray-500">{teacher.email}</p>
-              <p className="text-sm text-gray-500">
-                Cell: {cells[teacher.researchCell] ? cells[teacher.researchCell] : 'N/A'}
-              </p>
+      {teachers.length === 0 ? (
+        <p>No teachers have been assigned to any research cells yet.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {teachers.map((teacher) => (
+            <div key={teacher.id} className="bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-xl font-bold mb-2">{teacher.name}</h2>
+              <p className="text-sm text-gray-600 mb-4">{teacher.email}</p>
+              <div>
+                <h3 className="text-md font-semibold mb-2">Assigned Cells:</h3>
+                {teacher.researchCells.map((cellId) => (
+                  <div key={cellId} className="inline-block bg-indigo-100 text-indigo-800 rounded-full px-3 py-1 text-sm font-semibold mr-2 mb-2">
+                    {cells[cellId] || 'Unknown Cell'}
+                  </div>
+                ))}
+              </div>
             </div>
-            <button className="text-gray-500 hover:text-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>
-            </button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

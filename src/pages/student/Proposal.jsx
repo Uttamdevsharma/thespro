@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getFirestore, collection, getDocs, addDoc, query, where } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
+import toast from 'react-hot-toast';
 
 const Proposal = () => {
   const user = useSelector(selectUser);
@@ -13,7 +14,7 @@ const Proposal = () => {
   const [members, setMembers] = useState([]);
   const [cells, setCells] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
-  const [students, setStudents] = useState([]);
+  const [allStudents, setAllStudents] = useState([]); // Renamed to avoid conflict with 'students' in group members
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -22,7 +23,7 @@ const Proposal = () => {
       setCells(cellsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
 
       const studentsSnapshot = await getDocs(query(collection(db, 'users'), where('role', '==', 'student')));
-      setStudents(studentsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setAllStudents(studentsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     };
 
     fetchInitialData();
@@ -30,32 +31,72 @@ const Proposal = () => {
 
   useEffect(() => {
     const fetchSupervisors = async () => {
-      if (!researchCell) return;
+      if (!researchCell) {
+        setSupervisors([]); // Clear supervisors if no research cell is selected
+        return;
+      }
       const db = getFirestore();
-      const q = query(collection(db, 'users'), where('role', '==', 'supervisor'), where('researchCell', '==', researchCell));
+      const q = query(collection(db, 'users'), where('role', '==', 'supervisor'));
       const querySnapshot = await getDocs(q);
-      setSupervisors(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      const allSupervisors = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // Filter supervisors based on whether their researchCells array includes the selected researchCell
+      const filteredSupervisors = allSupervisors.filter(supervisor => {
+        let supervisorResearchCells = supervisor.researchCells;
+        // Handle old schema where researchCell might be a string
+        if (supervisor.researchCell && !Array.isArray(supervisorResearchCells)) {
+          supervisorResearchCells = [supervisor.researchCell];
+        }
+        return supervisorResearchCells && supervisorResearchCells.includes(researchCell);
+      });
+      setSupervisors(filteredSupervisors);
     };
 
     fetchSupervisors();
   }, [researchCell]);
 
+  const handleMemberChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
+    if (selectedOptions.length > 2) {
+      toast.error('You can select a maximum of 2 group members.');
+      // Do NOT update the state if the limit is exceeded
+      return;
+    }
+    setMembers(selectedOptions);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast.error('User not logged in.');
+      return;
+    }
+    if (!researchCell || !supervisor) {
+      toast.error('Please select a Research Cell and a Supervisor.');
+      return;
+    }
+
     const db = getFirestore();
+    const proposalData = {
+      title,
+      abstract,
+      type,
+      researchCellId: researchCell, // Store ID
+      supervisorId: supervisor,     // Store ID
+      members: [user.uid, ...members], // Include current user's ID and selected members
+      status: 'Pending',
+      createdBy: user.uid,
+      createdAt: new Date(),
+    };
+
+    console.log("Submitting proposal data:", proposalData);
+
     try {
-      await addDoc(collection(db, 'proposals'), {
-        title,
-        abstract,
-        type,
-        researchCell,
-        supervisor,
-        members: [user.uid, ...members],
-        status: 'Pending',
-        createdBy: user.uid,
-        createdAt: new Date(),
-      });
+      await addDoc(collection(db, 'proposals'), proposalData);
+      toast.success('Proposal Submitted Successfully!');
       // Reset form
       setTitle('');
       setAbstract('');
@@ -65,47 +106,56 @@ const Proposal = () => {
       setMembers([]);
     } catch (error) {
       console.error("Error submitting proposal: ", error);
+      toast.error(`Failed to submit proposal: ${error.message}`);
     }
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Submit Proposal</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Title</label>
+    <div className="p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold mb-6">Submit Proposal</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
           <input
             type="text"
+            id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            required
           />
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Abstract</label>
+        <div>
+          <label htmlFor="abstract" className="block text-sm font-medium text-gray-700">Abstract</label>
           <textarea
+            id="abstract"
             value={abstract}
             onChange={(e) => setAbstract(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-32"
+            rows="5"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            required
           ></textarea>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Type</label>
+        <div>
+          <label htmlFor="type" className="block text-sm font-medium text-gray-700">Type</label>
           <select
+            id="type"
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           >
             <option>Thesis</option>
             <option>Project</option>
           </select>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Research Cell</label>
+        <div>
+          <label htmlFor="researchCell" className="block text-sm font-medium text-gray-700">Research Cell</label>
           <select
+            id="researchCell"
             value={researchCell}
             onChange={(e) => setResearchCell(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            required
           >
             <option value="">Select a cell</option>
             {cells.map((cell) => (
@@ -115,13 +165,15 @@ const Proposal = () => {
             ))}
           </select>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Supervisor</label>
+        <div>
+          <label htmlFor="supervisor" className="block text-sm font-medium text-gray-700">Supervisor</label>
           <select
+            id="supervisor"
             value={supervisor}
             onChange={(e) => setSupervisor(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             disabled={!researchCell}
+            required
           >
             <option value="">Select a supervisor</option>
             {supervisors.map((s) => (
@@ -131,16 +183,17 @@ const Proposal = () => {
             ))}
           </select>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Group Members (Select up to 2)</label>
+        <div>
+          <label htmlFor="members" className="block text-sm font-medium text-gray-700">Group Members (Select up to 2)</label>
           <select
+            id="members"
             multiple
             value={members}
-            onChange={(e) => setMembers(Array.from(e.target.selectedOptions, (option) => option.value))}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-32"
+            onChange={handleMemberChange}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm h-32"
           >
-            {students
-              .filter((student) => student.id !== user?.uid)
+            {allStudents
+              .filter((student) => student.id !== user?.uid) // Exclude current user
               .map((student) => (
                 <option key={student.id} value={student.id}>
                   {student.name}
@@ -150,9 +203,9 @@ const Proposal = () => {
         </div>
         <button
           type="submit"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
-          Submit
+          Submit Proposal
         </button>
       </form>
     </div>

@@ -46,6 +46,7 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center h-screen">
       <div className="w-full max-w-md">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Login Page</h2>
         <form onSubmit={handleLogin} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
@@ -85,6 +86,12 @@ const Login = () => {
               href="/register"
             >
               Create an Account
+            </a>
+            <a
+              className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+              href="/"
+            >
+              Back to Home
             </a>
           </div>
         </form>

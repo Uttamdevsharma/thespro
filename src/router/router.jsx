@@ -14,8 +14,23 @@ import Requests from '../pages/supervisor/Requests';
 import Notice from '../pages/supervisor/Notice';
 import StudentDashboard from '../pages/student/Dashboard';
 import Proposal from '../pages/student/Proposal';
+import LandingPage from '../pages/LandingPage';
+
+import CommitteeLayout from '../pages/committee/CommitteeLayout';
+
+import StudentLayout from '../pages/student/StudentLayout';
+import ProposalStatus from '../pages/student/ProposalStatus';
+import Chat from '../pages/student/Chat';
+import ResearchCellInfo from '../pages/student/ResearchCellInfo';
+import Profile from '../pages/student/Profile';
+
+import PendingProposals from '../pages/supervisor/PendingProposals';
 
 export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <LandingPage />,
+  },
   {
     path: '/login',
     element: <Login />,
@@ -25,52 +40,84 @@ export const router = createBrowserRouter([
     element: <Register />,
   },
   {
-    path: '/',
-    element: <PrivateRoute><App /></PrivateRoute>,
+    path: '/committee',
+    element: <PrivateRoute><CommitteeLayout /></PrivateRoute>,
     children: [
       {
-        path: '/committee/dashboard',
+        path: 'dashboard',
         element: <CommitteeDashboard />,
       },
       {
-        path: '/committee/all-students',
+        path: 'all-students',
         element: <AllStudents />,
       },
       {
-        path: '/committee/all-teachers',
+        path: 'all-teachers',
         element: <AllTeachers />,
       },
       {
-        path: '/committee/research-cells',
+        path: 'research-cells',
         element: <ResearchCells />,
       },
       {
-        path: '/committee/cell-members',
+        path: 'cell-members',
         element: <CellMembers />,
       },
       {
-        path: '/committee/committee-members',
+        path: 'committee-members',
         element: <CommitteeMembers />,
       },
+    ],
+  },
+  {
+    path: '/supervisor',
+    element: <PrivateRoute><App /></PrivateRoute>,
+    children: [
       {
-        path: '/supervisor/dashboard',
+        path: 'dashboard',
         element: <SupervisorDashboard />,
       },
       {
-        path: '/supervisor/requests',
+        path: 'requests',
         element: <Requests />,
       },
       {
-        path: '/supervisor/notice',
+        path: 'notice',
         element: <Notice />,
       },
       {
-        path: '/student/dashboard',
+        path: 'pending-proposals',
+        element: <PendingProposals />,
+      },
+    ],
+  },
+  {
+    path: '/student',
+    element: <PrivateRoute><StudentLayout /></PrivateRoute>,
+    children: [
+      {
+        path: 'dashboard',
         element: <StudentDashboard />,
       },
       {
-        path: '/student/proposal',
+        path: 'proposal',
         element: <Proposal />,
+      },
+      {
+        path: 'proposal-status',
+        element: <ProposalStatus />,
+      },
+      {
+        path: 'chat',
+        element: <Chat />,
+      },
+      {
+        path: 'research-cell-info',
+        element: <ResearchCellInfo />,
+      },
+      {
+        path: 'profile',
+        element: <Profile />,
       },
     ],
   },

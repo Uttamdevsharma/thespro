@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
 import toast from 'react-hot-toast';
 
-const Requests = () => {
+const PendingProposals = () => {
   const user = useSelector(selectUser);
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -155,4 +155,4 @@ const Requests = () => {
   );
 };
 
-export default Requests;
+export default PendingProposals;

@@ -24,7 +24,7 @@ const Register = () => {
         role: 'student',
         profilePicture: ''
       });
-      navigate('/student/dashboard');
+      navigate('/login');
     } catch (error) {
       console.error(error);
     }
@@ -33,6 +33,7 @@ const Register = () => {
   return (
     <div className="flex items-center justify-center h-screen">
       <div className="w-full max-w-md">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Student Register</h2>
         <form onSubmit={handleRegister} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
