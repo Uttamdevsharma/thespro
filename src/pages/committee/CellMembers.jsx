@@ -10,7 +10,8 @@ const CellMembers = () => {
     const fetchData = async () => {
       const db = getFirestore();
       try {
-        // 1. Fetch all research cells and create a map of ID to title
+        
+
         const cellsSnapshot = await getDocs(collection(db, 'researchCells'));
         const cellsMap = {};
         cellsSnapshot.forEach((doc) => {
@@ -18,7 +19,7 @@ const CellMembers = () => {
         });
         setCells(cellsMap);
 
-        // 2. Fetch all supervisors (teachers)
+        
         const teachersQuery = query(collection(db, 'users'), where('role', '==', 'supervisor'));
         const teachersSnapshot = await getDocs(teachersQuery);
         
@@ -26,13 +27,14 @@ const CellMembers = () => {
           .map(doc => {
             const data = doc.data();
             let researchCells = data.researchCells || [];
-            // If old singular researchCell exists and researchCells array is empty, convert it
+
+            
             if (data.researchCell && researchCells.length === 0) {
               researchCells = [data.researchCell];
             }
             return { id: doc.id, ...data, researchCells: researchCells };
           })
-          // 3. Filter for teachers who are actually assigned to one or more cells
+          
           .filter(teacher => teacher.researchCells && teacher.researchCells.length > 0);
 
         setTeachers(teachersList);

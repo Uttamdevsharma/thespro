@@ -19,7 +19,8 @@ const AllTeachers = () => {
     const teachersList = querySnapshot.docs.map((doc) => {
       const data = doc.data();
       let researchCells = data.researchCells || [];
-      // If old singular researchCell exists and researchCells array is empty, convert it
+      
+      
       if (data.researchCell && researchCells.length === 0) {
         researchCells = [data.researchCell];
       }
