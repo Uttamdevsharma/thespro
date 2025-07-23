@@ -26,7 +26,7 @@ const CommitteeMembers = () => {
         {members.map((member) => (
           <div key={member.id} className="bg-white p-4 rounded-lg shadow">
             <p className="text-lg font-semibold">{member.name}</p>
-            <p className="text-sm text-gray-500">{member.email}</p>
+            <p className="text-sm text-gray-400">{member.email}</p>
           </div>
         ))}
       </div>
