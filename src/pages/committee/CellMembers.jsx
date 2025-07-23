@@ -62,7 +62,7 @@ const CellMembers = () => {
           {teachers.map((teacher) => (
             <div key={teacher.id} className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-bold mb-2">{teacher.name}</h2>
-              <p className="text-sm text-gray-600 mb-4">{teacher.email}</p>
+              <p className="text-sm text-gray-500 mb-4">{teacher.email}</p>
               <div>
                 <h3 className="text-md font-semibold mb-2">Assigned Cells:</h3>
                 {teacher.researchCells.map((cellId) => (
