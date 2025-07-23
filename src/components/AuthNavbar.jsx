@@ -11,7 +11,7 @@ const AuthNavbar = () => {
           <div className="flex items-center  space-x- select-none">
             <img
               src="/system-logo.png"
-              alt="ThesPro Logo"
+              alt="ThesPro Logo1"
               className="h-12 w-auto mt-1"
             />
             <span className="text-2xl sm:text-4xl font-bold text-[#50C878] tracking-wide">
