@@ -38,7 +38,7 @@ const CommitteeLayout = () => {
         </div>
       </header>
       <div className="flex">
-        <aside className="w-64 bg-gray-800 text-white min-h-screen p-4">
+        <aside className="w-64 bg-gray-700 text-white min-h-screen p-4">
           <nav>
             <ul>
               <li>
