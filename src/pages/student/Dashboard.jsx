@@ -26,7 +26,7 @@ const Dashboard = () => {
       <h1 className="text-3xl font-bold text-gray-800 mb-4">
         Hi {studentName}, welcome back to ThesPro!
       </h1>
-      <p className="text-lg text-gray-600">
+      <p className="text-lg text-gray-500">
         Let’s start your academic journey. Propose your topic to get started!
       </p>
     </div>
