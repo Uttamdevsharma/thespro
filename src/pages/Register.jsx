@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
@@ -69,7 +68,7 @@ const Register = () => {
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
               id="password"
               type="password"
-              placeholder="******************"
+              placeholder="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -96,7 +95,7 @@ const Register = () => {
             </button>
             <a
               className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-              href="/"
+              href="/login"
             >
               Already have an account?
             </a>

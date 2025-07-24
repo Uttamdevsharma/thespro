@@ -3,6 +3,7 @@ import { getFirestore, collection, getDocs, addDoc, query, where } from 'firebas
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
 import toast from 'react-hot-toast';
+import MultiSelectDropdown from '../../components/MultiSelectDropdown';
 
 const Proposal = () => {
   const user = useSelector(selectUser);
@@ -14,7 +15,8 @@ const Proposal = () => {
   const [members, setMembers] = useState([]);
   const [cells, setCells] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
-  const [allStudents, setAllStudents] = useState([]); // Renamed to avoid conflict with 'students' in group members
+  const [allStudents, setAllStudents] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -32,7 +34,7 @@ const Proposal = () => {
   useEffect(() => {
     const fetchSupervisors = async () => {
       if (!researchCell) {
-        setSupervisors([]); // Clear supervisors if no research cell is selected
+        setSupervisors([]);
         return;
       }
       const db = getFirestore();
@@ -43,10 +45,8 @@ const Proposal = () => {
         ...doc.data(),
       }));
 
-      // Filter supervisors based on whether their researchCells array includes the selected researchCell
       const filteredSupervisors = allSupervisors.filter(supervisor => {
         let supervisorResearchCells = supervisor.researchCells;
-        // Handle old schema where researchCell might be a string
         if (supervisor.researchCell && !Array.isArray(supervisorResearchCells)) {
           supervisorResearchCells = [supervisor.researchCell];
         }
@@ -57,16 +57,6 @@ const Proposal = () => {
 
     fetchSupervisors();
   }, [researchCell]);
-
-  const handleMemberChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
-    if (selectedOptions.length > 2) {
-      toast.error('You can select a maximum of 2 group members.');
-      // Do NOT update the state if the limit is exceeded
-      return;
-    }
-    setMembers(selectedOptions);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,25 +69,23 @@ const Proposal = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     const db = getFirestore();
     const proposalData = {
       title,
       abstract,
       type,
-      researchCellId: researchCell, // Store ID
-      supervisorId: supervisor,     // Store ID
-      members: [user.uid, ...members], // Include current user's ID and selected members
+      researchCellId: researchCell,
+      supervisorId: supervisor,
+      members: [user.uid, ...members],
       status: 'Pending',
       createdBy: user.uid,
       createdAt: new Date(),
     };
 
-    console.log("Submitting proposal data:", proposalData);
-
     try {
       await addDoc(collection(db, 'proposals'), proposalData);
-      toast.success('Proposal Submitted Successfully!');
-      // Reset form
       setTitle('');
       setAbstract('');
       setType('Thesis');
@@ -105,8 +93,9 @@ const Proposal = () => {
       setSupervisor('');
       setMembers([]);
     } catch (error) {
-      console.error("Error submitting proposal: ", error);
       toast.error(`Failed to submit proposal: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -183,29 +172,18 @@ const Proposal = () => {
             ))}
           </select>
         </div>
-        <div>
-          <label htmlFor="members" className="block text-sm font-medium text-gray-700">Group Members (Select up to 2)</label>
-          <select
-            id="members"
-            multiple
-            value={members}
-            onChange={handleMemberChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm h-32"
-          >
-            {allStudents
-              .filter((student) => student.id !== user?.uid) // Exclude current user
-              .map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.name}
-                </option>
-              ))}
-          </select>
-        </div>
+        <MultiSelectDropdown 
+          allStudents={allStudents}
+          members={members}
+          setMembers={setMembers}
+          currentUser={user}
+        />
         <button
           type="submit"
-          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          disabled={isSubmitting}
+          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          Submit Proposal
+          {isSubmitting ? 'Submitting...' : 'Submit Proposal'}
         </button>
       </form>
     </div>
