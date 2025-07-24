@@ -146,7 +146,7 @@ const AllTeachers = () => {
             placeholder="Email"
             value={formData.email}
             onChange={handleFormChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
             required
           />
           <input
