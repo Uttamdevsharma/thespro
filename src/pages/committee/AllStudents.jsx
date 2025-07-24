@@ -27,7 +27,7 @@ const AllStudents = () => {
           <div key={student.id} className="bg-white p-4 rounded-lg shadow flex justify-between items-center">
             <div>
               <p className="text-lg font-semibold">{student.name}</p>
-              <p className="text-sm text-gray-500">{student.email}</p>
+              <p className="text-sm text-gray-400">{student.email}</p>
             </div>
           </div>
         ))}
