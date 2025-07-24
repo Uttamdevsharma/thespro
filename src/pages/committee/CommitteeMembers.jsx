@@ -20,6 +20,7 @@ const CommitteeMembers = () => {
   }, []);
 
   return (
+    
     <div>
       <h1 className="text-2xl font-bold mb-4">Committee Members</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -27,6 +28,7 @@ const CommitteeMembers = () => {
           <div key={member.id} className="bg-white p-4 rounded-lg shadow">
             <p className="text-lg font-semibold">{member.name}</p>
             <p className="text-sm text-gray-400">{member.email}</p>
+
           </div>
         ))}
       </div>
