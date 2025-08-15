@@ -4,12 +4,12 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCutN58DUiTd0Crv-s8Qi1iaS2FHwcmcjA",
-  authDomain: "thesis-project-management.firebaseapp.com",
-  projectId: "thesis-project-management",
-  storageBucket: "thesis-project-management.appspot.com",
-  messagingSenderId: "611526694898",
-  appId: "1:611526694898:web:22a626c27c504cd86cfd6b"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
