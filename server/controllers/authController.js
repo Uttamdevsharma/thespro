@@ -64,7 +64,7 @@ const loginUser = async (req, res) => {
       role: user.role,
       studentId: user.studentId,
       profilePicture: user.profilePicture,
-      department: user.department,
+      department: user.department || '',
       token: generateToken(user._id),
     });
   } else {
