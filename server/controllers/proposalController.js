@@ -10,6 +10,7 @@ const createProposal = async (req, res) => {
 
   // Assuming user ID is available from authentication middleware (req.user._id)
   const createdBy = req.user._id;
+  const department = req.user.department;
 
   try {
     const proposal = await Proposal.create({
@@ -20,6 +21,7 @@ const createProposal = async (req, res) => {
       supervisorId,
       members: [createdBy, ...members], // Add the creator to members list
       createdBy,
+      department,
     });
 
     res.status(201).json(proposal);
@@ -86,6 +88,22 @@ const getStudentProposals = async (req, res) => {
   }
 };
 
+// @desc    Get proposals for the current committee member's department
+// @route   GET /api/proposals/committee-proposals
+// @access  Private (Committee)
+const getCommitteeProposals = async (req, res) => {
+  try {
+    const proposals = await Proposal.find({ department: req.user.department })
+      .populate('createdBy', 'name email studentId') // Populate student info
+      .populate('supervisorId', 'name email') // Populate supervisor info
+      .populate('researchCellId', 'title'); // Populate research cell info
+
+    res.json(proposals);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Update proposal status
 // @route   PUT /api/proposals/:id/status
 // @access  Private (Supervisor)
@@ -119,4 +137,4 @@ const updateProposalStatus = async (req, res) => {
   }
 };
 
-module.exports = { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, updateProposalStatus };
+module.exports = { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus };

@@ -7,7 +7,7 @@ const generateToken = require('../utils/generateToken');
 const registerUser = async (req, res) => {
   try {
     console.log('registerUser called with body:', req.body);
-    const { name, email, password, role, studentId, profilePicture } = req.body;
+    const { name, email, password, role, studentId, profilePicture, department } = req.body;
 
     const userExists = await User.findOne({ email });
 
@@ -22,7 +22,8 @@ const registerUser = async (req, res) => {
       password,
       role,
       studentId,
-      profilePicture
+      profilePicture,
+      department
     });
 
     console.log('user created:', user);
@@ -35,6 +36,7 @@ const registerUser = async (req, res) => {
         role: user.role,
         studentId: user.studentId,
         profilePicture: user.profilePicture,
+        department: user.department,
         token: generateToken(user._id),
       });
     } else {
@@ -62,6 +64,7 @@ const loginUser = async (req, res) => {
       role: user.role,
       studentId: user.studentId,
       profilePicture: user.profilePicture,
+      department: user.department,
       token: generateToken(user._id),
     });
   } else {

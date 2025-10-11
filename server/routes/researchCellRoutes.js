@@ -6,7 +6,7 @@ const { authorizeRoles } = require('../middleware/roleMiddleware');
 const router = express.Router();
 
 router.route('/')
-  .get(getResearchCells)
+  .get(protect, getResearchCells)
   .post(protect, authorizeRoles('committee'), addResearchCell);
 
 module.exports = router;

@@ -20,6 +20,10 @@ const UserSchema = new mongoose.Schema({
     enum: ['student', 'supervisor', 'committee'],
     default: 'student',
   },
+  department: {
+    type: String,
+    required: true,
+  },
   studentId: {
     type: String,
     required: function() { return this.role === 'student'; }, // Student ID is required only for students

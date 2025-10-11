@@ -5,7 +5,7 @@ const User = require('../models/User');
 // @access  Private
 const getStudents = async (req, res) => {
   try {
-    const students = await User.find({ role: 'student' }).select('-password');
+    const students = await User.find({ role: 'student', department: req.user.department }).select('-password');
     res.json(students);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -18,7 +18,7 @@ const getStudents = async (req, res) => {
 const getSupervisors = async (req, res) => {
   const { researchCellId } = req.query;
   try {
-    let query = { role: 'supervisor' };
+    let query = { role: 'supervisor', department: req.user.department };
     if (researchCellId) {
       query.researchCells = researchCellId;
     }
@@ -35,6 +35,7 @@ const getSupervisors = async (req, res) => {
 // @access  Private (Committee)
 const addSupervisor = async (req, res) => {
   const { name, email, password } = req.body;
+  const committeeMember = await User.findById(req.user._id);
 
   const userExists = await User.findOne({ email });
 
@@ -49,6 +50,7 @@ const addSupervisor = async (req, res) => {
       email,
       password,
       role: 'supervisor',
+      department: committeeMember.department, // Assign committee member's department
       profilePicture: '',
       researchCells: [], // Initialize with empty array
     });
@@ -58,6 +60,7 @@ const addSupervisor = async (req, res) => {
       name: supervisor.name,
       email: supervisor.email,
       role: supervisor.role,
+      department: supervisor.department,
       profilePicture: supervisor.profilePicture,
       researchCells: supervisor.researchCells,
     });
@@ -203,8 +206,14 @@ const uploadProfilePicture = async (req, res) => {
 // @route   GET /api/users/all
 // @access  Private (Supervisor, Committee)
 const getAllUsers = async (req, res) => {
+  const { department } = req.query;
+  let filter = {};
+  if (department) {
+    filter.department = department;
+  }
+
   try {
-    const users = await User.find({}).select('-password');
+    const users = await User.find(filter).select('-password');
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -216,7 +225,7 @@ const getAllUsers = async (req, res) => {
 // @access  Private (Committee)
 const getCommitteeMembers = async (req, res) => {
   try {
-    const committeeMembers = await User.find({ role: 'committee' }).select('-password');
+    const committeeMembers = await User.find({ role: 'committee', department: req.user.department }).select('-password');
     res.json(committeeMembers);
   } catch (error) {
     res.status(500).json({ message: error.message });

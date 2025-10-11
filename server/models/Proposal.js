@@ -47,6 +47,10 @@ const ProposalSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  department: {
+    type: String,
+    required: true,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Proposal', ProposalSchema);

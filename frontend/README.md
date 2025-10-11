@@ -4,13 +4,14 @@ ThesPro is a comprehensive web application designed to streamline the management
 
 ## ✨ Features
 
-- **Role-Based Access Control:** Distinct dashboards and functionalities for three user roles:
-    - **Student:** Can submit research proposals, track their status, view feedback, and interact with supervisors.
-    - **Supervisor:** Can review and manage pending proposals, provide guidance, and oversee student progress.
-    - **Committee:** Can oversee all research activities, manage research cells, and view all registered students and teachers.
-- **Proposal Submission & Tracking:** A streamlined workflow for submitting, reviewing, and tracking the status of research proposals.
-- **Real-time Communication:** Integrated chat and notification features to foster seamless communication.
-- **Centralized Management:** Dashboards for each role to provide a clear overview of ongoing tasks and activities.
+- **Role-Based Access Control:** Distinct dashboards and functionalities for three user roles, with all interactions restricted to the user's own department:
+    - **Student:** Can submit research proposals, track their status, view feedback, and interact with supervisors within their department.
+    - **Supervisor:** Can review and manage pending proposals, provide guidance, and oversee student progress within their department.
+    - **Committee:** Can oversee all research activities, manage research cells, and view all registered students and teachers within their department.
+- **Department-wise Functionality:** The system is now organized by departments (e.g., CSE, EEE, BBA). Students, supervisors, and committee members are associated with a specific department, ensuring that all interactions and data are segregated accordingly.
+- **Proposal Submission & Tracking:** A streamlined workflow for submitting, reviewing, and tracking the status of research proposals within a department.
+- **Real-time Communication:** Integrated chat and notification features to foster seamless communication within a department.
+- **Centralized Management:** Dashboards for each role to provide a clear overview of ongoing tasks and activities within their department.
 
 ## 🚀 Tech Stack
 

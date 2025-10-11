@@ -8,6 +8,7 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [studentId, setStudentId] = useState('');
+  const [department, setDepartment] = useState('CSE');
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
@@ -19,6 +20,7 @@ const Register = () => {
         email,
         password,
         studentId,
+        department,
         role: 'student', // Default role for registration
         profilePicture: ''
       });
@@ -85,6 +87,22 @@ const Register = () => {
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
             />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="department">
+              Department
+            </label>
+            <select
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="department"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+            >
+              <option value="CSE">CSE</option>
+              <option value="EEE">EEE</option>
+              <option value="BBA">BBA</option>
+              <option value="Textile">Textile</option>
+            </select>
           </div>
           <div className="flex items-center justify-between">
             <button
