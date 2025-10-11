@@ -120,7 +120,7 @@ const assignCellToSupervisor = async (req, res) => {
 // @access  Private
 const getUserProfile = async (req, res) => {
   // req.user is set by the protect middleware
-  const user = await User.findById(req.user._id).select('-password');
+  const user = await User.findById(req.user._id).select('-password').populate('researchCells', 'title description');
 
   if (user) {
     res.json({
@@ -130,6 +130,7 @@ const getUserProfile = async (req, res) => {
       role: user.role,
       studentId: user.studentId,
       profilePicture: user.profilePicture,
+      researchCells: user.researchCells, // Include populated research cells
     });
   } else {
     res.status(404).json({ message: 'User not found' });

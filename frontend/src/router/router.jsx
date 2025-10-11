@@ -10,17 +10,18 @@ import ResearchCells from '../pages/committee/ResearchCells';
 import CellMembers from '../pages/committee/CellMembers';
 import CommitteeMembers from '../pages/committee/CommitteeMembers';
 import SupervisorDashboard from '../pages/supervisor/Dashboard';
-import Requests from '../pages/supervisor/Requests';
+import SupervisorChat from '../pages/supervisor/Chat';
 import Notice from '../pages/supervisor/Notice';
 import StudentDashboard from '../pages/student/Dashboard';
 import Proposal from '../pages/student/Proposal';
 import LandingPage from '../pages/LandingPage';
 
 import CommitteeLayout from '../pages/committee/CommitteeLayout';
+import SupervisorLayout from '../pages/supervisor/SupervisorLayout';
 
 import StudentLayout from '../pages/student/StudentLayout';
 import ProposalStatus from '../pages/student/ProposalStatus';
-import Chat from '../pages/student/Chat';
+import StudentChat from '../pages/student/Chat';
 import ResearchCellInfo from '../pages/student/ResearchCellInfo';
 import Profile from '../pages/student/Profile';
 
@@ -71,15 +72,15 @@ export const router = createBrowserRouter([
   },
   {
     path: '/supervisor',
-    element: <PrivateRoute><App /></PrivateRoute>,
+    element: <PrivateRoute><SupervisorLayout /></PrivateRoute>,
     children: [
       {
         path: 'dashboard',
         element: <SupervisorDashboard />,
       },
       {
-        path: 'requests',
-        element: <Requests />,
+        path: 'chat',
+        element: <SupervisorChat />,
       },
       {
         path: 'notice',
@@ -109,7 +110,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'chat',
-        element: <Chat />,
+        element: <StudentChat />,
       },
       {
         path: 'research-cell-info',

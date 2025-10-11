@@ -8,16 +8,8 @@ const Dashboard = () => {
   const [proposals, setProposals] = useState([]);
   const [researchCells, setResearchCells] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [studentNames, setStudentNames] = useState({});
-  const [cellDetails, setCellDetails] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', items: [] });
-
-  const config = {
-    headers: {
-      Authorization: `Bearer ${user?.token}`,
-    },
-  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,32 +17,20 @@ const Dashboard = () => {
         setLoading(false);
         return;
       }
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
 
       try {
-        // Fetch all users (students and supervisors) to map UIDs to names
-        const { data: usersData } = await axios.get('http://localhost:5000/api/users/all', config);
-        const namesMap = {};
-        usersData.forEach(d => {
-          namesMap[d._id] = d.name;
-        });
-        setStudentNames(namesMap);
-
-        // Fetch all research cells to map IDs to titles and descriptions
-        const { data: cellsData } = await axios.get('http://localhost:5000/api/researchcells', config);
-        const detailsMap = {};
-        cellsData.forEach(d => {
-          detailsMap[d._id] = d;
-        });
-        setCellDetails(detailsMap);
+        // Fetch supervisor's profile with populated research cells
+        const profileResponse = await axios.get('http://localhost:5000/api/users/profile', config);
+        setResearchCells(profileResponse.data.researchCells || []);
 
         // Fetch proposals assigned to the current supervisor
-        const { data: proposalsData } = await axios.get('http://localhost:5000/api/proposals/supervisor-proposals', config);
-        setProposals(proposalsData.map(p => ({ id: p._id, ...p })));
-
-        // Fetch supervisor's own profile to get research cell assignments
-        const { data: supervisorProfile } = await axios.get('http://localhost:5000/api/users/profile', config);
-        let assignedCells = supervisorProfile.researchCells || [];
-        setResearchCells(assignedCells);
+        const proposalsResponse = await axios.get('http://localhost:5000/api/proposals/supervisor-proposals', config);
+        setProposals(proposalsResponse.data || []);
 
       } catch (error) {
         console.error("Error fetching dashboard data: ", error);
@@ -62,38 +42,42 @@ const Dashboard = () => {
     fetchData();
   }, [user]);
 
-  const thesisGroups = proposals.filter(p => p.type === 'Thesis').length;
-  const projectGroups = proposals.filter(p => p.type === 'Project').length;
-  const totalGroups = proposals.length;
+  const approvedProposals = proposals.filter(p => p.status === 'Approved');
+
+  const thesisGroups = approvedProposals.filter(p => p.type === 'Thesis').length;
+  const projectGroups = approvedProposals.filter(p => p.type === 'Project').length;
+  const totalGroups = approvedProposals.length;
 
   const handleCardClick = (type) => {
     let items = [];
     let title = '';
 
+    const approved = proposals.filter(p => p.status === 'Approved');
+
     if (type === 'thesis') {
       title = 'Thesis Groups';
-      items = proposals.filter(p => p.type === 'Thesis').map(p => ({
-        title: p.title,
-        members: p.members.map(m => studentNames[m] || 'Unknown').join(', '),
+      items = approved.filter(p => p.type === 'Thesis').map(p => ({ 
+        title: p.title, 
+        members: p.createdBy.name 
       }));
     } else if (type === 'project') {
       title = 'Project Groups';
-      items = proposals.filter(p => p.type === 'Project').map(p => ({
-        title: p.title,
-        members: p.members.map(m => studentNames[m] || 'Unknown').join(', '),
+      items = approved.filter(p => p.type === 'Project').map(p => ({ 
+        title: p.title, 
+        members: p.createdBy.name 
       }));
     } else if (type === 'total') {
-      title = 'All Groups';
-      items = proposals.map(p => ({
-        title: p.title,
-        type: p.type,
-        members: p.members.map(m => studentNames[m] || 'Unknown').join(', '),
+      title = 'All Approved Groups';
+      items = approved.map(p => ({ 
+        title: p.title, 
+        type: p.type, 
+        members: p.createdBy.name 
       }));
     } else if (type === 'researchCells') {
       title = 'Assigned Research Cells';
-      items = researchCells.map(cellId => ({
-        title: cellDetails[cellId]?.title || 'Unknown Cell',
-        description: cellDetails[cellId]?.description || 'No description',
+      items = researchCells.map(cell => ({
+        title: cell.title,
+        description: cell.description || 'No description',
       }));
     }
 
