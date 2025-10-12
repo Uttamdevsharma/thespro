@@ -1,22 +1,63 @@
 
 import React from 'react';
-import { useGetResearchCellsQuery, useGetProposalsQuery } from '../../features/apiSlice';
+import { useNavigate } from 'react-router-dom';
+import { FaUserGraduate, FaChalkboardTeacher, FaFileAlt, FaCheckCircle, FaHourglassHalf, FaFlask, FaUsers } from 'react-icons/fa';
+import { useGetResearchCellsQuery, useGetProposalsQuery, useGetStudentsQuery, useGetTeachersQuery } from '../../features/apiSlice';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { data: researchCells, isLoading: loadingCells, error: cellsError } = useGetResearchCellsQuery();
   const { data: proposals, isLoading: loadingProposals, error: proposalsError } = useGetProposalsQuery();
+  const { data: students, isLoading: loadingStudents, error: studentsError } = useGetStudentsQuery();
+  const { data: teachers, isLoading: loadingTeachers, error: teachersError } = useGetTeachersQuery();
 
-  if (loadingCells || loadingProposals) {
+  const totalStudents = students?.length || 0;
+  const totalTeachers = teachers?.length || 0;
+  const totalProposals = proposals?.length || 0;
+  const approvedProposals = proposals?.filter(p => p.status === 'Approved').length || 0;
+  const pendingProposals = proposals?.filter(p => p.status === 'Pending').length || 0;
+  const totalResearchCells = researchCells?.length || 0;
+  const totalCommitteeMembers = 5; // Placeholder for now, as there's no direct query for committee members
+
+  if (loadingCells || loadingProposals || loadingStudents || loadingTeachers) {
     return <div className="p-6 bg-white rounded-lg shadow-md">Loading dashboard...</div>;
   }
 
-  if (cellsError || proposalsError) {
+  if (cellsError || proposalsError || studentsError || teachersError) {
     return <div className="p-6 bg-white rounded-lg shadow-md text-red-600">Error loading data.</div>;
   }
 
+  const cardData = [
+    { id: 'students', label: 'Total Students', value: totalStudents, icon: FaUserGraduate, bgColor: 'bg-blue-500', path: '/committee/all-students' },
+    { id: 'teachers', label: 'Total Teachers', value: totalTeachers, icon: FaChalkboardTeacher, bgColor: 'bg-green-500', path: '/committee/all-teachers' },
+    { id: 'proposals', label: 'Total Proposals', value: totalProposals, icon: FaFileAlt, bgColor: 'bg-purple-500', path: '/committee/proposals' }, // Assuming a proposals page
+    { id: 'approved', label: 'Approved Proposals', value: approvedProposals, icon: FaCheckCircle, bgColor: 'bg-teal-500', path: '/committee/proposals?status=Approved' },
+    { id: 'pending', label: 'Pending Proposals', value: pendingProposals, icon: FaHourglassHalf, bgColor: 'bg-orange-500', path: '/committee/proposals?status=Pending' },
+    { id: 'researchCells', label: 'Total Research Cells', value: totalResearchCells, icon: FaFlask, bgColor: 'bg-red-500', path: '/committee/research-cells' },
+    { id: 'committeeMembers', label: 'Total Committee Members', value: totalCommitteeMembers, icon: FaUsers, bgColor: 'bg-indigo-500', path: '/committee/committee-members' },
+  ];
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Committee Dashboard</h1>
+      
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+        {cardData.map(card => (
+          <div
+            key={card.id}
+            className={`${card.bgColor} text-white p-5 rounded-lg shadow-md flex items-center justify-between cursor-pointer hover:shadow-lg transition-shadow duration-300`}
+            onClick={() => navigate(card.path)}
+          >
+            <div className="text-2xl">
+              <card.icon />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium">{card.label}</p>
+              <p className="text-3xl font-bold">{card.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {researchCells && researchCells.length > 0 ? (
         <div className="space-y-8">
