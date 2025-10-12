@@ -62,6 +62,9 @@ const CommitteeLayout = () => {
               <li>
                 <Link to="/committee/committee-members" className="block py-2 px-4 rounded hover:bg-gray-700">Committee Members</Link>
               </li>
+              <li>
+                <Link to="/committee/notices" className="block py-2 px-4 rounded hover:bg-gray-700">Notices</Link>
+              </li>
             </ul>
           </nav>
         </aside>

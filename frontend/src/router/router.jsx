@@ -9,6 +9,7 @@ import AllTeachers from '../pages/committee/AllTeachers';
 import ResearchCells from '../pages/committee/ResearchCells';
 import CellMembers from '../pages/committee/CellMembers';
 import CommitteeMembers from '../pages/committee/CommitteeMembers';
+import NoticeManagement from '../pages/committee/NoticeManagement';
 import SupervisorDashboard from '../pages/supervisor/Dashboard';
 import SupervisorChat from '../pages/supervisor/Chat';
 import Notice from '../pages/supervisor/Notice';
@@ -67,6 +68,10 @@ export const router = createBrowserRouter([
       {
         path: 'committee-members',
         element: <CommitteeMembers />,
+      },
+      {
+        path: 'notices',
+        element: <NoticeManagement />,
       },
     ],
   },

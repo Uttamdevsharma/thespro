@@ -1,18 +1,7 @@
 const mongoose = require('mongoose');
 
 const NoticeSchema = new mongoose.Schema({
-  proposalId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Proposal',
-    required: true,
-  },
-  groupMembers: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
-  ],
-  supervisorId: {
+  sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
@@ -25,6 +14,21 @@ const NoticeSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  file: {
+    type: String, // URL to the uploaded file
+    required: false,
+  },
+  sendTo: {
+    type: String,
+    enum: ['students', 'supervisors', 'all'],
+    required: true,
+  },
+  readBy: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Notice', NoticeSchema);
