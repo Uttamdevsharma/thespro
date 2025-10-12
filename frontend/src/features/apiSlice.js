@@ -15,7 +15,7 @@ const baseQuery = fetchBaseQuery({
 
 const baseQueryWithAuth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
-  if (result.error && result.error.status === 401) {
+  if (result.error && (result.error.status === 401 || result.error.status === 403)) {
     if (result.error.data.message === 'Not authorized, token expired') {
       api.dispatch(logout());
     }
@@ -127,6 +127,18 @@ export const apiSlice = createApi({
       query: () => '/proposals',
       providesTags: ['Proposals'],
     }),
+    getStudentProposals: builder.query({
+      query: (userId) => `/proposals/student-proposals?userId=${userId}`,
+      providesTags: ['Proposals'],
+    }),
+    createProposal: builder.mutation({
+      query: (proposalData) => ({
+        url: '/proposals',
+        method: 'POST',
+        body: proposalData,
+      }),
+      invalidatesTags: ['Proposals'],
+    }),
   }),
 });
 
@@ -148,4 +160,5 @@ export const {
   useMarkNoticeAsReadMutation,
   useDeleteNoticeMutation,
   useGetProposalsQuery,
+  useGetStudentProposalsQuery,
 } = apiSlice;

@@ -9,6 +9,7 @@ const stringSimilarity = require('string-similarity');
 // @access  Private (Student)
 const createProposal = async (req, res) => {
   const { title, abstract, type, researchCellId, supervisorId, members } = req.body;
+  console.log('createProposal - req.body:', req.body);
 
   // Assuming user ID is available from authentication middleware (req.user._id)
   const createdBy = req.user._id;
@@ -37,6 +38,7 @@ const createProposal = async (req, res) => {
       members: [createdBy, ...members], // Add the creator to members list
       createdBy,
       department,
+      status: 'Pending', // Explicitly set status to Pending
     });
 
     res.status(201).json(proposal);
@@ -85,19 +87,20 @@ const getSupervisorPendingProposals = async (req, res) => {
 // @route   GET /api/proposals/student-proposals
 // @access  Private (Student)
 const getStudentProposals = async (req, res) => {
+  const { userId } = req.query;
   try {
     const proposals = await Proposal.find({
       $or: [
-        { createdBy: req.user._id },
-        { members: req.user._id }
+        { createdBy: userId },
+        { members: userId }
       ]
     })
       .populate('createdBy', 'name email studentId')
       .populate('supervisorId', 'name email')
       .populate('researchCellId', 'title')
-      .populate('members', 'name email');
-
+      .populate('members', 'name email')
     res.json(proposals);
+    console.log('getStudentProposals - proposals:', proposals.map(p => ({ id: p._id, status: p.status })));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

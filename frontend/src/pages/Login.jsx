@@ -14,7 +14,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const { data } = await axios.post('/api/auth/login', { email, password });
       localStorage.setItem('userInfo', JSON.stringify(data));
       dispatch(login(data));
       console.log('Login successful, received data:', data);
