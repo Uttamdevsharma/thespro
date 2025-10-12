@@ -20,70 +20,48 @@ const Proposal = () => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      };
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
       try {
         const { data: cellsData } = await axios.get('http://localhost:5000/api/researchcells', config);
         setCells(cellsData);
 
         const { data: studentsData } = await axios.get('http://localhost:5000/api/users/students', config);
-        console.log('studentsData:', studentsData);
         setAllStudents(studentsData);
       } catch (error) {
         toast.error('Failed to fetch initial data.');
         console.error(error);
       }
     };
-
-    if (user && user.token) {
-      fetchInitialData();
-    }
+    if (user && user.token) fetchInitialData();
   }, [user]);
 
   useEffect(() => {
     const fetchSupervisors = async () => {
-      if (!researchCell || !user || !user.token) {
-        setSupervisors([]);
-        return;
-      }
-      const config = {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      };
+      if (!researchCell || !user || !user.token) return setSupervisors([]);
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
       try {
-        const { data: supervisorsData } = await axios.get(`http://localhost:5000/api/users/supervisors?researchCellId=${researchCell}`, config);
+        const { data: supervisorsData } = await axios.get(
+          `http://localhost:5000/api/users/supervisors?researchCellId=${researchCell}`,
+          config
+        );
         setSupervisors(supervisorsData);
       } catch (error) {
         toast.error('Failed to fetch supervisors.');
         console.error(error);
       }
     };
-
     fetchSupervisors();
   }, [researchCell, user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user || !user.token) {
-      toast.error('User not logged in.');
-      return;
-    }
-    if (!researchCell || !supervisor) {
-      toast.error('Please select a Research Cell and a Supervisor.');
-      return;
-    }
+    if (!user || !user.token) return toast.error('User not logged in.');
+    if (!researchCell || !supervisor) return toast.error('Select Research Cell & Supervisor.');
 
     setIsSubmitting(true);
 
     const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${user.token}`,
-      },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
     };
 
     const proposalData = {
@@ -92,111 +70,115 @@ const Proposal = () => {
       type,
       researchCellId: researchCell,
       supervisorId: supervisor,
-      members: members.map(member => member._id), // Assuming members are objects with an '_id' field
+      members: members.map((m) => m._id),
     };
 
     try {
       await axios.post('http://localhost:5000/api/proposals', proposalData, config);
       toast.success('Proposal submitted successfully!');
-      setTitle('');
-      setAbstract('');
-      setType('Thesis');
-      setResearchCell('');
-      setSupervisor('');
-      setMembers([]);
+      setTitle(''); setAbstract(''); setType('Thesis'); setResearchCell(''); setSupervisor(''); setMembers([]);
     } catch (error) {
       toast.error(`Failed to submit proposal: ${error.response?.data?.message || error.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    } finally { setIsSubmitting(false); }
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6">Submit Proposal</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg">
+      <h1 className="text-3xl font-bold mb-8 text-gray-800 text-center">Submit Proposal</h1>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Title */}
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
           <input
             type="text"
-            id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Enter proposal title"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 sm:text-sm"
             required
           />
         </div>
+
+        {/* Abstract */}
         <div>
-          <label htmlFor="abstract" className="block text-sm font-medium text-gray-700">Abstract</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Abstract</label>
           <textarea
-            id="abstract"
             value={abstract}
             onChange={(e) => setAbstract(e.target.value)}
             rows="5"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            placeholder="Enter a brief abstract"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 sm:text-sm"
             required
-          ></textarea>
+          />
         </div>
+
+        {/* Type */}
         <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700">Type</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
           <select
-            id="type"
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 sm:text-sm"
           >
             <option>Thesis</option>
             <option>Project</option>
           </select>
         </div>
+
+        {/* Research Cell */}
         <div>
-          <label htmlFor="researchCell" className="block text-sm font-medium text-gray-700">Research Cell</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Research Cell</label>
           <select
-            id="researchCell"
             value={researchCell}
             onChange={(e) => setResearchCell(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 sm:text-sm"
             required
           >
             <option value="">Select a cell</option>
             {cells.map((cell) => (
-              <option key={cell._id} value={cell._id}>
-                {cell.title}
-              </option>
+              <option key={cell._id} value={cell._id}>{cell.title}</option>
             ))}
           </select>
         </div>
+
+        {/* Supervisor */}
         <div>
-          <label htmlFor="supervisor" className="block text-sm font-medium text-gray-700">Supervisor</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Supervisor</label>
           <select
-            id="supervisor"
             value={supervisor}
             onChange={(e) => setSupervisor(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 sm:text-sm"
             disabled={!researchCell}
             required
           >
             <option value="">Select a supervisor</option>
             {supervisors.map((s) => (
-              <option key={s._id} value={s._id}>
-                {s.name}
-              </option>
+              <option key={s._id} value={s._id}>{s.name}</option>
             ))}
           </select>
         </div>
-        <MultiSelectDropdown 
-          allStudents={allStudents}
-          members={members}
-          setMembers={setMembers}
-          currentUser={user}
-        />
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit Proposal'}
-        </button>
+
+        {/* Members */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Team Members</label>
+          <MultiSelectDropdown
+            allStudents={allStudents}
+            members={members}
+            setMembers={setMembers}
+            currentUser={user}
+          />
+        </div>
+
+        {/* Submit Button */}
+        <div className="text-center">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-3 px-6 bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg shadow-md hover:from-green-500 hover:to-green-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Proposal'}
+          </button>
+        </div>
       </form>
     </div>
   );

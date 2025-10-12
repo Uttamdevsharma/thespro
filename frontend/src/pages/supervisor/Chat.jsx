@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
-import { useSelector } from 'react-redux';
-import { selectUser } from '../../features/userSlice';
-import { useSocket } from '../../contexts/SocketContext.jsx';
-import toast from 'react-hot-toast';
+import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../features/userSlice";
+import { useSocket } from "../../contexts/SocketContext.jsx";
+import toast from "react-hot-toast";
 
 const Chat = () => {
   const user = useSelector(selectUser);
@@ -11,7 +11,7 @@ const Chat = () => {
   const [proposals, setProposals] = useState([]);
   const [selectedProposalId, setSelectedProposalId] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState(null);
   const messagesEndRef = useRef(null);
@@ -22,28 +22,27 @@ const Chat = () => {
     },
   };
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Fetch supervisor's proposals
   useEffect(() => {
     const fetchSupervisorProposals = async () => {
-      if (!user || !user.token) {
+      if (!user?.token) {
         setLoading(false);
         return;
       }
 
       try {
-        const { data } = await axios.get('http://localhost:5000/api/proposals/supervisor-proposals', config);
+        const { data } = await axios.get(
+          "http://localhost:5000/api/proposals/supervisor-proposals",
+          config
+        );
         setProposals(data);
-        if (data && data.length > 0) {
-          setSelectedProposalId(data[0]._id); // Auto-select the first proposal
-        }
+        if (data?.length > 0) setSelectedProposalId(data[0]._id);
       } catch (error) {
-        console.error('Error fetching supervisor proposals:', error);
-        toast.error('Failed to load proposals for chat.');
+        console.error(error);
+        toast.error("Failed to load proposals for chat.");
       } finally {
         setLoading(false);
       }
@@ -52,23 +51,18 @@ const Chat = () => {
     fetchSupervisorProposals();
   }, [user]);
 
-  // Socket.io logic for selected proposal
   useEffect(() => {
     if (socket && selectedProposalId) {
-      socket.emit('joinRoom', selectedProposalId);
+      socket.emit("joinRoom", selectedProposalId);
 
-      socket.on('messageHistory', (history) => {
-        setMessages(history);
-      });
-
-      socket.on('newMessage', (message) => {
-        setMessages((prevMessages) => [...prevMessages, message]);
-      });
+      socket.on("messageHistory", (history) => setMessages(history));
+      socket.on("newMessage", (message) =>
+        setMessages((prev) => [...prev, message])
+      );
 
       return () => {
-        socket.off('messageHistory');
-        socket.off('newMessage');
-        // Optionally leave room, though server handles disconnects
+        socket.off("messageHistory");
+        socket.off("newMessage");
       };
     }
   }, [socket, selectedProposalId]);
@@ -77,127 +71,149 @@ const Chat = () => {
     if ((newMessage.trim() || file) && user && selectedProposalId && socket) {
       if (file) {
         handleFileUpload();
-      } else if (newMessage.trim()) {
-        socket.emit('sendMessage', {
+      } else {
+        socket.emit("sendMessage", {
           senderId: user._id,
           proposalId: selectedProposalId,
           content: newMessage.trim(),
         });
-        setNewMessage('');
+        setNewMessage("");
       }
     }
   };
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+  const handleFileChange = (e) => setFile(e.target.files[0]);
 
   const handleFileUpload = async () => {
     if (!file || !user || !selectedProposalId || !socket) return;
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     try {
-      const { data } = await axios.post('http://localhost:5000/api/upload/chat-file', formData, config);
-      
-      socket.emit('sendMessage', {
+      const { data } = await axios.post(
+        "http://localhost:5000/api/upload/chat-file",
+        formData,
+        config
+      );
+
+      socket.emit("sendMessage", {
         senderId: user._id,
         proposalId: selectedProposalId,
         fileUrl: data.fileUrl,
         fileType: data.fileType,
       });
       setFile(null);
-      toast.success('File sent!');
+      toast.success("File sent!");
     } catch (error) {
-      console.error('Error uploading file:', error);
-      toast.error('Failed to upload file.');
+      console.error(error);
+      toast.error("Failed to upload file.");
     }
   };
 
   if (loading) {
-    return <div className="p-6 bg-white rounded-lg shadow-md">Loading chat...</div>;
+    return (
+      <div className="p-6 bg-white rounded-lg shadow-md text-center text-gray-500">
+        Loading chat...
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] bg-white rounded-lg shadow-md p-4">
-      <h1 className="text-2xl font-bold mb-4">Supervisor Chat</h1>
-
-      <div className="mb-4">
-        <label htmlFor="proposal-select" className="block text-gray-700 text-sm font-bold mb-2">Select Proposal Group:</label>
+    <div className="flex flex-col h-[calc(100vh-120px)] bg-white rounded-xl shadow-lg border border-gray-200">
+      {/* Header */}
+      <div className="flex justify-between items-center bg-[#50C878] text-white px-6 py-3 rounded-t-xl shadow">
+        <h1 className="text-xl font-semibold">Supervisor Chat</h1>
         <select
-          id="proposal-select"
-          value={selectedProposalId || ''}
+          value={selectedProposalId || ""}
           onChange={(e) => setSelectedProposalId(e.target.value)}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          className="bg-white text-gray-800 px-3 py-1 rounded-md focus:ring-2 focus:ring-green-300 focus:outline-none"
         >
-          <option value="" disabled>Select a proposal</option>
+          <option value="" disabled>
+            Select Proposal
+          </option>
           {proposals.map((prop) => (
             <option key={prop._id} value={prop._id}>
-              {prop.title} (Supervisor: {prop.supervisorId?.name || 'N/A'})
+              {prop.title}
             </option>
           ))}
         </select>
       </div>
 
-      {selectedProposalId ? (
-        <>
-          <div className="flex-1 overflow-y-auto mb-4 p-2 border rounded-lg bg-gray-50">
-            {messages.map((msg) => (
-              <div key={msg._id} className={`mb-2 ${msg.sender._id === user._id ? 'text-right' : 'text-left'}`}>
-                <span className="font-semibold text-sm">{msg.sender.name}: </span>
-                {msg.content && <p className="inline-block bg-blue-200 rounded-lg px-3 py-1 max-w-xs break-words">{msg.content}</p>}
-                {msg.fileUrl && (
-                  <div className="inline-block bg-green-200 rounded-lg px-3 py-1 max-w-xs break-words">
-                    <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                      {msg.fileType === 'image' ? (
-                        <img src={msg.fileUrl} alt="file" className="max-w-[150px] max-h-[150px] object-contain" />
-                      ) : (
-                        `Download ${msg.fileType || 'file'}`
-                      )}
-                    </a>
-                  </div>
-                )}
-                <p className="text-xs text-gray-500 mt-1">{new Date(msg.createdAt).toLocaleString()}</p>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-          <div className="flex items-center">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSendMessage();
-                }
-              }}
-              placeholder="Type a message..."
-              className="flex-1 border rounded-lg p-2 mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="file"
-              onChange={handleFileChange}
-              className="hidden"
-              id="file-upload-sup"
-            />
-            <label htmlFor="file-upload-sup" className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg cursor-pointer mr-2">
-              {file ? file.name : 'Attach File'}
-            </label>
-            <button
-              onClick={handleSendMessage}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 bg-gray-50 custom-scrollbar">
+        {messages.map((msg) => (
+          <div
+            key={msg._id}
+            className={`flex mb-3 ${
+              msg.sender._id === user._id ? "justify-end" : "justify-start"
+            }`}
+          >
+            <div
+              className={`max-w-[70%] px-4 py-2 rounded-2xl shadow ${
+                msg.sender._id === user._id
+                  ? "bg-[#50C878] text-white rounded-br-none"
+                  : "bg-white text-gray-800 border border-gray-200 rounded-bl-none"
+              }`}
             >
-              Send
-            </button>
+              <p className="font-semibold text-sm mb-1">{msg.sender.name}</p>
+              {msg.content && <p className="text-base">{msg.content}</p>}
+              {msg.fileUrl && (
+                <a
+                  href={msg.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-sm mt-2 underline text-blue-200"
+                >
+                  {msg.fileType === "image" ? (
+                    <img
+                      src={msg.fileUrl}
+                      alt="file"
+                      className="max-w-[180px] rounded-md mt-1"
+                    />
+                  ) : (
+                    "📎 Download file"
+                  )}
+                </a>
+              )}
+              <p className="text-xs text-gray-200 mt-1">
+                {new Date(msg.createdAt).toLocaleTimeString()}
+              </p>
+            </div>
           </div>
-        </>
-      ) : (
-        <div className="p-6 text-center text-gray-500">
-          {proposals.length === 0 ? 'No proposals assigned to you for chat.' : 'Please select a proposal to start chatting.'}
-        </div>
-      )}
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <div className="flex items-center p-3 bg-white border-t border-gray-200 rounded-b-xl">
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+          placeholder="Type a message..."
+          className="flex-1 border border-gray-300 rounded-full px-4 py-2 mr-2 focus:ring-2 focus:ring-[#50C878] focus:outline-none"
+        />
+        <input
+          type="file"
+          onChange={handleFileChange}
+          id="file-upload"
+          className="hidden"
+        />
+        <label
+          htmlFor="file-upload"
+          className="cursor-pointer bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium px-3 py-2 rounded-full mr-2"
+        >
+          📎
+        </label>
+        <button
+          onClick={handleSendMessage}
+          className="bg-[#50C878] hover:bg-[#3ea764] text-white font-semibold px-5 py-2 rounded-full transition-all"
+        >
+          ➤
+        </button>
+      </div>
     </div>
   );
 };

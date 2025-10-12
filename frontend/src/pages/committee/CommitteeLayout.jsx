@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import ProfileIcon from '../../components/ProfileIcon';
 
 const CommitteeLayout = () => {
@@ -17,12 +17,23 @@ const CommitteeLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex-shrink-0 flex items-center">
-              <span className="text-2xl font-bold text-gray-700">ThesPro</span>
+          <div className="flex justify-between items-center h-18">
+            {/* Logo + ThesPro */}
+            <div className="flex items-center space-x-2 select-none">
+              <img
+                src="/system-logo.png"
+                alt="ThesPro Logo"
+                className="h-12 w-auto"
+              />
+              <span className="text-2xl sm:text-3xl font-bold text-[#50C878] tracking-wide">
+                ThesPro
+              </span>
             </div>
+
+            {/* Profile Icon */}
             <div className="flex items-center space-x-4">
               <ProfileIcon />
             </div>
@@ -31,6 +42,7 @@ const CommitteeLayout = () => {
       </header>
 
       <div className="flex">
+        {/* Sidebar */}
         <aside
           className="w-64 text-black min-h-screen p-4"
           style={{ backgroundColor: 'rgb(224, 224, 224)' }}
@@ -57,6 +69,7 @@ const CommitteeLayout = () => {
           </nav>
         </aside>
 
+        {/* Main Content */}
         <main className="flex-1 p-10">
           <Outlet />
         </main>
