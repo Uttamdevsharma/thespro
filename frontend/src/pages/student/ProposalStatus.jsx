@@ -1,58 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+
+import React from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
+import { useGetStudentProposalsQuery } from '../../features/apiSlice';
 
 const ProposalStatus = () => {
   const user = useSelector(selectUser);
-  const [proposals, setProposals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: proposals, isLoading: proposalsLoading } = useGetStudentProposalsQuery(user?._id, { skip: !user });
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${user?.token}`,
-    },
-  };
-
-  useEffect(() => {
-    const fetchProposals = async () => {
-      if (!user || !user.token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data: proposalsData } = await axios.get('http://localhost:5000/api/proposals/student-proposals', config);
-        setProposals(proposalsData.map(p => ({ id: p._id, ...p })));
-      } catch (error) {
-        console.error("Error fetching proposals: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProposals();
-  }, [user]);
-
-  if (loading) {
+  if (proposalsLoading) {
     return <div className="p-6 bg-white rounded-lg shadow-md">Loading proposals...</div>;
   }
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-6">Proposal Status</h1>
-      {proposals.length === 0 ? (
+      {proposals && proposals.length === 0 ? (
         <p>No proposals found. Submit a new proposal to get started!</p>
       ) : (
         <div className="space-y-4">
           {proposals.map((proposal) => (
-            <div key={proposal.id} className="border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div key={proposal._id} className="border border-gray-200 rounded-lg p-4 shadow-sm">
               <h2 className="text-xl font-semibold text-gray-800">{proposal.title}</h2>
               <p className="text-gray-600 text-sm mb-2">Type: {proposal.type}</p>
-              <p className="text-gray-600 text-sm mb-2">Research Cell: {proposal.researchCellId.title || 'N/A'}</p>
-              <p className="text-gray-600 text-sm mb-2">Supervisor: {proposal.supervisorId.name || 'N/A'}</p>
+              <p className="text-gray-600 text-sm mb-2">Research Cell: {proposal.researchCellId?.title || 'N/A'}</p>
+              <p className="text-gray-600 text-sm mb-2">Supervisor: {proposal.supervisorId?.name || 'N/A'}</p>
               <p className="text-gray-600 text-sm mb-2">
-                Group Members: 
+                Group Members:
                 {proposal.members.map((member, index) => (
                   <span key={member._id} className="inline-block bg-gray-100 rounded-full px-2 py-0.5 text-xs font-medium text-gray-700 mr-1">
                     {member.name || 'Unknown'}{index < proposal.members.length - 1 ? ', ' : ''}

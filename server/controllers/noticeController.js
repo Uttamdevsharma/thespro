@@ -99,9 +99,9 @@ const getNotices = async (req, res) => {
   try {
     let notices;
     if (req.user.role === 'committee') {
-      notices = await Notice.find({}).sort({ createdAt: -1 }).populate('sender', 'name');
+      notices = await Notice.find({}).sort({ createdAt: -1 }).populate('sender', 'name role');
     } else {
-      notices = await Notice.find({ recipients: userId }).sort({ createdAt: -1 }).populate('sender', 'name');
+      notices = await Notice.find({ recipients: userId }).sort({ createdAt: -1 }).populate('sender', 'name role');
     }
     res.status(200).json(notices);
   } catch (error) {

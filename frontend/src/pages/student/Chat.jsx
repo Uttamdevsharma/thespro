@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
 import { useSocket } from '../../contexts/SocketContext.jsx';
 import toast from 'react-hot-toast';
+import { useGetStudentProposalsQuery } from '../../features/apiSlice';
 
 const Chat = () => {
   const user = useSelector(selectUser);
@@ -11,15 +12,12 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [proposalId, setProposalId] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [supervisorName, setSupervisorName] = useState('');
+  const [loadingChat, setLoadingChat] = useState(true);
   const [file, setFile] = useState(null);
   const messagesEndRef = useRef(null);
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${user?.token}`,
-    },
-  };
+  const { data: proposals, isLoading: proposalsLoading } = useGetStudentProposalsQuery(user?._id, { skip: !user });
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -27,30 +25,19 @@ const Chat = () => {
   }, [messages]);
 
   useEffect(() => {
-    const fetchStudentProposal = async () => {
-      if (!user || !user.token) {
-        setLoading(false);
-        return;
-      }
+    if (!user || proposalsLoading) return;
 
-      try {
-        const { data } = await axios.get('http://localhost:5000/api/proposals/student-proposals', config);
-        // Assuming a student has one primary proposal for chat for simplicity
-        if (data && data.length > 0) {
-          setProposalId(data[0]._id);
-        } else {
-          toast.error('No active proposal found for chat.');
-        }
-      } catch (error) {
-        console.error('Error fetching student proposal:', error);
-        toast.error('Failed to load proposal for chat.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    const activeProposal = proposals?.find(p => p.status === 'Pending' || p.status === 'Approved');
 
-    fetchStudentProposal();
-  }, [user]);
+    if (activeProposal) {
+      setProposalId(activeProposal._id);
+      setSupervisorName(activeProposal.supervisorId?.name || 'Supervisor');
+    } else {
+      setProposalId(null);
+      setSupervisorName('');
+    }
+    setLoadingChat(false);
+  }, [user, proposals, proposalsLoading]);
 
   useEffect(() => {
     if (socket && proposalId) {
@@ -71,10 +58,10 @@ const Chat = () => {
     }
   }, [socket, proposalId]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if ((newMessage.trim() || file) && user && proposalId && socket) {
       if (file) {
-        handleFileUpload();
+        await handleFileUpload();
       } else if (newMessage.trim()) {
         socket.emit('sendMessage', {
           senderId: user._id,
@@ -97,7 +84,12 @@ const Chat = () => {
     formData.append('file', file);
 
     try {
-      const { data } = await axios.post('http://localhost:5000/api/upload/chat-file', formData, config);
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      };
+      const { data } = await axios.post('/api/upload/chat-file', formData, config);
       
       socket.emit('sendMessage', {
         senderId: user._id,
@@ -113,7 +105,7 @@ const Chat = () => {
     }
   };
 
-  if (loading) {
+  if (proposalsLoading || loadingChat) {
     return <div className="p-6 bg-white rounded-lg shadow-md">Loading chat...</div>;
   }
 
@@ -123,7 +115,7 @@ const Chat = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] bg-white rounded-lg shadow-md p-4">
-      <h1 className="text-2xl font-bold mb-4">Chat for Proposal: {proposalId}</h1>
+      <h1 className="text-2xl font-bold mb-4">Chat with {supervisorName} for Proposal: {proposalId}</h1>
       <div className="flex-1 overflow-y-auto mb-4 p-2 border rounded-lg bg-gray-50">
         {messages.map((msg) => (
           <div key={msg._id} className={`mb-2 ${msg.sender._id === user._id ? 'text-right' : 'text-left'}`}>
