@@ -1,15 +1,18 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { useDispatch } from 'react-redux';
-import { logout } from '../../features/userSlice';
 import NotificationBell from '../../components/NotificationBell';
 import ProfileIcon from '../../components/ProfileIcon';
 
 const SupervisorLayout = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const [activeMenu, setActiveMenu] = useState('/supervisor/dashboard'); // default active
+
+  const menuItems = [
+    { to: '/supervisor/dashboard', label: 'Dashboard' },
+    { to: '/supervisor/pending-proposals', label: 'Pending Proposals' },
+    { to: '/supervisor/chat', label: 'Chat' },
+    { to: '/supervisor/notice', label: 'Notice' },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -28,24 +31,30 @@ const SupervisorLayout = () => {
         </div>
       </header>
 
-
       <div className="flex flex-grow">
         {/* Sidebar */}
-        <aside className="w-64 bg-gray-800 text-white p-4 flex flex-col">
+        <aside
+          className="w-64 text-black p-4 flex flex-col"
+          style={{ backgroundColor: 'rgb(224, 224, 224)' }}
+        >
           <nav className="flex-grow">
             <ul>
-              <li className="mb-2">
-                <Link to="/supervisor/dashboard" className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors duration-200">Dashboard</Link>
-              </li>
-              <li className="mb-2">
-                <Link to="/supervisor/pending-proposals" className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors duration-200">Pending Proposals</Link>
-              </li>
-              <li className="mb-2">
-                <Link to="/supervisor/chat" className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors duration-200">Chat</Link>
-              </li>
-              <li className="mb-2">
-                <Link to="/supervisor/notice" className="block py-2 px-4 rounded hover:bg-gray-700 transition-colors duration-200">Notice</Link>
-              </li>
+              {menuItems.map((item) => (
+                <li key={item.to} className="mb-2">
+                  <Link
+                    to={item.to}
+                    onClick={() => setActiveMenu(item.to)}
+                    className={`block py-2 px-4 rounded transition-colors duration-200
+                      ${
+                        activeMenu === item.to
+                          ? 'bg-green-500 text-white' // active menu
+                          : 'hover:bg-white hover:text-black' // hover effect
+                      }`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
         </aside>

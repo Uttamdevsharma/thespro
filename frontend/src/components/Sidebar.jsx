@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -29,12 +28,15 @@ const Sidebar = ({ role }) => {
   }[role];
 
   return (
-    <div className="bg-gray-200 h-screen w-64">
+    <div className="h-screen w-64 bg-gray-200">
       <ul className="p-4">
         {links &&
           links.map((link, index) => (
             <li key={index} className="mb-2">
-              <Link to={link.to} className="text-gray-700 hover:text-gray-900">
+              <Link
+                to={link.to}
+                className="block text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md transition-colors duration-200"
+              >
                 {link.label}
               </Link>
             </li>

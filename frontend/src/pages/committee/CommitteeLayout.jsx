@@ -1,16 +1,19 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { useDispatch } from 'react-redux';
-import { logout } from '../../features/userSlice';
-import NotificationBell from '../../components/NotificationBell';
 import ProfileIcon from '../../components/ProfileIcon';
 
 const CommitteeLayout = () => {
-  console.log('CommitteeLayout rendering');
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const [activeMenu, setActiveMenu] = useState('/committee/dashboard'); // default active
+
+  const menuItems = [
+    { to: '/committee/dashboard', label: 'Dashboard' },
+    { to: '/committee/all-students', label: 'All Students' },
+    { to: '/committee/all-teachers', label: 'All Teachers' },
+    { to: '/committee/research-cells', label: 'Research Cells' },
+    { to: '/committee/cell-members', label: 'Cell Members' },
+    { to: '/committee/committee-members', label: 'Committee Members' },
+    { to: '/committee/notices', label: 'Notices' },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -21,7 +24,6 @@ const CommitteeLayout = () => {
               <span className="text-2xl font-bold text-gray-700">ThesPro</span>
             </div>
             <div className="flex items-center space-x-4">
-              
               <ProfileIcon />
             </div>
           </div>
@@ -29,33 +31,32 @@ const CommitteeLayout = () => {
       </header>
 
       <div className="flex">
-        <aside className="w-64 bg-gray-800 text-white min-h-screen p-4">
+        <aside
+          className="w-64 text-black min-h-screen p-4"
+          style={{ backgroundColor: 'rgb(224, 224, 224)' }}
+        >
           <nav>
             <ul>
-              <li>
-                <Link to="/committee/dashboard" className="block py-2 px-4 rounded hover:bg-gray-700">Dashboard</Link>
-              </li>
-              <li>
-                <Link to="/committee/all-students" className="block py-2 px-4 rounded hover:bg-gray-700">All Students</Link>
-              </li>
-              <li>
-                <Link to="/committee/all-teachers" className="block py-2 px-4 rounded hover:bg-gray-700">All Teachers</Link>
-              </li>
-              <li>
-                <Link to="/committee/research-cells" className="block py-2 px-4 rounded hover:bg-gray-700">Research Cells</Link>
-              </li>
-              <li>
-                <Link to="/committee/cell-members" className="block py-2 px-4 rounded hover:bg-gray-700">Cell Members</Link>
-              </li>
-              <li>
-                <Link to="/committee/committee-members" className="block py-2 px-4 rounded hover:bg-gray-700">Committee Members</Link>
-              </li>
-              <li>
-                <Link to="/committee/notices" className="block py-2 px-4 rounded hover:bg-gray-700">Notices</Link>
-              </li>
+              {menuItems.map((item) => (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    onClick={() => setActiveMenu(item.to)}
+                    className={`block py-2 px-4 rounded transition-colors duration-200
+                      ${
+                        activeMenu === item.to
+                          ? 'bg-green-500 text-white' // active menu
+                          : 'hover:bg-white hover:text-black' // hover effect
+                      }`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
         </aside>
+
         <main className="flex-1 p-10">
           <Outlet />
         </main>
