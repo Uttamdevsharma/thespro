@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { logout } from './userSlice';
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: '/api',
+  baseUrl: 'http://localhost:5000/api',
   prepareHeaders: (headers, { getState }) => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     if (userInfo && userInfo.token) {
@@ -124,7 +124,7 @@ export const apiSlice = createApi({
       invalidatesTags: ['Notices'],
     }),
     getProposals: builder.query({
-      query: () => '/proposals',
+      query: () => '/proposals/committee-proposals',
       providesTags: ['Proposals'],
     }),
     getStudentProposals: builder.query({
