@@ -1,25 +1,15 @@
+
 import React from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../features/userSlice';
 import NotificationBell from '../../components/NotificationBell';
+import ProfileIcon from '../../components/ProfileIcon';
 
 const SupervisorLayout = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem('userInfo');
-      dispatch(logout());
-      toast.success('Logged out successfully.');
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout failed', error);
-      toast.error('Logout failed.');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -30,18 +20,14 @@ const SupervisorLayout = () => {
             <div className="flex-shrink-0 flex items-center">
               <span className="text-2xl font-bold text-gray-800">ThesPro</span>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
               <NotificationBell />
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 ml-4" // Added ml-4 for spacing
-              >
-                Logout
-              </button>
+              <ProfileIcon />
             </div>
           </div>
         </div>
       </header>
+
 
       <div className="flex flex-grow">
         {/* Sidebar */}
