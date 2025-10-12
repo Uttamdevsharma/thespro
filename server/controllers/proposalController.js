@@ -29,6 +29,11 @@ const createProposal = async (req, res) => {
       }
     }
 
+    const researchCell = await ResearchCell.findById(researchCellId);
+    if (!researchCell) {
+      return res.status(400).json({ message: 'Research cell not found.' });
+    }
+
     const proposal = await Proposal.create({
       title,
       abstract,

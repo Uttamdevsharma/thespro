@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
+import { useGetNoticesQuery } from '../../features/apiSlice';
+import NoticeItem from '../../components/NoticeItem';
 
 const Dashboard = () => {
   const user = useSelector(selectUser);
@@ -10,6 +12,10 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', items: [] });
+  const { data: notices, isLoading: noticesLoading } = useGetNoticesQuery(user?._id, { skip: !user });
+
+  const committeeNotices = notices ? notices.filter(notice => notice.sender.role === 'committee') : [];
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,25 +96,87 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6">Supervisor Dashboard</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          Supervisor Dashboard
+        </h1>
+        <p className="text-lg text-gray-500">
+          Here is an overview of your assigned proposals and recent notices.
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-blue-100 p-4 rounded-lg shadow cursor-pointer hover:bg-blue-200 transition-colors" onClick={() => handleCardClick('thesis')}>
-          <p className="text-lg font-semibold text-blue-800">Thesis Groups</p>
-          <p className="text-3xl font-bold text-blue-900">{thesisGroups}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
+            <div className="bg-blue-100 p-4 rounded-lg shadow cursor-pointer hover:bg-blue-200 transition-colors" onClick={() => handleCardClick('thesis')}>
+              <p className="text-lg font-semibold text-blue-800">Thesis Groups</p>
+              <p className="text-3xl font-bold text-blue-900">{thesisGroups}</p>
+            </div>
+            <div className="bg-green-100 p-4 rounded-lg shadow cursor-pointer hover:bg-green-200 transition-colors" onClick={() => handleCardClick('project')}>
+              <p className="text-lg font-semibold text-green-800">Project Groups</p>
+              <p className="text-3xl font-bold text-green-900">{projectGroups}</p>
+            </div>
+            <div className="bg-purple-100 p-4 rounded-lg shadow cursor-pointer hover:bg-purple-200 transition-colors" onClick={() => handleCardClick('total')}>
+              <p className="text-lg font-semibold text-purple-800">Total Groups</p>
+              <p className="text-3xl font-bold text-purple-900">{totalGroups}</p>
+            </div>
+            <div className="bg-yellow-100 p-4 rounded-lg shadow cursor-pointer hover:bg-yellow-200 transition-colors" onClick={() => handleCardClick('researchCells')}>
+              <p className="text-lg font-semibold text-yellow-800">Research Cells</p>
+              <p className="text-3xl font-bold text-yellow-900">{researchCells.length}</p>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 className="text-xl font-semibold mb-4">Student Proposals</h2>
+            {loading ? (
+              <p>Loading proposals...</p>
+            ) : proposals && proposals.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white">
+                  <thead>
+                    <tr>
+                      <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
+                      <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Submitted By</th>
+                      <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Research Cell</th>
+                      <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Last Updated</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {proposals.map(proposal => (
+                      <tr key={proposal._id}>
+                        <td className="py-2 px-4 border-b border-gray-200 text-sm">{proposal.title}</td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-sm">{proposal.createdBy?.name || 'N/A'}</td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-sm">{proposal.researchCell?.title || 'N/A'}</td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-sm">{proposal.status}</td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-sm">{new Date(proposal.updatedAt || proposal.createdAt).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p>No proposals submitted by your students yet.</p>
+            )}
+          </div>
         </div>
-        <div className="bg-green-100 p-4 rounded-lg shadow cursor-pointer hover:bg-green-200 transition-colors" onClick={() => handleCardClick('project')}>
-          <p className="text-lg font-semibold text-green-800">Project Groups</p>
-          <p className="text-3xl font-bold text-green-900">{projectGroups}</p>
-        </div>
-        <div className="bg-purple-100 p-4 rounded-lg shadow cursor-pointer hover:bg-purple-200 transition-colors" onClick={() => handleCardClick('total')}>
-          <p className="text-lg font-semibold text-purple-800">Total Groups</p>
-          <p className="text-3xl font-bold text-purple-900">{totalGroups}</p>
-        </div>
-        <div className="bg-yellow-100 p-4 rounded-lg shadow cursor-pointer hover:bg-yellow-200 transition-colors" onClick={() => handleCardClick('researchCells')}>
-          <p className="text-lg font-semibold text-yellow-800">Research Cells</p>
-          <p className="text-3xl font-bold text-yellow-900">{researchCells.length}</p>
+
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Committee Notices</h2>
+            {noticesLoading ? (
+              <p>Loading notices...</p>
+            ) : committeeNotices && committeeNotices.length > 0 ? (
+              <div>
+                {committeeNotices.map(notice => (
+                  <NoticeItem key={notice._id} notice={notice} />
+                ))}
+              </div>
+            ) : (
+              <p>No new notices from the committee.</p>
+            )}
+          </div>
         </div>
       </div>
 
