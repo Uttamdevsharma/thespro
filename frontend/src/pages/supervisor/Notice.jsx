@@ -1,85 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
 import toast from 'react-hot-toast';
+import {
+  useGetSupervisorSentNoticesQuery,
+  useSendNoticeToGroupMutation,
+  useGetProposalsBySupervisorQuery
+} from '../../features/apiSlice';
 
 const Notice = () => {
   const user = useSelector(selectUser);
-  const [proposals, setProposals] = useState([]);
   const [selectedProposalId, setSelectedProposalId] = useState('');
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeDescription, setNoticeDescription] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${user?.token}`,
-    },
-  };
-
-  useEffect(() => {
-    const fetchProposals = async () => {
-      if (!user || !user.token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Fetch all proposals where the current user is the supervisor
-        const { data } = await axios.get('http://localhost:5000/api/proposals/supervisor-proposals', config);
-        const fetchedProposals = data.map(p => ({ id: p._id, ...p }));
-        setProposals(fetchedProposals);
-      } catch (error) {
-        console.error("Error fetching proposals for notice: ", error);
-        toast.error('Failed to fetch proposals.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProposals();
-  }, [user]);
+  const { data: proposals, isLoading: proposalsLoading } = useGetProposalsBySupervisorQuery(user?._id, { skip: !user });
+  const { data: sentNotices, isLoading: noticesLoading, refetch } = useGetSupervisorSentNoticesQuery();
+  const [sendNoticeToGroup] = useSendNoticeToGroupMutation();
 
   const handleSubmitNotice = async (e) => {
     e.preventDefault();
-    if (!user || !user.token) {
-      toast.error('User not logged in.');
-      return;
-    }
     if (!selectedProposalId || !noticeTitle || !noticeDescription) {
       toast.error('Please fill all fields.');
       return;
     }
 
     try {
-      const selectedProposal = proposals.find(p => p.id === selectedProposalId);
-      if (!selectedProposal) {
-        toast.error('Selected proposal not found.');
-        return;
-      }
-
-      const noticeData = {
-        proposalId: selectedProposalId,
-        groupMembers: selectedProposal.members,
-        supervisorId: user._id, // Use user._id from Redux store
-        title: noticeTitle,
-        description: noticeDescription,
-      };
-
-      await axios.post('http://localhost:5000/api/notices', noticeData, config);
-
+      await sendNoticeToGroup({ groupId: selectedProposalId, title: noticeTitle, description: noticeDescription }).unwrap();
       toast.success('Notice Sent Successfully!');
       setSelectedProposalId('');
       setNoticeTitle('');
       setNoticeDescription('');
+      refetch();
     } catch (error) {
       console.error("Error sending notice: ", error);
       toast.error(`Failed to send notice: ${error.response?.data?.message || error.message}`);
     }
   };
 
-  if (loading) {
+  if (proposalsLoading || noticesLoading) {
     return <div className="p-6 bg-white rounded-lg shadow-md">Loading...</div>;
   }
 
@@ -97,8 +56,9 @@ const Notice = () => {
             required
           >
             <option value="">Select a proposal/group</option>
-            {proposals.map((proposal) => (
-              <option key={proposal.id} value={proposal.id}>
+            <option value="all">All Groups</option>
+            {proposals?.map((proposal) => (
+              <option key={proposal._id} value={proposal._id}>
                 {proposal.title} (Members: {proposal.members.length})
               </option>
             ))}
@@ -133,6 +93,23 @@ const Notice = () => {
           Send Notice
         </button>
       </form>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Sent Notices</h2>
+        {sentNotices && sentNotices.length > 0 ? (
+          <ul className="divide-y divide-gray-200">
+            {sentNotices.map((notice) => (
+              <li key={notice._id} className="py-4">
+                <h3 className="text-lg font-medium">{notice.title}</h3>
+                <p className="text-gray-600 text-sm">Sent to: {notice.recipients.length} users</p>
+                <p className="text-gray-600 text-sm">on {new Date(notice.createdAt).toLocaleDateString()}</p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No notices sent yet.</p>
+        )}
+      </div>
     </div>
   );
 };

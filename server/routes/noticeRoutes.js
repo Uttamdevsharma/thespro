@@ -1,6 +1,10 @@
+
 const express = require('express');
 const {
-  createNotice,
+  createCommitteeNotice,
+  getCommitteeSentNotices,
+  sendNoticeToGroup,
+  getSupervisorSentNotices,
   getNotices,
   getNoticeById,
   markNoticeAsRead,
@@ -8,29 +12,28 @@ const {
 } = require('../controllers/noticeController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorizeRoles } = require('../middleware/roleMiddleware');
-const uploadNotice = require('../middleware/noticeUploadMiddleware');
 
 const router = express.Router();
 
-// Committee can create notices with optional file upload
-router.post(
-  '/',
-  protect,
-  authorizeRoles('committee'),
-  uploadNotice,
-  createNotice
-);
+router.route('/committee')
+  .post(protect, authorizeRoles('committee'), createCommitteeNotice);
 
-// All authenticated users (students, supervisors, committee) can get notices
-router.get('/', protect, getNotices);
+router.route('/committee/sent')
+  .get(protect, authorizeRoles('committee'), getCommitteeSentNotices);
 
-// All authenticated users can get a single notice by ID
-router.get('/:id', protect, getNoticeById);
+router.route('/supervisor')
+  .post(protect, authorizeRoles('supervisor'), sendNoticeToGroup);
 
-// All authenticated users can mark a notice as read
-router.put('/:id/read', protect, markNoticeAsRead);
+router.route('/supervisor/sent')
+  .get(protect, authorizeRoles('supervisor'), getSupervisorSentNotices);
 
-// Committee can delete notices
-router.delete('/:id', protect, authorizeRoles('committee'), deleteNotice);
+router.route('/')
+  .get(protect, getNotices);
+
+router.route('/:id')
+  .get(protect, getNoticeById)
+  .delete(protect, authorizeRoles('committee'), deleteNotice);
+
+router.route('/:id/read').put(protect, markNoticeAsRead);
 
 module.exports = router;

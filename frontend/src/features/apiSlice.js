@@ -1,8 +1,9 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:5000',
+    baseUrl: '/api',
     prepareHeaders: (headers, { getState }) => {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
       if (userInfo && userInfo.token) {
@@ -11,27 +12,27 @@ export const apiSlice = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Students', 'Teachers', 'Cells', 'Notices'],
+  tagTypes: ['Students', 'Teachers', 'Cells', 'Notices', 'Proposals'],
   endpoints: (builder) => ({
     getStudents: builder.query({
-      query: () => '/students',
+      query: () => '/users/students',
       providesTags: ['Students'],
     }),
     updateStudent: builder.mutation({
       query: ({ id, ...data }) => ({
-        url: `/students/${id}`,
+        url: `/users/students/${id}`,
         method: 'PUT',
         body: data,
       }),
       invalidatesTags: ['Students'],
     }),
     getTeachers: builder.query({
-      query: () => '/teachers',
+      query: () => '/users/supervisors',
       providesTags: ['Teachers'],
     }),
     addTeacher: builder.mutation({
       query: (teacher) => ({
-        url: '/teachers',
+        url: '/users/add-supervisor',
         method: 'POST',
         body: teacher,
       }),
@@ -39,57 +40,75 @@ export const apiSlice = createApi({
     }),
     assignCell: builder.mutation({
       query: ({ id, ...data }) => ({
-        url: `/teachers/${id}`,
+        url: `/users/${id}/assign-cell`,
         method: 'PATCH',
         body: data,
       }),
       invalidatesTags: ['Teachers'],
     }),
     getResearchCells: builder.query({
-      query: () => '/researchCells',
+      query: () => '/researchcells',
       providesTags: ['Cells'],
     }),
     addResearchCell: builder.mutation({
       query: (cell) => ({
-        url: '/researchCells',
+        url: '/researchcells',
         method: 'POST',
         body: cell,
       }),
       invalidatesTags: ['Cells'],
     }),
+    getProposalsBySupervisor: builder.query({
+      query: (id) => `/proposals/supervisor-proposals`,
+      providesTags: ['Proposals'],
+    }),
     // Notice Endpoints
-    createNotice: builder.mutation({
+    createCommitteeNotice: builder.mutation({
       query: (noticeData) => ({
-        url: '/api/notices',
+        url: '/notices/committee',
         method: 'POST',
         body: noticeData,
       }),
       invalidatesTags: ['Notices'],
     }),
-    getNotices: builder.query({
-      query: () => '/api/notices',
+    getCommitteeSentNotices: builder.query({
+      query: () => '/notices/committee/sent',
       providesTags: ['Notices'],
     }),
+    sendNoticeToGroup: builder.mutation({
+      query: (noticeData) => ({
+        url: '/notices/supervisor',
+        method: 'POST',
+        body: noticeData,
+      }),
+      invalidatesTags: ['Notices'],
+    }),
+    getSupervisorSentNotices: builder.query({
+      query: () => '/notices/supervisor/sent',
+      providesTags: ['Notices'],
+    }),
+    getNotices: builder.query({
+      query: (userId) => `/notices?userId=${userId}`,
+      providesTags: ['Notices'],
+    }),
+    getProposals: builder.query({
+      query: () => '/proposals',
+      providesTags: ['Proposals'],
+    }),
     getNoticeById: builder.query({
-      query: (id) => `/api/notices/${id}`,
-      providesTags: (result, error, id) => [{
-        type: 'Notices',
-        id
-      }],
+      query: (id) => `/notices/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Notices', id }],
     }),
     markNoticeAsRead: builder.mutation({
       query: (id) => ({
-        url: `/api/notices/${id}/read`,
+        url: `/notices/${id}/read`,
         method: 'PUT',
       }),
-      invalidatesTags: (result, error, id) => [{
-        type: 'Notices',
-        id
-      }],
+      invalidatesTags: ['Notices'],
     }),
     deleteNotice: builder.mutation({
       query: (id) => ({
-        url: `/api/notices/${id}`,
+        url: `/notices/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Notices'],
@@ -105,7 +124,11 @@ export const {
   useAssignCellMutation,
   useGetResearchCellsQuery,
   useAddResearchCellMutation,
-  useCreateNoticeMutation,
+  useGetProposalsBySupervisorQuery,
+  useCreateCommitteeNoticeMutation,
+  useGetCommitteeSentNoticesQuery,
+  useSendNoticeToGroupMutation,
+  useGetSupervisorSentNoticesQuery,
   useGetNoticesQuery,
   useGetNoticeByIdQuery,
   useMarkNoticeAsReadMutation,

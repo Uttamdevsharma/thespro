@@ -21,7 +21,7 @@ const CommitteeLayout = () => {
               <span className="text-2xl font-bold text-gray-700">ThesPro</span>
             </div>
             <div className="flex items-center space-x-4">
-              <NotificationBell />
+              
               <ProfileIcon />
             </div>
           </div>

@@ -5,12 +5,15 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import NoticeDetailModal from './NoticeDetailModal';
 
+import { useSocket } from '../contexts/SocketContext';
+
 const NotificationBell = () => {
   const { user: userInfo } = useSelector((state) => state.user);
-  console.log('NotificationBell - userInfo:', userInfo);
-  const { data: notices, isLoading, refetch } = useGetNoticesQuery();
-  console.log('NotificationBell - fetched notices:', notices);
+  const { data: notices, isLoading, refetch } = useGetNoticesQuery(userInfo?._id, {
+    skip: !userInfo,
+  });
   const [markNoticeAsRead] = useMarkNoticeAsReadMutation();
+  const socket = useSocket();
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -18,6 +21,21 @@ const NotificationBell = () => {
   const [showModal, setShowModal] = useState(false);
 
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('newNotice', (data) => {
+        if (data.recipientId === userInfo?._id) {
+          refetch();
+          toast.info(`New notice: ${data.notice.title}`);
+        }
+      });
+
+      return () => {
+        socket.off('newNotice');
+      };
+    }
+  }, [socket, userInfo, refetch]);
 
   useEffect(() => {
     if (notices && userInfo) {

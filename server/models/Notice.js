@@ -18,11 +18,12 @@ const NoticeSchema = new mongoose.Schema({
     type: String, // URL to the uploaded file
     required: false,
   },
-  sendTo: {
-    type: String,
-    enum: ['students', 'supervisors', 'all'],
-    required: true,
-  },
+  recipients: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
   readBy: [
     {
       type: mongoose.Schema.Types.ObjectId,

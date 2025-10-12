@@ -1,34 +1,29 @@
+
 import React, { useState } from 'react';
-import { useCreateNoticeMutation, useGetNoticesQuery, useDeleteNoticeMutation } from '../../features/apiSlice';
+import {
+  useCreateCommitteeNoticeMutation,
+  useGetCommitteeSentNoticesQuery,
+  useDeleteNoticeMutation,
+} from '../../features/apiSlice';
 import { toast } from 'react-toastify';
 
 const NoticeManagement = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [noticeFile, setNoticeFile] = useState(null);
   const [sendTo, setSendTo] = useState('all');
 
-  const [createNotice] = useCreateNoticeMutation();
-  const { data: notices, isLoading, refetch } = useGetNoticesQuery();
+  const [createCommitteeNotice] = useCreateCommitteeNoticeMutation();
+  const { data: notices, isLoading, refetch } = useGetCommitteeSentNoticesQuery();
   const [deleteNotice] = useDeleteNoticeMutation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('sendTo', sendTo);
-    if (noticeFile) {
-      formData.append('noticeFile', noticeFile);
-    }
-
     try {
-      await createNotice(formData).unwrap();
+      await createCommitteeNotice({ title, description, sendTo }).unwrap();
       toast.success('Notice created successfully!');
       setTitle('');
       setDescription('');
-      setNoticeFile(null);
       setSendTo('all');
       refetch();
     } catch (err) {
@@ -78,15 +73,6 @@ const NoticeManagement = () => {
             ></textarea>
           </div>
           <div className="mb-4">
-            <label htmlFor="noticeFile" className="block text-gray-700 text-sm font-bold mb-2">Attachment (Optional)</label>
-            <input
-              type="file"
-              id="noticeFile"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              onChange={(e) => setNoticeFile(e.target.files[0])}
-            />
-          </div>
-          <div className="mb-4">
             <label htmlFor="sendTo" className="block text-gray-700 text-sm font-bold mb-2">Send To</label>
             <select
               id="sendTo"
@@ -95,8 +81,8 @@ const NoticeManagement = () => {
               onChange={(e) => setSendTo(e.target.value)}
             >
               <option value="all">Both Students and Supervisors</option>
-              <option value="students">Students Only</option>
-              <option value="supervisors">Supervisors Only</option>
+              <option value="student">Students Only</option>
+              <option value="supervisor">Supervisors Only</option>
             </select>
           </div>
           <button
@@ -118,7 +104,7 @@ const NoticeManagement = () => {
               <li key={notice._id} className="py-4 flex justify-between items-center">
                 <div>
                   <h3 className="text-lg font-medium">{notice.title}</h3>
-                  <p className="text-gray-600 text-sm">Sent to: {notice.sendTo}</p>
+                  <p className="text-gray-600 text-sm">Sent to: {notice.recipients.length} users</p>
                   <p className="text-gray-600 text-sm">Created by: {notice.sender?.name || 'Unknown'} on {new Date(notice.createdAt).toLocaleDateString()}</p>
                 </div>
                 <button
