@@ -1,17 +1,31 @@
+
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { logout } from './userSlice';
+
+const baseQuery = fetchBaseQuery({
+  baseUrl: '/api',
+  prepareHeaders: (headers, { getState }) => {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (userInfo && userInfo.token) {
+      headers.set('Authorization', `Bearer ${userInfo.token}`);
+    }
+    return headers;
+  },
+});
+
+const baseQueryWithAuth = async (args, api, extraOptions) => {
+  let result = await baseQuery(args, api, extraOptions);
+  if (result.error && result.error.status === 401) {
+    if (result.error.data.message === 'Not authorized, token expired') {
+      api.dispatch(logout());
+    }
+  }
+  return result;
+};
 
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api',
-    prepareHeaders: (headers, { getState }) => {
-      const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      if (userInfo && userInfo.token) {
-        headers.set('Authorization', `Bearer ${userInfo.token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithAuth,
   tagTypes: ['Students', 'Teachers', 'Cells', 'Notices', 'Proposals'],
   endpoints: (builder) => ({
     getStudents: builder.query({
@@ -91,10 +105,6 @@ export const apiSlice = createApi({
       query: (userId) => `/notices?userId=${userId}`,
       providesTags: ['Notices'],
     }),
-    getProposals: builder.query({
-      query: () => '/proposals',
-      providesTags: ['Proposals'],
-    }),
     getNoticeById: builder.query({
       query: (id) => `/notices/${id}`,
       providesTags: (result, error, id) => [{ type: 'Notices', id }],
@@ -112,6 +122,10 @@ export const apiSlice = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['Notices'],
+    }),
+    getProposals: builder.query({
+      query: () => '/proposals',
+      providesTags: ['Proposals'],
     }),
   }),
 });
@@ -133,4 +147,5 @@ export const {
   useGetNoticeByIdQuery,
   useMarkNoticeAsReadMutation,
   useDeleteNoticeMutation,
+  useGetProposalsQuery,
 } = apiSlice;

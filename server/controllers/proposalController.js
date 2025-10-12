@@ -1,6 +1,8 @@
+
 const Proposal = require('../models/Proposal');
 const User = require('../models/User');
 const ResearchCell = require('../models/ResearchCell');
+const stringSimilarity = require('string-similarity');
 
 // @desc    Create a new proposal
 // @route   POST /api/proposals
@@ -13,6 +15,19 @@ const createProposal = async (req, res) => {
   const department = req.user.department;
 
   try {
+    // Fuzzy string matching
+    const existingProposals = await Proposal.find({ supervisorId });
+    const newTitle = title.toLowerCase().replace(/[\s\p{P}]+/gu, "");
+
+    for (const existingProposal of existingProposals) {
+      const existingTitle = existingProposal.title.toLowerCase().replace(/[\s\p{P}]+/gu, "");
+      const similarity = stringSimilarity.compareTwoStrings(newTitle, existingTitle);
+
+      if (similarity > 0.8) {
+        return res.status(400).json({ message: 'A similar project title already exists under this supervisor. Please modify your title and try again.' });
+      }
+    }
+
     const proposal = await Proposal.create({
       title,
       abstract,
