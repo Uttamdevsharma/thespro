@@ -1,4 +1,3 @@
-
 const Proposal = require('../models/Proposal');
 const User = require('../models/User');
 const ResearchCell = require('../models/ResearchCell');
