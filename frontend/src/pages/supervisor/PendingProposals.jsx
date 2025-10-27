@@ -126,7 +126,6 @@ const PendingProposals = () => {
                   value="supervisor_only"
                   checked={acceptanceOption === 'supervisor_only'}
                   onChange={() => setAcceptanceOption('supervisor_only')}
-                  disabled={user.currentGroupCount >= 5}
                 />
                 <label htmlFor="supervisor_only" className="ml-2">Keep the group under my supervision only</label>
               </div>
@@ -136,7 +135,7 @@ const PendingProposals = () => {
                   id="supervisor_and_course_supervisor"
                   name="acceptanceOption"
                   value="supervisor_and_course_supervisor"
-                  checked={acceptanceOption === 'supervisor_and_course_supervisor' || user.currentGroupCount >= 5}
+                  checked={acceptanceOption === 'supervisor_and_course_supervisor'}
                   onChange={() => setAcceptanceOption('supervisor_and_course_supervisor')}
                 />
                 <label htmlFor="supervisor_and_course_supervisor" className="ml-2">Keep the group under my supervision + my assigned course supervisor</label>

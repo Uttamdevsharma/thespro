@@ -30,7 +30,6 @@ const DefenseSchedule = () => {
                     <th className="py-2">Type</th>
                     <th className="py-2">Supervisor</th>
                     <th className="py-2">Course Supervisor</th>
-                    <th className="py-2">Members</th>
                     <th className="py-2">Comments</th>
                   </tr>
                 </thead>
@@ -44,12 +43,14 @@ const DefenseSchedule = () => {
                       <td className="py-2">{group.proposalType}</td>
                       <td className="py-2">{group.supervisorId ? group.supervisorId.name : '-'}</td>
                       <td className="py-2">{group.courseSupervisorId ? group.courseSupervisorId.name : '-'}</td>
-                      <td className="py-2">{board.boardMembers.map(m => m.name).join(', ')}</td>
                       <td className="py-2">{board.comments.find(c => c.group === group._id)?.text || ''}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <div className="text-center mt-2 font-bold">
+                Board Members: {board.boardMembers.map(m => m.name).join(', ')}
+              </div>
             </div>
           ))}
         </div>

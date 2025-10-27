@@ -42,7 +42,6 @@ const DefenseSchedule = () => {
                     <th className="py-2">Type</th>
                     <th className="py-2">Supervisor</th>
                     <th className="py-2">Course Supervisor</th>
-                    <th className="py-2">Members</th>
                     <th className="py-2">Comments</th>
                   </tr>
                 </thead>
@@ -56,7 +55,6 @@ const DefenseSchedule = () => {
                       <td className="py-2">{group.proposalType}</td>
                       <td className="py-2">{group.supervisorId ? group.supervisorId.name : '-'}</td>
                       <td className="py-2">{group.courseSupervisorId ? group.courseSupervisorId.name : '-'}</td>
-                      <td className="py-2">{board.boardMembers.map(m => m.name).join(', ')}</td>
                       <td className="py-2">
                         <textarea value={comment} onChange={handleCommentChange} className="w-full px-3 py-2 border rounded-md"></textarea>
                         <button onClick={() => handleCommentSubmit(board._id, group._id)} className="bg-blue-500 text-white px-2 py-1 rounded-md mt-2">Save</button>
@@ -66,6 +64,9 @@ const DefenseSchedule = () => {
                   ))}
                 </tbody>
               </table>
+              <div className="text-center mt-2 font-bold">
+                Board Members: {board.boardMembers.map(m => m.name).join(', ')}
+              </div>
             </div>
           ))}
         </div>

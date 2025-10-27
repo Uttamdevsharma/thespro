@@ -90,13 +90,13 @@ export const apiSlice = createApi({
       providesTags: ['Proposals'],
     }),
     getSupervisorPendingProposals: builder.query({
-      query: () => '/proposals/supervisor-pending',
+      query: () => '/proposals/supervisor-pending-proposals',
       providesTags: ['Proposals'],
     }),
     updateProposalStatus: builder.mutation({
       query: ({ id, ...data }) => ({
         url: `/proposals/${id}/status`,
-        method: 'PATCH',
+        method: 'PUT',
         body: data,
       }),
       invalidatesTags: ['Proposals'],
@@ -107,8 +107,8 @@ export const apiSlice = createApi({
     }),
     forwardProposal: builder.mutation({
       query: (proposalId) => ({
-        url: `/proposals/forward/${proposalId}`,
-        method: 'POST',
+        url: `/proposals/${proposalId}/forward`,
+        method: 'PUT',
       }),
       invalidatesTags: ['Proposals'],
     }),
@@ -117,9 +117,10 @@ export const apiSlice = createApi({
       providesTags: ['Proposals'],
     }),
     rejectProposal: builder.mutation({
-      query: (proposalId) => ({
-        url: `/proposals/reject/${proposalId}`,
-        method: 'POST',
+      query: ({ id, feedback }) => ({
+        url: `/api/proposals/${id}/reject`,
+        method: 'PUT',
+        body: { feedback },
       }),
       invalidatesTags: ['Proposals'],
     }),

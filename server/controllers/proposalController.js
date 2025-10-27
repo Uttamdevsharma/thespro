@@ -183,15 +183,12 @@ const updateProposalStatus = asyncHandler(async (req, res) => {
       const potentialCourseSupervisors = await User.find({
         role: 'supervisor',
         isCourseSupervisor: true,
-        mainSupervisor: supervisor._id,
+        mainSupervisor: proposal.supervisorId,
       });
 
       let availableCourseSupervisor = null;
-      for (const cs of potentialCourseSupervisors) {
-        if (cs.currentGroupCount < cs.maxGroupCapacity) {
-          availableCourseSupervisor = cs;
-          break;
-        }
+      if (potentialCourseSupervisors.length > 0) {
+        availableCourseSupervisor = potentialCourseSupervisors[0];
       }
 
       if (!availableCourseSupervisor) {
@@ -209,7 +206,6 @@ const updateProposalStatus = asyncHandler(async (req, res) => {
 
   proposal.feedback = feedback;
   proposal.reviewedAt = new Date();
-  await supervisor.save();
 
   const updatedProposal = await proposal.save();
 
