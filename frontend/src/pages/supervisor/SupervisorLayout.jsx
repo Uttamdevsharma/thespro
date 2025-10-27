@@ -9,8 +9,11 @@ const SupervisorLayout = () => {
   const menuItems = [
     { to: '/supervisor/dashboard', label: 'Dashboard' },
     { to: '/supervisor/pending-proposals', label: 'Pending Proposals' },
+    { to: '/supervisor/all-groups', label: 'All Groups' },
     { to: '/supervisor/chat', label: 'Chat' },
     { to: '/supervisor/notice', label: 'Notice' },
+    { to: '/supervisor/defense-schedule', label: 'Defense Schedule' },
+    { to: '/supervisor/defense-result', label: 'Defense Result' },
   ];
 
   return (
@@ -48,20 +51,46 @@ const SupervisorLayout = () => {
         >
           <nav className="flex-grow">
             <ul>
-              {menuItems.map((item) => (
-                <li key={item.to} className="mb-2">
-                  <Link
-                    to={item.to}
-                    onClick={() => setActiveMenu(item.to)}
-                    className={`block py-2 px-4 rounded transition-colors duration-200
-                      ${
-                        activeMenu === item.to
-                          ? 'bg-green-500 text-white' // active menu
-                          : 'hover:bg-white hover:text-black' // hover effect
-                      }`}
-                  >
-                    {item.label}
-                  </Link>
+              {menuItems.map((item, index) => (
+                <li key={index} className="mb-2">
+                  {item.to ? (
+                    <Link
+                      to={item.to}
+                      onClick={() => setActiveMenu(item.to)}
+                      className={`block py-2 px-4 rounded transition-colors duration-200
+                        ${
+                          activeMenu === item.to
+                            ? 'bg-green-500 text-white' // active menu
+                            : 'hover:bg-white hover:text-black' // hover effect
+                        }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <>
+                      <span className="block py-2 px-4 font-semibold text-gray-700">
+                        {item.label}
+                      </span>
+                      <ul className="ml-4">
+                        {item.children.map((child, childIndex) => (
+                          <li key={childIndex} className="mb-1">
+                            <Link
+                              to={child.to}
+                              onClick={() => setActiveMenu(child.to)}
+                              className={`block py-2 px-4 rounded transition-colors duration-200
+                                ${
+                                  activeMenu === child.to
+                                    ? 'bg-green-500 text-white' // active menu
+                                    : 'hover:bg-white hover:text-black' // hover effect
+                                }`}
+                            >
+                              {child.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
@@ -74,7 +103,6 @@ const SupervisorLayout = () => {
         </main>
       </div>
     </div>
-  );
-};
+  );};
 
 export default SupervisorLayout;

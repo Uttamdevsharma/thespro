@@ -88,7 +88,7 @@ const Chat = () => {
 
     try {
       const { data } = await axios.post(
-        'http://localhost:5000/api/upload/chat-file',
+        'http://localhost:5005/api/upload/chat-file',
         formData,
         config
       );

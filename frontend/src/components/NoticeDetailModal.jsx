@@ -14,7 +14,7 @@ const NoticeDetailModal = ({ showModal, onClose, notice }) => {
           <div className="mb-4">
             <p className="text-sm font-semibold text-gray-800">Attachment:</p>
             <a
-              href={`http://localhost:5000${notice.file}`}
+              href={`http://localhost:5005${notice.file}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline"

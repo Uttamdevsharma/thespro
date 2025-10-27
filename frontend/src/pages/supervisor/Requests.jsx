@@ -27,7 +27,7 @@ const Requests = () => {
 
     try {
       // Fetch all users (students) to map UIDs to names
-      const { data: usersData } = await axios.get('http://localhost:5000/api/users/all', config);
+      const { data: usersData } = await axios.get('http://localhost:5005/api/users/all', config);
       const namesMap = {};
       usersData.forEach(d => {
         namesMap[d._id] = d.name;
@@ -35,7 +35,7 @@ const Requests = () => {
       setStudentNames(namesMap);
 
       // Fetch all research cells to map IDs to titles
-      const { data: cellsData } = await axios.get('http://localhost:5000/api/researchcells', config);
+      const { data: cellsData } = await axios.get('http://localhost:5005/api/researchcells', config);
       const cellMap = {};
       cellsData.forEach(d => {
         cellMap[d._id] = d.title;
@@ -43,7 +43,7 @@ const Requests = () => {
       setCellNames(cellMap);
 
       // Fetch pending proposals for the current supervisor
-      const { data: proposalsData } = await axios.get('http://localhost:5000/api/proposals/supervisor-pending-proposals', config);
+      const { data: proposalsData } = await axios.get('http://localhost:5005/api/proposals/supervisor-pending-proposals', config);
       setProposals(proposalsData.map(p => ({ id: p._id, ...p })));
     } catch (error) {
       console.error("Error fetching pending proposals: ", error);
@@ -61,7 +61,7 @@ const Requests = () => {
     if (!selectedProposal) return;
 
     try {
-      await axios.put(`http://localhost:5000/api/proposals/${selectedProposal.id}/status`, {
+      await axios.put(`http://localhost:5005/api/proposals/${selectedProposal.id}/status`, {
         status: newStatus,
         feedback: feedback,
       }, config);

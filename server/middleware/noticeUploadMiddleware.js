@@ -1,5 +1,5 @@
-const multer = require('multer');
-const path = require('path');
+import multer from 'multer';
+import path from 'path';
 
 // Set storage engine for notices
 const noticeStorage = multer.diskStorage({
@@ -36,4 +36,4 @@ const uploadNotice = multer({
   },
 }).single('noticeFile'); // 'noticeFile' is the name of the field in the form
 
-module.exports = uploadNotice;
+export default uploadNotice;

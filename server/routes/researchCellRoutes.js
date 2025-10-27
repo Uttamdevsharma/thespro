@@ -1,7 +1,7 @@
-const express = require('express');
-const { getResearchCells, addResearchCell } = require('../controllers/researchCellController');
-const { protect } = require('../middleware/authMiddleware');
-const { authorizeRoles } = require('../middleware/roleMiddleware');
+import express from 'express';
+import { getResearchCells, addResearchCell } from '../controllers/researchCellController.js';
+import { protect } from '../middleware/authMiddleware.js';
+import { authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -9,4 +9,4 @@ router.route('/')
   .get(protect, getResearchCells)
   .post(protect, authorizeRoles('committee'), addResearchCell);
 
-module.exports = router;
+export default router;

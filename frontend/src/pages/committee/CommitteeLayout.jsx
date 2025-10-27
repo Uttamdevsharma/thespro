@@ -12,7 +12,12 @@ const CommitteeLayout = () => {
     { to: '/committee/research-cells', label: 'Research Cells' },
     { to: '/committee/cell-members', label: 'Cell Members' },
     { to: '/committee/committee-members', label: 'Committee Members' },
+    { to: '/committee/pending-proposals', label: 'Pending Proposals' },
     { to: '/committee/notices', label: 'Notices' },
+    { to: '/committee/manage-course-supervisors', label: 'Manage Course Supervisors' },
+    { to: '/committee/set-submission-dates', label: 'Set Submission Dates' },
+    { to: '/committee/all-groups', label: 'All Groups' },
+    { to: '/committee/defense-schedule', label: 'Defense Schedule' },
   ];
 
   return (

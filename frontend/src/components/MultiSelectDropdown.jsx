@@ -30,8 +30,8 @@ const MultiSelectDropdown = ({ allStudents, members, setMembers, currentUser }) 
     };
   }, []);
 
-  const selectedStudentNames = members
-    .map(student => student.name)
+  const selectedStudentsDisplay = members
+    .map(student => `${student.name} - ${student.studentId}`)
     .join(', ');
 
   return (
@@ -41,7 +41,7 @@ const MultiSelectDropdown = ({ allStudents, members, setMembers, currentUser }) 
         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm cursor-pointer h-10 flex items-center justify-between"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="truncate">{selectedStudentNames || 'Select members...'}</span>
+        <span className="truncate">{selectedStudentsDisplay || 'Select members...'}</span>
         <svg className={`w-5 h-5 text-gray-500 transform transition-transform ${isOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
         </svg>
@@ -62,7 +62,7 @@ const MultiSelectDropdown = ({ allStudents, members, setMembers, currentUser }) 
                       disabled={members.length >= 2 && !members.some(member => member._id === student._id)}
                       className="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out disabled:opacity-50"
                     />
-                    <span>{student.name}</span>
+                    <span>{`${student.name} - ${student.studentId}`}</span>
                   </label>
                 </li>
               ))}

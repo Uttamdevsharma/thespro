@@ -19,14 +19,14 @@ const ResearchCells = () => {
   const fetchCellsAndSupervisors = async () => {
     if (!user || !user.token) return;
     try {
-      const { data: cellsData } = await axios.get('http://localhost:5000/api/researchcells', config);
+      const { data: cellsData } = await axios.get('http://localhost:5005/api/researchcells', config);
       const cellsList = cellsData.map((cell) => ({
         id: cell._id,
         ...cell,
       }));
       setCells(cellsList);
 
-      const { data: supervisorsData } = await axios.get('http://localhost:5000/api/users/supervisors', config);
+      const { data: supervisorsData } = await axios.get('http://localhost:5005/api/users/supervisors', config);
       setSupervisors(supervisorsData);
 
     } catch (error) {
@@ -52,7 +52,7 @@ const ResearchCells = () => {
       return;
     }
     try {
-      await axios.post('http://localhost:5000/api/researchcells', formData, config);
+      await axios.post('http://localhost:5005/api/researchcells', formData, config);
       fetchCellsAndSupervisors(); // Re-fetch all data
       setFormData({ title: '', description: '' });
       toast.success('Research Cell Added.');

@@ -28,7 +28,7 @@ const Profile = () => {
       }
 
       try {
-        const { data } = await axios.get('http://localhost:5000/api/users/profile', config);
+        const { data } = await axios.get('http://localhost:5005/api/users/profile', config);
         setName(data.name || '');
         setEmail(data.email || '');
         setProfilePictureURL(data.profilePicture || '');
@@ -54,7 +54,7 @@ const Profile = () => {
 
     try {
       // Update name
-      await axios.put('http://localhost:5000/api/users/profile', { name }, config);
+      await axios.put('http://localhost:5005/api/users/profile', { name }, config);
 
       // Update password if newPassword is provided
       if (newPassword) {
@@ -63,7 +63,7 @@ const Profile = () => {
           setLoading(false);
           return;
         }
-        await axios.put('http://localhost:5000/api/users/update-password', { currentPassword, newPassword }, config);
+        await axios.put('http://localhost:5005/api/users/update-password', { currentPassword, newPassword }, config);
         toast.success('Password updated successfully!');
         setCurrentPassword('');
         setNewPassword('');
@@ -74,14 +74,14 @@ const Profile = () => {
         const formData = new FormData();
         formData.append('profilePicture', profilePicture);
 
-        await axios.post('http://localhost:5000/api/users/profile-picture', formData, {
+        await axios.post('http://localhost:5005/api/users/profile-picture', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${user?.token}`,
           },
         });
         // After successful upload, re-fetch user data to get the updated URL
-        const { data: updatedUserData } = await axios.get('http://localhost:5000/api/users/profile', config);
+        const { data: updatedUserData } = await axios.get('http://localhost:5005/api/users/profile', config);
         setProfilePictureURL(updatedUserData.profilePicture || '');
         toast.success('Profile picture updated successfully!');
       }

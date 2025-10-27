@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const UserSchema = new mongoose.Schema({
   name: {
@@ -38,6 +38,29 @@ const UserSchema = new mongoose.Schema({
     ref: 'ResearchCell',
     default: [],
   }],
+  currentCGPA: {
+    type: Number,
+    required: function() { return this.role === 'student'; },
+  },
+  maxGroupCapacity: {
+    type: Number,
+    default: 5,
+    required: function() { return this.role === 'supervisor'; },
+  },
+  currentGroupCount: {
+    type: Number,
+    default: 0,
+    required: function() { return this.role === 'supervisor'; },
+  },
+  isCourseSupervisor: {
+    type: Boolean,
+    default: false,
+  },
+  mainSupervisor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: function() { return this.isCourseSupervisor; },
+  },
 }, { timestamps: true });
 
 // Hash password before saving
@@ -54,4 +77,4 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model('User', UserSchema);
+export default mongoose.model('User', UserSchema);

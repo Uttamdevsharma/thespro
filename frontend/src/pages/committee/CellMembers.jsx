@@ -22,7 +22,7 @@ const CellMembers = () => {
       };
 
       try {
-        const { data: teachersData } = await axios.get('http://localhost:5000/api/users/supervisors', config);
+        const { data: teachersData } = await axios.get('http://localhost:5005/api/users/supervisors', config);
         
         const teachersList = teachersData
           .map(teacher => {

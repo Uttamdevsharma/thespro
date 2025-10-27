@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
 import { useGetNoticesQuery } from '../../features/apiSlice';
 import NoticeItem from '../../components/NoticeItem';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const user = useSelector(selectUser);
@@ -16,37 +17,22 @@ const Dashboard = () => {
 
   const committeeNotices = notices ? notices.filter(notice => notice.sender.role === 'committee') : [];
 
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user || !user.token) {
-        setLoading(false);
-        return;
-      }
-      const config = {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      };
-
-      try {
-        // Fetch supervisor's profile with populated research cells
-        const profileResponse = await axios.get('http://localhost:5000/api/users/profile', config);
-        setResearchCells(profileResponse.data.researchCells || []);
-
-        // Fetch proposals assigned to the current supervisor
-        const proposalsResponse = await axios.get('http://localhost:5000/api/proposals/supervisor-proposals', config);
-        setProposals(proposalsResponse.data || []);
-
-      } catch (error) {
-        console.error("Error fetching dashboard data: ", error);
-      } finally {
-        setLoading(false);
-      }
+  const fetchProposals = async () => {
+    if (!user || !user.token) return;
+    const config = {
+      headers: {
+        Authorization: `Bearer ${user.token}`,
+      },
     };
+    try {
+      const proposalsResponse = await axios.get('http://localhost:5005/api/proposals/supervisor-proposals', config);
+      setProposals(proposalsResponse.data || []);
+    } catch (error) {
+      console.error("Error fetching proposals: ", error);
+      toast.error("Failed to fetch proposals.");
+    }
+  };
 
-    fetchData();
-  }, [user]);
 
   const approvedProposals = proposals.filter(p => p.status === 'Approved');
 
@@ -62,22 +48,22 @@ const Dashboard = () => {
 
     if (type === 'thesis') {
       title = 'Thesis Groups';
-      items = approved.filter(p => p.type === 'Thesis').map(p => ({ 
-        title: p.title, 
-        members: p.createdBy.name 
+      items = approved.filter(p => p.type === 'Thesis').map(p => ({
+        title: p.title,
+        members: p.createdBy.name
       }));
     } else if (type === 'project') {
       title = 'Project Groups';
-      items = approved.filter(p => p.type === 'Project').map(p => ({ 
-        title: p.title, 
-        members: p.createdBy.name 
+      items = approved.filter(p => p.type === 'Project').map(p => ({
+        title: p.title,
+        members: p.createdBy.name
       }));
     } else if (type === 'total') {
       title = 'All Approved Groups';
-      items = approved.map(p => ({ 
-        title: p.title, 
-        type: p.type, 
-        members: p.createdBy.name 
+      items = approved.map(p => ({
+        title: p.title,
+        type: p.type,
+        members: p.createdBy.name
       }));
     } else if (type === 'researchCells') {
       title = 'Assigned Research Cells';
@@ -90,6 +76,36 @@ const Dashboard = () => {
     setModalContent({ title, items });
     setShowModal(true);
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user || !user.token) {
+        setLoading(false);
+        return;
+      }
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+
+      try {
+        // Fetch supervisor's profile with populated research cells
+        const profileResponse = await axios.get('http://localhost:5005/api/users/profile', config);
+        setResearchCells(profileResponse.data.researchCells || []);
+
+        await fetchProposals();
+        setLoading(false); // Moved here
+
+      } catch (error) {
+        console.error("Error fetching dashboard data: ", error);
+        toast.error("Failed to fetch dashboard data.");
+        setLoading(false); // Added here
+      }
+    };
+
+    fetchData();
+  }, [user]); // Dependency array
 
   if (loading) {
     return <div className="p-6 bg-white rounded-lg shadow-md">Loading dashboard...</div>;
@@ -127,8 +143,10 @@ const Dashboard = () => {
             </div>
           </div>
 
+
+
           <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-            <h2 className="text-xl font-semibold mb-4">Student Proposals</h2>
+            <h2 className="text-xl font-semibold mb-4">All Proposals</h2>
             {loading ? (
               <p>Loading proposals...</p>
             ) : proposals && proposals.length > 0 ? (
@@ -148,7 +166,7 @@ const Dashboard = () => {
                       <tr key={proposal._id}>
                         <td className="py-2 px-4 border-b border-gray-200 text-sm">{proposal.title}</td>
                         <td className="py-2 px-4 border-b border-gray-200 text-sm">{proposal.createdBy?.name || 'N/A'}</td>
-                        <td className="py-2 px-4 border-b border-gray-200 text-sm">{proposal.researchCell?.title || 'N/A'}</td>
+                        <td className="py-2 px-4 border-b border-gray-200 text-sm">{proposal.researchCellId?.title || 'N/A'}</td>
                         <td className="py-2 px-4 border-b border-gray-200 text-sm">{proposal.status}</td>
                         <td className="py-2 px-4 border-b border-gray-200 text-sm">{new Date(proposal.updatedAt || proposal.createdAt).toLocaleDateString()}</td>
                       </tr>

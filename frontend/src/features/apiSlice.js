@@ -1,9 +1,8 @@
-
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { logout } from './userSlice';
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: 'http://localhost:5000/api',
+  baseUrl: 'http://localhost:5005/api',
   prepareHeaders: (headers, { getState }) => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     if (userInfo && userInfo.token) {
@@ -26,7 +25,7 @@ const baseQueryWithAuth = async (args, api, extraOptions) => {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithAuth,
-  tagTypes: ['Students', 'Teachers', 'Cells', 'Notices', 'Proposals'],
+  tagTypes: ['Students', 'Teachers', 'Cells', 'Notices', 'Proposals', 'DefenseBoards', 'Rooms', 'ScheduleSlots'],
   endpoints: (builder) => ({
     getStudents: builder.query({
       query: () => '/users/students',
@@ -72,9 +71,92 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ['Cells'],
     }),
+    createProposal: builder.mutation({
+      query: (newProposal) => ({
+        url: '/proposals',
+        method: 'POST',
+        body: newProposal,
+      }),
+      invalidatesTags: ['Proposals'],
+    }),
     getProposalsBySupervisor: builder.query({
-      query: (id) => `/proposals/supervisor-proposals`,
+      query: ({ supervisorId, filter }) => {
+        let url = `/proposals/supervisor-proposals`;
+        if (filter) {
+          url += `?filter=${filter}`;
+        }
+        return url;
+      },
       providesTags: ['Proposals'],
+    }),
+    getSupervisorPendingProposals: builder.query({
+      query: () => '/proposals/supervisor-pending',
+      providesTags: ['Proposals'],
+    }),
+    updateProposalStatus: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/proposals/${id}/status`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['Proposals'],
+    }),
+    getStudentProposals: builder.query({
+      query: () => '/proposals/student-proposals',
+      providesTags: ['Proposals'],
+    }),
+    forwardProposal: builder.mutation({
+      query: (proposalId) => ({
+        url: `/proposals/forward/${proposalId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Proposals'],
+    }),
+    getPendingProposalsByCell: builder.query({
+      query: () => '/proposals/pending-by-cell',
+      providesTags: ['Proposals'],
+    }),
+    rejectProposal: builder.mutation({
+      query: (proposalId) => ({
+        url: `/proposals/reject/${proposalId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Proposals'],
+    }),
+    createDefenseBoard: builder.mutation({
+      query: (newDefenseBoard) => ({
+        url: '/defenseboards',
+        method: 'POST',
+        body: newDefenseBoard,
+      }),
+      invalidatesTags: ['DefenseBoards'],
+    }),
+    deleteDefenseBoard: builder.mutation({
+      query: (id) => ({
+        url: `/defenseboards/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['DefenseBoards'],
+    }),
+    getAllDefenseBoards: builder.query({
+      query: () => '/defenseboards',
+      providesTags: ['DefenseBoards'],
+    }),
+    updateDefenseBoard: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/defenseboards/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['DefenseBoards'],
+    }),
+    addOrUpdateComment: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/defenseboards/${id}/comments`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['DefenseBoards'],
     }),
     // Notice Endpoints
     createCommitteeNotice: builder.mutation({
@@ -103,62 +185,172 @@ export const apiSlice = createApi({
     }),
     getNotices: builder.query({
       query: (userId) => `/notices?userId=${userId}`,
-      providesTags: ['Notices'],
+      providesTags: ['Notice'],
     }),
     getNoticeById: builder.query({
       query: (id) => `/notices/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Notices', id }],
+      providesTags: (result, error, id) => [{ type: 'Notice', id }],
+    }),
+    createNotice: builder.mutation({
+      query: (newNotice) => ({
+        url: '/notices',
+        method: 'POST',
+        body: newNotice,
+      }),
+      invalidatesTags: ['Notice'],
+    }),
+    updateNotice: builder.mutation({
+      query: ({ id, updatedNotice }) => ({
+        url: `/notices/${id}`,
+        method: 'PUT',
+        body: updatedNotice,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Notice', id }],
     }),
     markNoticeAsRead: builder.mutation({
       query: (id) => ({
-        url: `/notices/${id}/read`,
+        url: `/notices/mark-as-read/${id}`,
         method: 'PUT',
       }),
-      invalidatesTags: ['Notices'],
+      invalidatesTags: (result, error, id) => [{ type: 'Notice', id }],
     }),
     deleteNotice: builder.mutation({
       query: (id) => ({
         url: `/notices/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Notices'],
+      invalidatesTags: ['Notice'],
+    }),
+    getSupervisorDefenseSchedule: builder.query({
+      query: () => '/defenseboards/supervisor-schedule',
+      providesTags: ['DefenseBoards'],
+    }),
+    getStudentDefenseSchedule: builder.query({
+      query: () => '/defenseboards/student-schedule',
+      providesTags: ['DefenseBoards'],
+    }),
+    getRooms: builder.query({
+      query: () => '/rooms',
+      providesTags: ['Rooms'],
+    }),
+    addRoom: builder.mutation({
+      query: (room) => ({
+        url: '/rooms',
+        method: 'POST',
+        body: room,
+      }),
+      invalidatesTags: ['Rooms'],
+    }),
+    updateRoom: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/rooms/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Rooms'],
+    }),
+    deleteRoom: builder.mutation({
+      query: (id) => ({
+        url: `/rooms/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Rooms'],
+    }),
+    getScheduleSlots: builder.query({
+      query: () => '/schedule-slots',
+      providesTags: ['ScheduleSlots'],
+    }),
+    addScheduleSlot: builder.mutation({
+      query: (slot) => ({
+        url: '/schedule-slots',
+        method: 'POST',
+        body: slot,
+      }),
+      invalidatesTags: ['ScheduleSlots'],
+    }),
+    updateScheduleSlot: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/schedule-slots/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['ScheduleSlots'],
+    }),
+    deleteScheduleSlot: builder.mutation({
+      query: (id) => ({
+        url: `/schedule-slots/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['ScheduleSlots'],
     }),
     getProposals: builder.query({
-      query: () => '/proposals/committee-proposals',
+      query: () => '/proposals',
       providesTags: ['Proposals'],
     }),
-    getStudentProposals: builder.query({
-      query: (userId) => `/proposals/student-proposals?userId=${userId}`,
+    getAvailableProposals: builder.query({
+      query: () => '/proposals/available-proposals',
       providesTags: ['Proposals'],
-    }),
-    createProposal: builder.mutation({
-      query: (proposalData) => ({
-        url: '/proposals',
-        method: 'POST',
-        body: proposalData,
-      }),
-      invalidatesTags: ['Proposals'],
     }),
   }),
 });
 
 export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useLogoutMutation,
+  useGetUsersQuery,
+  useGetUserDetailsQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
   useGetStudentsQuery,
-  useUpdateStudentMutation,
   useGetTeachersQuery,
-  useAddTeacherMutation,
-  useAssignCellMutation,
-  useGetResearchCellsQuery,
-  useAddResearchCellMutation,
+  useGetProposalsQuery,
+  useGetProposalByIdQuery,
+  useCreateProposalMutation,
+  useUpdateProposalMutation,
+  useDeleteProposalMutation,
   useGetProposalsBySupervisorQuery,
+  useGetSupervisorPendingProposalsQuery,
+  useUpdateProposalStatusMutation,
+  useForwardProposalMutation,
+  useGetPendingProposalsByCellQuery,
+  useRejectProposalMutation,
+  useCreateDefenseBoardMutation,
+  useDeleteDefenseBoardMutation,
+  useGetAllDefenseBoardsQuery,
+  useUpdateDefenseBoardMutation,
+  useAddOrUpdateCommentMutation,
+  useGetGroupsQuery,
+  useGetGroupByIdQuery,
+  useCreateGroupMutation,
+  useUpdateGroupMutation,
+  useDeleteGroupMutation,
+  useAssignBoardMembersMutation,
+  useAssignGroupsMutation,
+  useGetResearchCellsQuery,
   useCreateCommitteeNoticeMutation,
   useGetCommitteeSentNoticesQuery,
   useSendNoticeToGroupMutation,
   useGetSupervisorSentNoticesQuery,
   useGetNoticesQuery,
   useGetNoticeByIdQuery,
+  useCreateNoticeMutation,
   useMarkNoticeAsReadMutation,
+  useUpdateNoticeMutation,
   useDeleteNoticeMutation,
-  useGetProposalsQuery,
+  useGetSupervisorDefenseScheduleQuery,
+  useGetSupervisorDefenseResultQuery,
+  useUpdateSupervisorCommentMutation,
+  useGetStudentDefenseScheduleQuery,
   useGetStudentProposalsQuery,
+  useGetSupervisorProposalsQuery,
+  useGetRoomsQuery,
+  useAddRoomMutation,
+  useUpdateRoomMutation,
+  useDeleteRoomMutation,
+  useGetScheduleSlotsQuery,
+  useAddScheduleSlotMutation,
+  useUpdateScheduleSlotMutation,
+  useDeleteScheduleSlotMutation,
+  useGetAvailableProposalsQuery,
 } = apiSlice;

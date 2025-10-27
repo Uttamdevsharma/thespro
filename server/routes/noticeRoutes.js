@@ -1,17 +1,8 @@
 
-const express = require('express');
-const {
-  createCommitteeNotice,
-  getCommitteeSentNotices,
-  sendNoticeToGroup,
-  getSupervisorSentNotices,
-  getNotices,
-  getNoticeById,
-  markNoticeAsRead,
-  deleteNotice,
-} = require('../controllers/noticeController');
-const { protect } = require('../middleware/authMiddleware');
-const { authorizeRoles } = require('../middleware/roleMiddleware');
+import express from 'express';
+import { createCommitteeNotice, getCommitteeSentNotices, sendNoticeToGroup, getSupervisorSentNotices, getNotices, getNoticeById, markNoticeAsRead, deleteNotice, } from '../controllers/noticeController.js';
+import { protect } from '../middleware/authMiddleware.js';
+import { authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -36,4 +27,4 @@ router.route('/:id')
 
 router.route('/:id/read').put(protect, markNoticeAsRead);
 
-module.exports = router;
+export default router;

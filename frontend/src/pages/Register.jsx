@@ -9,17 +9,19 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [studentId, setStudentId] = useState('');
   const [department, setDepartment] = useState('CSE');
+  const [currentCGPA, setCurrentCGPA] = useState('');
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/auth/register', {
+      await axios.post('http://localhost:5005/api/auth/register', {
         name,
         email,
         password,
         studentId,
         department,
+        currentCGPA,
         role: 'student', // Default role
         profilePicture: '',
       });
@@ -138,6 +140,22 @@ const Register = () => {
                 <option value="BBA">BBA</option>
                 <option value="Textile">Textile</option>
               </select>
+            </div>
+
+            {/* Current CGPA */}
+            <div>
+              <label className="block text-gray-700 text-sm font-semibold mb-2" htmlFor="currentCGPA">
+                Current CGPA
+              </label>
+              <input
+                id="currentCGPA"
+                type="number"
+                placeholder="Enter your current CGPA"
+                value={currentCGPA}
+                onChange={(e) => setCurrentCGPA(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-gray-700 shadow-sm"
+                required
+              />
             </div>
 
             {/* Submit Button */}

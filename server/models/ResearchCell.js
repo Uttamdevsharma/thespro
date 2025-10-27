@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const ResearchCellSchema = new mongoose.Schema({
   title: {
@@ -16,4 +16,4 @@ const ResearchCellSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-module.exports = mongoose.model('ResearchCell', ResearchCellSchema);
+export default mongoose.model('ResearchCell', ResearchCellSchema);

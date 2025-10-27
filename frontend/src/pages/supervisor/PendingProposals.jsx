@@ -1,126 +1,156 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
 import toast from 'react-hot-toast';
+import { useUpdateProposalStatusMutation, useGetSupervisorPendingProposalsQuery } from '../../features/apiSlice';
 
 const PendingProposals = () => {
   const user = useSelector(selectUser);
-  const [proposals, setProposals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedProposal, setSelectedProposal] = useState(null);
+  const { data: proposals, isLoading } = useGetSupervisorPendingProposalsQuery();
+  const [expandedProposalId, setExpandedProposalId] = useState(null);
   const [feedback, setFeedback] = useState('');
+  const [showFeedbackInputFor, setShowFeedbackInputFor] = useState(null);
+  const [showAcceptanceModalFor, setShowAcceptanceModalFor] = useState(null);
+  const [acceptanceOption, setAcceptanceOption] = useState('supervisor_only');
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${user?.token}`,
-    },
-  };
+  const [updateProposalStatus, { isLoading: isUpdating }] = useUpdateProposalStatusMutation();
 
-  const fetchProposals = async () => {
-    if (!user || !user.token) {
-      setLoading(false);
-      return;
-    }
-
+  const handleStatusChange = async (proposalId, newStatus, acceptanceOption) => {
     try {
-      const { data: proposalsData } = await axios.get('http://localhost:5000/api/proposals/supervisor-pending-proposals', config);
-      console.log('proposalsData:', proposalsData);
-      setProposals(proposalsData.map(p => ({ id: p._id, ...p })));
-    } catch (error) {
-      console.error("Error fetching pending proposals: ", error);
-      toast.error('Failed to fetch pending proposals.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProposals();
-  }, [user]);
-
-  const handleStatusChange = async (newStatus) => {
-    if (!selectedProposal) return;
-
-    try {
-      await axios.put(`http://localhost:5000/api/proposals/${selectedProposal.id}/status`, {
-        status: newStatus,
-        feedback: feedback,
-      }, config);
-      toast.success(`Proposal ${newStatus} successfully!`);
-      setSelectedProposal(null); // Close modal
-      setFeedback(''); // Clear feedback
-      fetchProposals(); // Re-fetch proposals to update the list
+      await updateProposalStatus({ id: proposalId, status: newStatus, feedback, acceptanceOption }).unwrap();
+      if (newStatus === 'Approved') {
+        toast.success('Proposal approved successfully and group assigned correctly.');
+      } else {
+        toast.success(`Proposal ${newStatus} successfully!`);
+      }
+      setExpandedProposalId(null);
+      setFeedback('');
+      setShowFeedbackInputFor(null);
+      setShowAcceptanceModalFor(null);
     } catch (error) {
       console.error(`Error updating proposal status to ${newStatus}: `, error);
-      toast.error(`Failed to update proposal status: ${error.response?.data?.message || error.message}`);
+      toast.error(`Failed to update proposal status: ${error.data?.message || error.message}`);
     }
   };
 
-  if (loading) {
+  const handleApproveClick = (proposalId) => {
+    setShowAcceptanceModalFor(proposalId);
+  };
+
+  const handleAcceptance = () => {
+    handleStatusChange(showAcceptanceModalFor, 'Approved', acceptanceOption);
+  };
+
+  if (isLoading) {
     return <div className="p-6 bg-white rounded-lg shadow-md">Loading pending proposals...</div>;
   }
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-6">Pending Proposals</h1>
-      {proposals.length === 0 ? (
+      {!proposals || proposals.length === 0 ? (
         <p>No pending proposals found.</p>
       ) : (
         <div className="space-y-4">
-          {proposals.map((proposal) => (
-            <div key={proposal.id} className="border border-gray-200 rounded-lg p-4 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => setSelectedProposal(proposal)}>
-              <h2 className="text-xl font-semibold text-gray-800">{proposal.title}</h2>
-              <p className="text-gray-600 text-sm mb-2">Research Cell: {proposal.researchCellId.title || 'N/A'}</p>
-              <p className="text-gray-600 text-sm mb-2">Submitted By: {proposal.createdBy.name || 'N/A'}</p>
+          {proposals && proposals.map((proposal) => (
+            <div key={proposal._id} className="border border-gray-200 rounded-lg p-4 shadow-sm">
+              <div className="cursor-pointer hover:bg-gray-50 transition-colors p-2" onClick={() => setExpandedProposalId(expandedProposalId === proposal._id ? null : proposal._id)}>
+                <h2 className="text-xl font-semibold text-gray-800">{proposal.title || 'Project title here'}</h2>
+                <p className="text-gray-600 text-sm">Research Cell: {proposal.researchCellId.title || 'N/A'}</p>
+                <p className="text-gray-600 text-sm">Submitted By: {proposal.createdBy.name || 'N/A'}</p>
+              </div>
+
+              {expandedProposalId === proposal._id && (
+                <div className="mt-4 p-2 border-t border-gray-200">
+                  <p className="text-gray-700 mb-2"><strong>Submitted By:</strong> {proposal.createdBy.name || 'N/A'} - {proposal.createdBy.studentId}</p>
+                  <p className="text-gray-700 mb-2"><strong>Research Cell:</strong> {proposal.researchCellId.title || 'N/A'}</p>
+                  <p className="text-gray-700 mb-4">
+                    <strong>Group Members:</strong>
+                    {proposal.members.map((member, index) => (
+                      <span key={member._id} className="inline-block bg-gray-100 rounded-full px-2 py-0.5 text-xs font-medium text-gray-700 mr-1">
+                        {member.name || 'Unknown'} - {member.studentId} (CGPA: {member.currentCGPA})
+                      </span>
+                    ))}
+                  </p>
+
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button
+                      onClick={() => handleApproveClick(proposal._id)}
+                      className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded text-sm"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => setShowFeedbackInputFor(proposal._id)}
+                      className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded text-sm"
+                    >
+                      Deny
+                    </button>
+                  </div>
+
+                  {showFeedbackInputFor === proposal._id && (
+                    <div className="mt-4">
+                      <textarea
+                        value={feedback}
+                        onChange={(e) => setFeedback(e.target.value)}
+                        rows="3"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        placeholder="Provide feedback for denial..."
+                      ></textarea>
+                      <button
+                        onClick={() => handleStatusChange(proposal._id, 'Not Approved')}
+                        disabled={!feedback}
+                        className="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded text-sm disabled:bg-gray-400"
+                      >
+                        Confirm Deny
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {selectedProposal && (
+      {showAcceptanceModalFor && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl max-w-2xl w-full">
-            <h2 className="text-2xl font-bold mb-4">Proposal Details: {selectedProposal.title}</h2>
-            <p className="text-gray-700 mb-4"><strong>Abstract:</strong> {selectedProposal.abstract}</p>
-            <p className="text-gray-700 mb-2"><strong>Submitted By:</strong> {selectedProposal.createdBy.name || 'N/A'}</p>
-            <p className="text-gray-700 mb-2"><strong>Research Cell:</strong> {selectedProposal.researchCellId.title || 'N/A'}</p>
-            <p className="text-gray-700 mb-4">
-              <strong>Group Members:</strong> 
-              {selectedProposal.members.map((member, index) => (
-                <span key={member._id} className="inline-block bg-gray-100 rounded-full px-2 py-0.5 text-xs font-medium text-gray-700 mr-1">
-                  {member.name || 'Unknown'}{index < selectedProposal.members.length - 1 ? ', ' : ''}
-                </span>
-              ))}
-            </p>
-
-            <div className="mt-4">
-              <label htmlFor="feedback" className="block text-sm font-medium text-gray-700">Feedback</label>
-              <textarea
-                id="feedback"
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                rows="3"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              ></textarea>
+          <div className="bg-white p-8 rounded-lg shadow-xl max-w-lg w-full">
+            <h2 className="text-2xl font-bold mb-4">Acceptance Options</h2>
+            <div className="space-y-4">
+              <div>
+                <input
+                  type="radio"
+                  id="supervisor_only"
+                  name="acceptanceOption"
+                  value="supervisor_only"
+                  checked={acceptanceOption === 'supervisor_only'}
+                  onChange={() => setAcceptanceOption('supervisor_only')}
+                  disabled={user.currentGroupCount >= 5}
+                />
+                <label htmlFor="supervisor_only" className="ml-2">Keep the group under my supervision only</label>
+              </div>
+              <div>
+                <input
+                  type="radio"
+                  id="supervisor_and_course_supervisor"
+                  name="acceptanceOption"
+                  value="supervisor_and_course_supervisor"
+                  checked={acceptanceOption === 'supervisor_and_course_supervisor' || user.currentGroupCount >= 5}
+                  onChange={() => setAcceptanceOption('supervisor_and_course_supervisor')}
+                />
+                <label htmlFor="supervisor_and_course_supervisor" className="ml-2">Keep the group under my supervision + my assigned course supervisor</label>
+              </div>
             </div>
-
             <div className="mt-6 flex justify-end space-x-3">
               <button
-                onClick={() => handleStatusChange('Approved')}
+                onClick={handleAcceptance}
                 className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded text-sm"
               >
-                Approve
+                Confirm
               </button>
               <button
-                onClick={() => handleStatusChange('Rejected')}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded text-sm"
-              >
-                Deny
-              </button>
-              <button
-                onClick={() => setSelectedProposal(null)}
+                onClick={() => setShowAcceptanceModalFor(null)}
                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded text-sm"
               >
                 Cancel

@@ -22,7 +22,7 @@ const ResearchCellInfo = () => {
       };
 
       try {
-        const { data: teachersData } = await axios.get('http://localhost:5000/api/users/supervisors', config);
+        const { data: teachersData } = await axios.get('http://localhost:5005/api/users/supervisors', config);
         
         // Filter for teachers who are assigned to one or more cells
         const teachersWithCells = teachersData.filter(teacher => teacher.researchCells && teacher.researchCells.length > 0);

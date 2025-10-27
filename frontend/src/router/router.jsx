@@ -10,6 +10,14 @@ import ResearchCells from '../pages/committee/ResearchCells';
 import CellMembers from '../pages/committee/CellMembers';
 import CommitteeMembers from '../pages/committee/CommitteeMembers';
 import NoticeManagement from '../pages/committee/NoticeManagement';
+import CommitteePendingProposals from '../pages/committee/CommitteePendingProposals';
+import ManageCourseSupervisors from '../pages/committee/ManageCourseSupervisors';
+import SetSubmissionDates from '../pages/committee/SetSubmissionDates';
+import AllGroups from '../pages/committee/AllGroups';
+import DefenseSchedule from '../pages/committee/DefenseSchedule'; // New import
+import CreateDefenseBoard from '../pages/committee/CreateDefenseBoard';
+import SelectGroups from '../pages/committee/SelectGroups';
+import SelectMembers from '../pages/committee/SelectMembers';
 import SupervisorDashboard from '../pages/supervisor/Dashboard';
 import SupervisorChat from '../pages/supervisor/Chat';
 import Notice from '../pages/supervisor/Notice';
@@ -25,8 +33,12 @@ import ProposalStatus from '../pages/student/ProposalStatus';
 import StudentChat from '../pages/student/Chat';
 import ResearchCellInfo from '../pages/student/ResearchCellInfo';
 import Profile from '../pages/student/Profile';
+import StudentDefenseSchedule from '../pages/student/DefenseSchedule';
 
 import PendingProposals from '../pages/supervisor/PendingProposals';
+import SupervisorAllGroups from '../pages/supervisor/AllGroups'; // New import
+import SupervisorDefenseSchedule from '../pages/supervisor/DefenseSchedule';
+import SupervisorDefenseResult from '../pages/supervisor/DefenseResult';
 
 export const router = createBrowserRouter([
   {
@@ -43,7 +55,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/committee',
-    element: <PrivateRoute><CommitteeLayout /></PrivateRoute>,
+    element: <PrivateRoute role="committee"><CommitteeLayout /></PrivateRoute>,
     children: [
       {
         path: 'dashboard',
@@ -73,11 +85,43 @@ export const router = createBrowserRouter([
         path: 'notices',
         element: <NoticeManagement />,
       },
+      {
+        path: 'pending-proposals',
+        element: <CommitteePendingProposals />,
+      },
+      {
+        path: 'manage-course-supervisors',
+        element: <ManageCourseSupervisors />,
+      },
+      {
+        path: 'set-submission-dates',
+        element: <SetSubmissionDates />,
+      },
+      {
+        path: 'all-groups',
+        element: <AllGroups />,
+      },
+      {
+        path: 'defense-schedule',
+        element: <DefenseSchedule />,
+      },
+      {
+        path: 'defense-schedule/create',
+        element: <CreateDefenseBoard />,
+      },
+      {
+        path: 'defense-schedule/select-groups',
+        element: <SelectGroups />,
+      },
+      {
+        path: 'defense-schedule/select-members',
+        element: <SelectMembers />,
+      },
     ],
   },
   {
     path: '/supervisor',
-    element: <PrivateRoute><SupervisorLayout /></PrivateRoute>,
+    element: <PrivateRoute role="supervisor"><SupervisorLayout /></PrivateRoute>,
     children: [
       {
         path: 'dashboard',
@@ -95,11 +139,23 @@ export const router = createBrowserRouter([
         path: 'pending-proposals',
         element: <PendingProposals />,
       },
+      {
+        path: 'all-groups',
+        element: <SupervisorAllGroups />,
+      },
+      {
+        path: 'defense-schedule',
+        element: <SupervisorDefenseSchedule />,
+      },
+      {
+        path: 'defense-result',
+        element: <SupervisorDefenseResult />,
+      },
     ],
   },
   {
     path: '/student',
-    element: <PrivateRoute><StudentLayout /></PrivateRoute>,
+    element: <PrivateRoute role="student"><StudentLayout /></PrivateRoute>,
     children: [
       {
         path: 'dashboard',
@@ -124,6 +180,10 @@ export const router = createBrowserRouter([
       {
         path: 'profile',
         element: <Profile />,
+      },
+      {
+        path: 'defense-schedule',
+        element: <StudentDefenseSchedule />,
       },
     ],
   },

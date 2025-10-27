@@ -1,7 +1,7 @@
-const express = require('express');
-const { protect } = require('../middleware/authMiddleware');
-const multer = require('multer'); // Import multer
-const { uploadChatFile } = require('../controllers/uploadController');
+import express from 'express';
+import { protect } from '../middleware/authMiddleware.js';
+import multer from 'multer'; // Import multer
+import { uploadChatFile } from '../controllers/uploadController.js';
 
 const router = express.Router();
 
@@ -10,4 +10,4 @@ const uploadChat = multer({ storage: multer.memoryStorage() });
 
 router.post('/chat-file', protect, uploadChat.single('file'), uploadChatFile);
 
-module.exports = router;
+export default router;

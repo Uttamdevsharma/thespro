@@ -17,7 +17,7 @@ const CommitteeMembers = () => {
     const fetchMembers = async () => {
       if (!user || !user.token) return;
       try {
-        const { data } = await axios.get('http://localhost:5000/api/users/committee-members', config);
+        const { data } = await axios.get('http://localhost:5005/api/users/committee-members', config);
         const membersList = data.map((member) => ({
           id: member._id,
           ...member,

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useLocation } from 'react-router-dom';
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../features/userSlice";
@@ -8,12 +9,14 @@ import toast from "react-hot-toast";
 const Chat = () => {
   const user = useSelector(selectUser);
   const socket = useSocket();
+  const location = useLocation(); // Add this line
   const [proposals, setProposals] = useState([]);
   const [selectedProposalId, setSelectedProposalId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState(null);
+  const [currentFilter, setCurrentFilter] = useState('my_supervision'); // Initialize filter state
   const messagesEndRef = useRef(null);
 
   const config = {
@@ -35,11 +38,12 @@ const Chat = () => {
 
       try {
         const { data } = await axios.get(
-          "http://localhost:5000/api/proposals/supervisor-proposals",
+          `http://localhost:5005/api/proposals/supervisor-proposals?filter=${currentFilter}`,
           config
         );
         setProposals(data);
         if (data?.length > 0) setSelectedProposalId(data[0]._id);
+        else setSelectedProposalId(null); // Clear selected proposal if no proposals for filter
       } catch (error) {
         console.error(error);
         toast.error("Failed to load proposals for chat.");
@@ -49,7 +53,7 @@ const Chat = () => {
     };
 
     fetchSupervisorProposals();
-  }, [user]);
+  }, [user, currentFilter]); // Add currentFilter to dependency array
 
   useEffect(() => {
     if (socket && selectedProposalId) {
@@ -92,7 +96,7 @@ const Chat = () => {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:5000/api/upload/chat-file",
+        "http://localhost:5005/api/upload/chat-file",
         formData,
         config
       );
@@ -124,20 +128,31 @@ const Chat = () => {
       {/* Header */}
       <div className="flex justify-between items-center bg-[#50C878] text-white px-6 py-3 rounded-t-xl shadow">
         <h1 className="text-xl font-semibold">Supervisor Chat</h1>
-        <select
-          value={selectedProposalId || ""}
-          onChange={(e) => setSelectedProposalId(e.target.value)}
-          className="bg-white text-gray-800 px-3 py-1 rounded-md focus:ring-2 focus:ring-green-300 focus:outline-none"
-        >
-          <option value="" disabled>
-            Select Proposal
-          </option>
-          {proposals.map((prop) => (
-            <option key={prop._id} value={prop._id}>
-              {prop.title}
+        <div className="flex items-center space-x-4">
+          <select
+            value={currentFilter}
+            onChange={(e) => setCurrentFilter(e.target.value)}
+            className="bg-white text-gray-800 px-3 py-1 rounded-md focus:ring-2 focus:ring-green-300 focus:outline-none"
+          >
+            <option value="my_supervision">Under My Supervision</option>
+            <option value="my_supervision_with_course_supervision">Under My Supervision with Course Supervision</option>
+            <option value="my_course_supervision">Under My Course Supervision</option>
+          </select>
+          <select
+            value={selectedProposalId || ""}
+            onChange={(e) => setSelectedProposalId(e.target.value)}
+            className="bg-white text-gray-800 px-3 py-1 rounded-md focus:ring-2 focus:ring-green-300 focus:outline-none"
+          >
+            <option value="" disabled>
+              Select Proposal
             </option>
-          ))}
-        </select>
+            {proposals.map((prop) => (
+              <option key={prop._id} value={prop._id}>
+                {prop.title}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Messages */}

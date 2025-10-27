@@ -20,7 +20,7 @@ const AllTeachers = () => {
   const fetchTeachers = async () => {
     if (!user || !user.token) return;
     try {
-      const { data } = await axios.get('http://localhost:5000/api/users/supervisors', config);
+      const { data } = await axios.get('http://localhost:5005/api/users/supervisors', config);
       const teachersList = data.map((teacher) => ({
         id: teacher._id,
         ...teacher,
@@ -35,7 +35,7 @@ const AllTeachers = () => {
   const fetchCells = async () => {
     if (!user || !user.token) return;
     try {
-      const { data } = await axios.get('http://localhost:5000/api/researchcells', config);
+      const { data } = await axios.get('http://localhost:5005/api/researchcells', config);
       const cellsList = data.map((cell) => ({
         id: cell._id,
         ...cell,
@@ -65,7 +65,7 @@ const AllTeachers = () => {
       return;
     }
     try {
-      await axios.post('http://localhost:5000/api/users/add-supervisor', formData, config);
+      await axios.post('http://localhost:5005/api/users/add-supervisor', formData, config);
       fetchTeachers(); // Re-fetch to ensure full synchronization
       setFormData({ name: '', email: '', password: '' });
       toast.success('Teacher added successfully.');
@@ -87,7 +87,7 @@ const AllTeachers = () => {
     }
 
     try {
-      await axios.put(`http://localhost:5000/api/users/${teacherId}/assign-cell`, { cellId }, config);
+      await axios.put(`http://localhost:5005/api/users/${teacherId}/assign-cell`, { cellId }, config);
       fetchTeachers(); // Re-fetch to ensure full synchronization
       setSelectedCells(prev => ({ ...prev, [teacherId]: '' }));
       toast.success('Cell assigned successfully.');

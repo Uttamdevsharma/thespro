@@ -1,30 +1,35 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const http = require('http');
-const { Server } = require('socket.io');
+import 'dotenv/config'; // Correct way to load dotenv in ES modules
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
 
-const authRoutes = require('./routes/authRoutes');
-const researchCellRoutes = require('./routes/researchCellRoutes');
-const proposalRoutes = require('./routes/proposalRoutes');
-const userRoutes = require('./routes/userRoutes');
-const noticeRoutes = require('./routes/noticeRoutes');
-const uploadRoutes = require('./routes/uploadRoutes');
+import http from 'http';
+import { Server } from 'socket.io';
+
+import authRoutes from './routes/authRoutes.js';
+import researchCellRoutes from './routes/researchCellRoutes.js';
+import proposalRoutes from './routes/proposalRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import noticeRoutes from './routes/noticeRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
+import committeeRoutes from './routes/committeeRoutes.js';
+import defenseBoardRoutes from './routes/defenseBoardRoutes.js';
+import roomRoutes from './routes/roomRoutes.js';
+import scheduleSlotRoutes from './routes/scheduleSlotRoutes.js';
 
 // Import Chat Models and Controllers
-const Message = require('./models/Message');
-const Proposal = require('./models/Proposal');
-const User = require('./models/User');
+import Message from './models/Message.js'; // Ensure .js extension
+import Proposal from './models/Proposal.js'; // Ensure .js extension
+import User from './models/User.js'; // Ensure .js extension
 
 const app = express();
 const httpServer = http.createServer(app); // Create HTTP server from Express app
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5005;
 
 // Socket.io setup
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173", // Allow your frontend to connect
+    origin: ["http://localhost:5173", "http://localhost:5174"], // Allow your frontend to connect
     methods: ["GET", "POST"]
   }
 });
@@ -32,7 +37,7 @@ const io = new Server(httpServer, {
 app.set('socketio', io);
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: ["http://localhost:5173", "http://localhost:5174"] }));
 app.use(express.json());
 
 // MongoDB Connection
@@ -47,6 +52,25 @@ app.use('/api/proposals', proposalRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/committee', committeeRoutes);
+app.use('/api/defenseboards', defenseBoardRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/schedule-slots', scheduleSlotRoutes);
+
+// Basic route
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode);
+  res.json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  });
+});
 
 // Socket.io Logic
 io.on('connection', (socket) => {
@@ -108,11 +132,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);
   });
-});
-
-// Basic route
-app.get('/', (req, res) => {
-  res.send('API is running...');
 });
 
 // Start server

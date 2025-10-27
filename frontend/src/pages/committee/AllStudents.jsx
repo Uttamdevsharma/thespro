@@ -20,7 +20,7 @@ const AllStudents = () => {
     };
 
     try {
-      const { data } = await axios.get('http://localhost:5000/api/users/students', config);
+      const { data } = await axios.get('http://localhost:5005/api/users/students', config);
       setStudents(data);
     } catch (error) {
       console.error('Failed to fetch students:', error);

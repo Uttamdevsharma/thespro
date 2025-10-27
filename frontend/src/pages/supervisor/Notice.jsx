@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
 import toast from 'react-hot-toast';
@@ -13,8 +14,13 @@ const Notice = () => {
   const [selectedProposalId, setSelectedProposalId] = useState('');
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeDescription, setNoticeDescription] = useState('');
+  const [currentFilter, setCurrentFilter] = useState('my_supervision'); // Initialize filter state
 
-  const { data: proposals, isLoading: proposalsLoading } = useGetProposalsBySupervisorQuery(user?._id, { skip: !user });
+  // const location = useLocation(); // No longer needed as filter is managed by state
+  // const query = new URLSearchParams(location.search);
+  // const filter = query.get('filter');
+
+  const { data: proposals, isLoading: proposalsLoading } = useGetProposalsBySupervisorQuery({ supervisorId: user?._id, filter: currentFilter }, { skip: !user });
   const { data: sentNotices, isLoading: noticesLoading, refetch } = useGetSupervisorSentNoticesQuery();
   const [sendNoticeToGroup] = useSendNoticeToGroupMutation();
 
@@ -51,6 +57,20 @@ const Notice = () => {
 
         <form onSubmit={handleSubmitNotice} className="space-y-5">
           <div>
+            <label htmlFor="selectGroup" className="block text-gray-700 font-medium mb-2">
+              Filter Groups
+            </label>
+            <select
+              id="filterGroups"
+              value={currentFilter}
+              onChange={(e) => setCurrentFilter(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none mb-4"
+            >
+              <option value="my_supervision">Under My Supervision</option>
+              <option value="my_supervision_with_course_supervision">Under My Supervision with Course Supervision</option>
+              <option value="my_course_supervision">Under My Course Supervision</option>
+            </select>
+
             <label htmlFor="selectGroup" className="block text-gray-700 font-medium mb-2">
               Select Group
             </label>

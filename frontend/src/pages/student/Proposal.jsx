@@ -17,46 +17,64 @@ const Proposal = () => {
   const [supervisors, setSupervisors] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionDeadlinePassed, setSubmissionDeadlinePassed] = useState(false); // Placeholder for deadline check
+  const [proposalSubmitted, setProposalSubmitted] = useState(false);
 
   useEffect(() => {
     const fetchInitialData = async () => {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
       try {
-        const { data: cellsData } = await axios.get('http://localhost:5000/api/researchcells', config);
+        const { data: cellsData } = await axios.get('http://localhost:5005/api/researchcells', config);
         setCells(cellsData);
 
-        const { data: studentsData } = await axios.get('http://localhost:5000/api/users/students', config);
+        const { data: studentsData } = await axios.get('http://localhost:5005/api/users/students', config);
         setAllStudents(studentsData);
+
+        const { data: deadlineData } = await axios.get('http://localhost:5005/api/committee/submission-dates', config);
+        if (deadlineData && new Date() > new Date(deadlineData.endDate)) {
+          setSubmissionDeadlinePassed(true);
+        }
+
       } catch (error) {
-        toast.error('Failed to fetch initial data.');
-        console.error(error);
+        if (error.response && error.response.status === 404) {
+          setSubmissionDeadlinePassed(true);
+        } else {
+          toast.error('Failed to fetch initial data.');
+          console.error(error);
+        }
       }
     };
     if (user && user.token) fetchInitialData();
   }, [user]);
 
   useEffect(() => {
-    const fetchSupervisors = async () => {
+    const fetchSupervisorsWithCapacity = async () => {
       if (!researchCell || !user || !user.token) return setSupervisors([]);
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
       try {
         const { data: supervisorsData } = await axios.get(
-          `http://localhost:5000/api/users/supervisors?researchCellId=${researchCell}`,
+          `http://localhost:5005/api/users/supervisors/capacity?researchCellId=${researchCell}`,
           config
         );
         setSupervisors(supervisorsData);
       } catch (error) {
-        toast.error('Failed to fetch supervisors.');
+        toast.error('Failed to fetch supervisors with capacity.');
         console.error(error);
       }
     };
-    fetchSupervisors();
-  }, [researchCell, user]);
+    fetchSupervisorsWithCapacity();
+  }, [researchCell, user, proposalSubmitted]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user || !user.token) return toast.error('User not logged in.');
     if (!researchCell || !supervisor) return toast.error('Select Research Cell & Supervisor.');
+    if (submissionDeadlinePassed) return toast.error('Proposal submission deadline has ended.');
+
+    const selectedSupervisor = supervisors.find(s => s._id === supervisor);
+    if (selectedSupervisor && selectedSupervisor.remainingCapacity <= 0) {
+      return toast.error('Supervisor\'s seat capacity is full. Please choose another supervisor.');
+    }
 
     setIsSubmitting(true);
 
@@ -74,9 +92,10 @@ const Proposal = () => {
     };
 
     try {
-      await axios.post('http://localhost:5000/api/proposals', proposalData, config);
+      await axios.post('http://localhost:5005/api/proposals', proposalData, config);
       toast.success('Proposal submitted successfully!');
       setTitle(''); setAbstract(''); setType('Thesis'); setResearchCell(''); setSupervisor(''); setMembers([]);
+      setProposalSubmitted(prev => !prev);
     } catch (error) {
       toast.error(`Failed to submit proposal: ${error.response?.data?.message || error.message}`);
     } finally { setIsSubmitting(false); }
@@ -148,14 +167,22 @@ const Proposal = () => {
             value={supervisor}
             onChange={(e) => setSupervisor(e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 sm:text-sm"
-            disabled={!researchCell}
+            disabled={!researchCell || submissionDeadlinePassed}
             required
           >
             <option value="">Select a supervisor</option>
             {supervisors.map((s) => (
-              <option key={s._id} value={s._id}>{s.name}</option>
+              <option key={s._id} value={s._id} disabled={s.remainingCapacity <= 0}>
+                {s.name} ({s.remainingCapacity} groups remaining)
+              </option>
             ))}
           </select>
+          {supervisor && supervisors.find(s => s._id === supervisor)?.remainingCapacity <= 0 && (
+            <p className="text-red-500 text-sm mt-1">Supervisor's seat capacity is full. Please choose another supervisor.</p>
+          )}
+          {submissionDeadlinePassed && (
+            <p className="text-red-500 text-sm mt-1">Proposal submission deadline has ended.</p>
+          )}
         </div>
 
         {/* Members */}
@@ -173,7 +200,7 @@ const Proposal = () => {
         <div className="text-center">
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || submissionDeadlinePassed || (supervisor && supervisors.find(s => s._id === supervisor)?.remainingCapacity <= 0)}
             className="w-full py-3 px-6 bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg shadow-md hover:from-green-500 hover:to-green-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Submitting...' : 'Submit Proposal'}

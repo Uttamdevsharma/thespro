@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
 const protect = async (req, res, next) => {
   let token;
@@ -11,6 +11,7 @@ const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       req.user = await User.findById(decoded.id).select('-password');
+      console.log('User populated in protect middleware:', req.user);
 
       next();
     } catch (error) {
@@ -27,4 +28,13 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: `User role ${req.user.role} is not authorized to access this route` });
+    }
+    next();
+  };
+};
+
+export { protect, authorizeRoles };

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const ProposalSchema = new mongoose.Schema({
   title: {
@@ -24,16 +24,25 @@ const ProposalSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  courseSupervisorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
   members: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
   ],
+  numberOfMembers: {
+    type: Number,
+    required: true,
+  },
   status: {
     type: String,
-    enum: ['Pending', 'Approved', 'Rejected'],
-    default: 'Pending',
+    enum: ['Pending Committee', 'Pending Supervisor', 'Approved', 'Not Approved'],
+    default: 'Pending Committee',
   },
   feedback: {
     type: String,
@@ -51,6 +60,11 @@ const ProposalSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  defenseBoardId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'DefenseBoard',
+    default: null,
+  },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Proposal', ProposalSchema);
+export default mongoose.model('Proposal', ProposalSchema);

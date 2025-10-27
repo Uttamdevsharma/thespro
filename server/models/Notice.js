@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const NoticeSchema = new mongoose.Schema({
   sender: {
@@ -32,4 +32,4 @@ const NoticeSchema = new mongoose.Schema({
   ],
 }, { timestamps: true });
 
-module.exports = mongoose.model('Notice', NoticeSchema);
+export default mongoose.model('Notice', NoticeSchema);

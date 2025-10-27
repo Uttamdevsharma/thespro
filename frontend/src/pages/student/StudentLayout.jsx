@@ -22,6 +22,7 @@ const StudentLayout = () => {
     { to: '/student/proposal-status', label: 'Proposal Status' },
     { to: '/student/chat', label: 'Chat' },
     { to: '/student/research-cell-info', label: 'Research Cell Info' },
+    { to: '/student/defense-schedule', label: 'Defense Schedule' },
 
   ];
 

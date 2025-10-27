@@ -5,6 +5,8 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import { useSelector } from 'react-redux';
 import { selectUser } from './features/userSlice';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const user = useSelector(selectUser);
@@ -18,6 +20,7 @@ function App() {
           <Outlet />
         </main>
       </div>
+      <ToastContainer />
     </div>
   );
 }
