@@ -232,7 +232,13 @@ export const apiSlice = createApi({
         providesTags: ['DefenseBoards'],
       }),
       getStudentDefenseSchedule: builder.query({
-        query: () => '/defenseboards/student-schedule',
+        query: (defenseType) => {
+          let url = '/defenseboards/student-schedule';
+          if (defenseType) {
+            url += `?defenseType=${defenseType}`;
+          }
+          return url;
+        },
         providesTags: ['DefenseBoards'],
       }),
       getRooms: builder.query({

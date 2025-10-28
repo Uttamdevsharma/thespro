@@ -17,7 +17,8 @@ const CommitteeLayout = () => {
     { to: '/committee/manage-course-supervisors', label: 'Manage Course Supervisors' },
     { to: '/committee/set-submission-dates', label: 'Set Submission Dates' },
     { to: '/committee/all-groups', label: 'All Groups' },
-    { to: '/committee/defense-schedule', label: 'Defense Schedule' },
+    { to: '/committee/defense-schedule', label: 'Current Defense Schedule' },
+    { to: '/committee/all-defense-boards', label: 'All Boards' },
   ];
 
   return (

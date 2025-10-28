@@ -64,7 +64,15 @@ const createDefenseBoard = asyncHandler(async (req, res) => {
 // @route   GET /api/defenseboards
 // @access  Private/Committee, Supervisor, Student
 const getAllDefenseBoards = asyncHandler(async (req, res) => {
-  let defenseBoards = await DefenseBoard.find({})
+  const { filter } = req.query;
+  let query = {};
+
+  if (filter === 'current') {
+    // Only show boards with a date in the future or today
+    query.date = { $gte: new Date().setHours(0, 0, 0, 0) };
+  }
+
+  let defenseBoards = await DefenseBoard.find(query)
     .populate('room', 'name')
     .populate('schedule', 'startTime endTime')
     .populate({
@@ -78,7 +86,11 @@ const getAllDefenseBoards = asyncHandler(async (req, res) => {
       ],
     })
     .populate('boardMembers', 'name email')
-    .populate('createdBy', 'name email');
+    .populate('createdBy', 'name email')
+    .populate({
+      path: 'comments.commentedBy',
+      select: 'name',
+    });
 
   // Filter out boards with null-populated fields that are essential
   defenseBoards = defenseBoards.filter(board => board.room && board.schedule);
@@ -176,6 +188,11 @@ const deleteDefenseBoard = asyncHandler(async (req, res) => {
   const defenseBoard = await DefenseBoard.findById(req.params.id);
 
   if (defenseBoard) {
+    // Set defenseBoardId to null for all associated proposals
+    for (const proposalId of defenseBoard.groups) {
+      await Proposal.findByIdAndUpdate(proposalId, { defenseBoardId: null });
+    }
+
     await defenseBoard.deleteOne();
     res.json({ message: 'Defense board removed' });
   } else {
@@ -243,6 +260,9 @@ const getStudentDefenseSchedule = asyncHandler(async (req, res) => {
   }
 
   const studentId = req.user._id;
+  const { defenseType } = req.query; // Get defenseType from query parameters
+
+  console.log('getStudentDefenseSchedule: studentId=', studentId, 'defenseType=', defenseType);
 
   try {
     // Find proposals where the student is either the creator or a member
@@ -252,7 +272,14 @@ const getStudentDefenseSchedule = asyncHandler(async (req, res) => {
 
     const proposalIds = studentProposals.map((p) => p._id);
 
-    let defenseBoards = await DefenseBoard.find({ groups: { $in: proposalIds } })
+    let query = { groups: { $in: proposalIds } };
+
+    if (defenseType) {
+      query.defenseType = defenseType; // Add defenseType to the query if provided
+    }
+    console.log('getStudentDefenseSchedule: Constructed query=', query);
+
+    let defenseBoards = await DefenseBoard.find(query)
       .populate('room', 'name')
       .populate('schedule', 'startTime endTime')
       .populate({
@@ -266,7 +293,11 @@ const getStudentDefenseSchedule = asyncHandler(async (req, res) => {
         ],
       })
       .populate('boardMembers', 'name email')
-      .populate('createdBy', 'name email');
+      .populate('createdBy', 'name email')
+      .populate({
+        path: 'comments.commentedBy',
+        select: 'name',
+      });
 
     // Filter out boards with null-populated fields that are essential
     defenseBoards = defenseBoards.filter(board => board.room && board.schedule);

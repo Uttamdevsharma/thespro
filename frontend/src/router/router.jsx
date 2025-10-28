@@ -14,10 +14,11 @@ import CommitteePendingProposals from '../pages/committee/CommitteePendingPropos
 import ManageCourseSupervisors from '../pages/committee/ManageCourseSupervisors';
 import SetSubmissionDates from '../pages/committee/SetSubmissionDates';
 import AllGroups from '../pages/committee/AllGroups';
-import DefenseSchedule from '../pages/committee/DefenseSchedule'; // New import
+import DefenseSchedule from '../pages/committee/DefenseSchedule';
 import CreateDefenseBoard from '../pages/committee/CreateDefenseBoard';
 import SelectGroups from '../pages/committee/SelectGroups';
 import SelectMembers from '../pages/committee/SelectMembers';
+import AllDefenseBoards from '../pages/committee/AllDefenseBoards';
 import SupervisorDashboard from '../pages/supervisor/Dashboard';
 import SupervisorChat from '../pages/supervisor/Chat';
 import Notice from '../pages/supervisor/Notice';
@@ -104,6 +105,10 @@ export const router = createBrowserRouter([
       {
         path: 'defense-schedule',
         element: <DefenseSchedule />,
+      },
+      {
+        path: 'all-defense-boards',
+        element: <AllDefenseBoards />,
       },
       {
         path: 'defense-schedule/create',

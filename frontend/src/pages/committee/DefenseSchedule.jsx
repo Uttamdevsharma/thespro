@@ -9,8 +9,6 @@ import {
   useAddScheduleSlotMutation,
   useUpdateScheduleSlotMutation,
   useDeleteScheduleSlotMutation,
-  useGetAllDefenseBoardsQuery,
-  useDeleteDefenseBoardMutation
 } from '../../features/apiSlice';
 
 // RoomManager Component
@@ -213,68 +211,15 @@ const ScheduleManager = () => {
 
 // DefenseSchedule Component
 const DefenseSchedule = () => {
-  const { data: defenseBoards, isLoading, isError, error } = useGetAllDefenseBoardsQuery();
-  const [deleteDefenseBoard] = useDeleteDefenseBoardMutation();
-
-  const handleDelete = async (id) => await deleteDefenseBoard(id);
-
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Defense Schedule</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Current Defense Schedule</h1>
       <Link to="/committee/defense-schedule/create" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md mb-4 inline-block">
         Create Defense Board
       </Link>
 
       <RoomManager />
       <ScheduleManager />
-
-      {isLoading ? <p>Loading defense boards...</p> : isError ? <p className="text-red-500">Error: {error.message}</p> : (
-        <div className="mt-6 space-y-4">
-          {defenseBoards.map(board => (
-            <div key={board._id} className="p-4 bg-gray-50 rounded-lg shadow-md">
-              <div className="flex justify-between items-center mb-2">
-                <div className="text-gray-700 font-medium">
-                  Date: {new Date(board.date).toLocaleDateString()} | Room: {board.room ? board.room.name : 'N/A'} | Schedule: {board.schedule ? `${board.schedule.startTime} - ${board.schedule.endTime}` : 'N/A'}
-                </div>
-                <button onClick={() => handleDelete(board._id)} className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md">Delete</button>
-              </div>
-
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="py-2 px-2 border-b">Sl.</th>
-                    <th className="py-2 px-2 border-b">Student IDs</th>
-                    <th className="py-2 px-2 border-b">Student Names</th>
-                    <th className="py-2 px-2 border-b">Title</th>
-                    <th className="py-2 px-2 border-b">Type</th>
-                    <th className="py-2 px-2 border-b">Supervisor</th>
-                    <th className="py-2 px-2 border-b">Course Supervisor</th>
-                    <th className="py-2 px-2 border-b">Comments</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {board.groups.map((group, index) => (
-                    <tr key={group._id} className="text-center hover:bg-gray-50">
-                      <td className="py-2 px-2 border-b">{index + 1}</td>
-                      <td className="py-2 px-2 border-b">{group.members.map(m => m.studentId).join(', ')}</td>
-                      <td className="py-2 px-2 border-b">{group.members.map(m => m.name).join(', ')}</td>
-                      <td className="py-2 px-2 border-b">{group.title}</td>
-                      <td className="py-2 px-2 border-b">{group.type}</td>
-                      <td className="py-2 px-2 border-b">{group.supervisorId?.name || '-'}</td>
-                      <td className="py-2 px-2 border-b">{group.courseSupervisorId?.name || '-'}</td>
-                      <td className="py-2 px-2 border-b">{board.comments.find(c => c.group === group._id)?.text || ''}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="mt-2 text-gray-700 font-semibold text-center">
-                Board Members: {board.boardMembers.map(m => m.name).join(', ')}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
