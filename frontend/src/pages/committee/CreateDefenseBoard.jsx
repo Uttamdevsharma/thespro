@@ -10,7 +10,15 @@ const CreateDefenseBoard = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [formData, setFormData] = useState(location.state?.defenseBoardDraft || { defenseType: 'Pre-Defense', room: '', schedule: '', groups: [], boardMembers: [] });
+  const [formData, setFormData] = useState(
+    location.state?.defenseBoardDraft || {
+      defenseType: 'Pre-Defense',
+      room: '',
+      schedule: '',
+      groups: [],
+      boardMembers: [],
+    }
+  );
 
   useEffect(() => {
     if (location.state?.defenseBoardDraft) {
@@ -40,41 +48,96 @@ const CreateDefenseBoard = () => {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Create Defense Board</h1>
-      <form onSubmit={handleSubmit} className="mt-4">
-        <div className="mb-4">
-          <label className="block text-gray-700">Defense Type</label>
-          <select name="defenseType" value={formData.defenseType} onChange={handleChange} className="w-full px-3 py-2 border rounded-md">
+    <div className="container mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Create Defense Board</h1>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Defense Type */}
+        <div>
+          <label className="block mb-2 text-gray-700 font-medium">Defense Type</label>
+          <select
+            name="defenseType"
+            value={formData.defenseType}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+          >
             <option value="Pre-Defense">Pre-Defense</option>
             <option value="Final Defense">Final Defense</option>
           </select>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Room</label>
-          <select name="room" value={formData.room} onChange={handleChange} className="w-full px-3 py-2 border rounded-md">
+
+        {/* Room */}
+        <div>
+          <label className="block mb-2 text-gray-700 font-medium">Room</label>
+          <select
+            name="room"
+            value={formData.room}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+          >
             <option value="">Select Room</option>
-            {rooms && rooms.map(room => <option key={room._id} value={room._id}>{room.name}</option>)}
+            {rooms && rooms.map(room => (
+              <option key={room._id} value={room._id}>{room.name}</option>
+            ))}
           </select>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Schedule</label>
-          <select name="schedule" value={formData.schedule} onChange={handleChange} className="w-full px-3 py-2 border rounded-md">
+
+        {/* Schedule */}
+        <div>
+          <label className="block mb-2 text-gray-700 font-medium">Schedule</label>
+          <select
+            name="schedule"
+            value={formData.schedule}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+          >
             <option value="">Select Schedule</option>
-            {scheduleSlots && scheduleSlots.map(slot => <option key={slot._id} value={slot._id}>{new Date(slot.date).toLocaleDateString()} {slot.startTime} - {slot.endTime}</option>)}
+            {scheduleSlots && scheduleSlots.map(slot => (
+              <option key={slot._id} value={slot._id}>
+                {new Date(slot.date).toLocaleDateString()} {slot.startTime} - {slot.endTime}
+              </option>
+            ))}
           </select>
         </div>
-        <div className="mb-4">
-          <Link to="/committee/defense-schedule/select-groups" state={{ defenseBoardDraft: formData }} className="bg-blue-500 text-white px-4 py-2 rounded-md">Select Groups</Link>
-          <div>Selected Groups: {formData.groups.length}</div>
+
+        {/* Select Groups */}
+        <div>
+          <Link
+            to="/committee/defense-schedule/select-groups"
+            state={{ defenseBoardDraft: formData }}
+            className="inline-block mb-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-200"
+          >
+            Select Groups
+          </Link>
+          <div className="text-gray-600">Selected Groups: <span className="font-medium">{formData.groups.length}</span></div>
         </div>
-        <div className="mb-4">
-          <Link to="/committee/defense-schedule/select-members" state={{ defenseBoardDraft: formData }} className="bg-blue-500 text-white px-4 py-2 rounded-md">Select Members</Link>
-          <div>Selected Members: {formData.boardMembers.length}</div>
+
+        {/* Select Members */}
+        <div>
+          <Link
+            to="/committee/defense-schedule/select-members"
+            state={{ defenseBoardDraft: formData }}
+            className="inline-block mb-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-200"
+          >
+            Select Members
+          </Link>
+          <div className="text-gray-600">Selected Members: <span className="font-medium">{formData.boardMembers.length}</span></div>
         </div>
-        <div className="flex justify-end">
-          <Link to="/committee/defense-schedule" className="bg-gray-500 text-white px-4 py-2 rounded-md mr-2">Cancel</Link>
-          <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md">Create</button>
+
+        {/* Actions */}
+        <div className="flex justify-end space-x-3">
+          <Link
+            to="/committee/defense-schedule"
+            className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition duration-200"
+          >
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition duration-200"
+          >
+            Create
+          </button>
         </div>
       </form>
     </div>

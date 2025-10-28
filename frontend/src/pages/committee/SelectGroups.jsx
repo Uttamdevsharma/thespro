@@ -21,45 +21,66 @@ const SelectGroups = () => {
   };
 
   const handleAddGroups = () => {
+    if (selectedGroups.length === 0) {
+      toast.error('Please select at least one group.');
+      return;
+    }
     const updatedDraft = { ...defenseBoardDraft, groups: selectedGroups };
     toast.success('Groups added successfully.');
     navigate('/committee/defense-schedule/create', { state: { defenseBoardDraft: updatedDraft } });
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="text-center py-8">Loading...</div>;
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Select Groups</h1>
-      <button onClick={handleAddGroups} className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4">Add Selected Groups</button>
-      <table className="min-w-full bg-white">
-        <thead>
-          <tr>
-            <th className="py-2">ID</th>
-            <th className="py-2">Name</th>
-            <th className="py-2">Title</th>
-            <th className="py-2">Type</th>
-            <th className="py-2">Supervisor</th>
-            <th className="py-2">Course Supervisor</th>
-            <th className="py-2">Select</th>
-          </tr>
-        </thead>
-        <tbody>
-          {availableProposals && availableProposals.map(proposal => (
-            <tr key={proposal._id}>
-              <td>{proposal.members.map(m => m.studentId).join(', ')}</td>
-              <td>{proposal.members.map(m => m.name).join(', ')}</td>
-              <td>{proposal.title}</td>
-              <td>{proposal.type}</td>
-              <td>{proposal.supervisorId.name}</td>
-              <td>{proposal.courseSupervisorId ? proposal.courseSupervisorId.name : '-'}</td>
-              <td><input type="checkbox" value={proposal._id} onChange={handleCheckboxChange} checked={selectedGroups.includes(proposal._id)} /></td>
+    <div className="container mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Select Groups</h1>
+
+      <button
+        onClick={handleAddGroups}
+        className="mb-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-200"
+      >
+        Add Selected Groups
+      </button>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border border-gray-200 rounded-lg">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="py-3 px-4 text-left text-gray-700 font-medium">Student IDs</th>
+              <th className="py-3 px-4 text-left text-gray-700 font-medium">Name</th>
+              <th className="py-3 px-4 text-left text-gray-700 font-medium">Title</th>
+              <th className="py-3 px-4 text-left text-gray-700 font-medium">Type</th>
+              <th className="py-3 px-4 text-left text-gray-700 font-medium">Supervisor</th>
+              <th className="py-3 px-4 text-left text-gray-700 font-medium">Course Supervisor</th>
+              <th className="py-3 px-4 text-center text-gray-700 font-medium">Select</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {availableProposals && availableProposals.map((proposal) => (
+              <tr key={proposal._id} className="hover:bg-gray-50 border-b border-gray-200">
+                <td className="py-2 px-4">{proposal.members.map(m => m.studentId).join(', ')}</td>
+                <td className="py-2 px-4">{proposal.members.map(m => m.name).join(', ')}</td>
+                <td className="py-2 px-4">{proposal.title}</td>
+                <td className="py-2 px-4">{proposal.type}</td>
+                <td className="py-2 px-4">{proposal.supervisorId.name}</td>
+                <td className="py-2 px-4">{proposal.courseSupervisorId ? proposal.courseSupervisorId.name : '-'}</td>
+                <td className="py-2 px-4 text-center">
+                  <input
+                    type="checkbox"
+                    value={proposal._id}
+                    onChange={handleCheckboxChange}
+                    checked={selectedGroups.includes(proposal._id)}
+                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
