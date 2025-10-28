@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGetSupervisorDefenseScheduleQuery, useAddOrUpdateCommentMutation } from '../../features/apiSlice';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast'; // Changed from react-toastify
 
 const DefenseSchedule = () => {
   const { data: defenseBoards, isLoading, isError, error, refetch } = useGetSupervisorDefenseScheduleQuery();

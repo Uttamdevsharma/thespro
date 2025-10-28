@@ -1,10 +1,10 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect } from 'react';
 import { useGetStudentDefenseScheduleQuery } from '../../features/apiSlice';
-import { SocketContext } from '../../contexts/SocketContext';
+import { useSocket } from '../../contexts/SocketContext';
 
 const DefenseSchedule = () => {
   const { data: defenseBoards, isLoading, isError, error, refetch } = useGetStudentDefenseScheduleQuery();
-  const { socket } = useContext(SocketContext);
+  const socket = useSocket();
 
   useEffect(() => {
     if (socket) {
