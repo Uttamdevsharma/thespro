@@ -267,7 +267,7 @@ const DefenseSchedule = () => {
                       <td className="py-2">{group.members.map(m => m.studentId).join(', ')}</td>
                       <td className="py-2">{group.members.map(m => m.name).join(', ')}</td>
                       <td className="py-2">{group.title}</td>
-                      <td className="py-2">{group.proposalType}</td>
+                      <td className="py-2">{group.type}</td>
                       <td className="py-2">{group.supervisorId ? group.supervisorId.name : '-'}</td>
                       <td className="py-2">{group.courseSupervisorId ? group.courseSupervisorId.name : '-'}</td>
                       <td className="py-2">{board.comments.find(c => c.group === group._id)?.text || ''}</td>

@@ -63,6 +63,7 @@ const getAllDefenseBoards = asyncHandler(async (req, res) => {
     .populate('schedule', 'startTime endTime')
     .populate({
       path: 'groups',
+      strictPopulate: false,
       populate: [
         { path: 'createdBy', select: 'name studentId' },
         { path: 'members', select: 'name studentId' },
@@ -88,6 +89,7 @@ const getDefenseBoardById = asyncHandler(async (req, res) => {
     .populate('schedule', 'startTime endTime')
     .populate({
       path: 'groups',
+      strictPopulate: false,
       populate: [
         { path: 'createdBy', select: 'name studentId' },
         { path: 'members', select: 'name studentId' },
@@ -165,33 +167,50 @@ const deleteDefenseBoard = asyncHandler(async (req, res) => {
 // @route   GET /api/defenseboards/supervisor-schedule
 // @access  Private/Supervisor
 const getSupervisorDefenseSchedule = asyncHandler(async (req, res) => {
-  const supervisorId = new mongoose.Types.ObjectId(req.user._id);
+  const supervisorId = req.user._id;
 
-  try {
-    let defenseBoards = await DefenseBoard.find({ boardMembers: supervisorId })
-      .populate('room', 'name')
-      .populate('schedule', 'startTime endTime')
-      .populate({
-        path: 'groups',
-        populate: [
-          { path: 'createdBy', select: 'name studentId' },
-          { path: 'members', select: 'name studentId' },
-          { path: 'supervisorId', select: 'name' },
-          { path: 'courseSupervisorId', select: 'name' },
-        ],
-      })
-      .populate('boardMembers', 'name email')
-      .populate('createdBy', 'name email');
+  // 1. Find the initial boards and populate top-level fields
+  const defenseBoards = await DefenseBoard.find({ boardMembers: supervisorId })
+    .populate('room', 'name')
+    .populate('schedule', 'startTime endTime')
+    .populate('boardMembers', 'name email')
+    .populate('createdBy', 'name email')
+    .lean(); // Use .lean() for performance and easier manipulation
 
-    // Filter out boards with null-populated fields that are essential
-    defenseBoards = defenseBoards.filter(board => board.room && board.schedule);
-
-    res.json(defenseBoards);
-  } catch (error) {
-    res.status(500);
-    throw new Error('Failed to fetch supervisor defense schedule');
+  if (!defenseBoards || defenseBoards.length === 0) {
+    return res.json([]);
   }
+
+  // 2. Manually populate the groups and their nested user fields for each board
+  for (const board of defenseBoards) {
+    if (board.groups && board.groups.length > 0) {
+      const populatedGroups = [];
+      for (const groupId of board.groups) {
+        // Find each proposal (group) and populate its user fields
+        const group = await Proposal.findById(groupId)
+          .populate('supervisorId', 'name')
+          .populate('courseSupervisorId', 'name')
+          .populate('members', 'name studentId')
+          .populate('createdBy', 'name studentId')
+          .lean();
+        
+        // Only add the group if it was found
+        if (group) {
+          populatedGroups.push(group);
+        }
+      }
+      board.groups = populatedGroups;
+    }
+  }
+
+  // 3. Filter out boards that might have had their essential references (like room or schedule) deleted
+  // const finalBoards = defenseBoards.filter(board => board.room && board.schedule);
+  const finalBoards = defenseBoards; // Temporarily keep all boards for debugging
+
+  res.json(finalBoards);
 });
+
+
 
 // @desc    Get defense boards for a specific student
 // @route   GET /api/defenseboards/student-schedule
@@ -217,6 +236,7 @@ const getStudentDefenseSchedule = asyncHandler(async (req, res) => {
       .populate('schedule', 'startTime endTime')
       .populate({
         path: 'groups',
+        strictPopulate: false,
         populate: [
           { path: 'createdBy', select: 'name studentId' },
           { path: 'members', select: 'name studentId' },

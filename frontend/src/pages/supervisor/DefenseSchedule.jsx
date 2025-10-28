@@ -1,20 +1,8 @@
-import React, { useState } from 'react';
-import { useGetSupervisorDefenseScheduleQuery, useAddOrUpdateCommentMutation } from '../../features/apiSlice';
+import React from 'react';
+import { useGetSupervisorDefenseScheduleQuery } from '../../features/apiSlice';
 
 const DefenseSchedule = () => {
   const { data: defenseBoards, isLoading, isError, error } = useGetSupervisorDefenseScheduleQuery();
-  const [addOrUpdateComment] = useAddOrUpdateCommentMutation();
-
-  const [comment, setComment] = useState('');
-
-  const handleCommentChange = (e) => {
-    setComment(e.target.value);
-  };
-
-  const handleCommentSubmit = async (boardId, groupId) => {
-    await addOrUpdateComment({ id: boardId, groupId, text: comment });
-    setComment('');
-  };
 
   return (
     <div>
@@ -22,7 +10,7 @@ const DefenseSchedule = () => {
       {isLoading ? (
         <p>Loading defense boards...</p>
       ) : isError ? (
-        <p>Error: {error.message}</p>
+        <p className="text-red-500">Error: {error.data?.message || 'An unexpected error occurred'}</p>
       ) : (
         <div>
           {defenseBoards && defenseBoards.map(board => (
@@ -52,14 +40,10 @@ const DefenseSchedule = () => {
                       <td className="py-2">{group.members.map(m => m.studentId).join(', ')}</td>
                       <td className="py-2">{group.members.map(m => m.name).join(', ')}</td>
                       <td className="py-2">{group.title}</td>
-                      <td className="py-2">{group.proposalType}</td>
+                      <td className="py-2">{group.type}</td>
                       <td className="py-2">{group.supervisorId ? group.supervisorId.name : '-'}</td>
                       <td className="py-2">{group.courseSupervisorId ? group.courseSupervisorId.name : '-'}</td>
-                      <td className="py-2">
-                        <textarea value={comment} onChange={handleCommentChange} className="w-full px-3 py-2 border rounded-md"></textarea>
-                        <button onClick={() => handleCommentSubmit(board._id, group._id)} className="bg-blue-500 text-white px-2 py-1 rounded-md mt-2">Save</button>
-                        <div>{board.comments.find(c => c.group === group._id)?.text || ''}</div>
-                      </td>
+                      <td className="py-2">{board.comments.find(c => c.group === group._id)?.text || ''}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -18,16 +18,17 @@ router.route('/')
   .post(protect, authorizeRoles('committee'), createDefenseBoard)
   .get(protect, authorizeRoles('committee', 'supervisor', 'student'), getAllDefenseBoards);
 
+// Supervisor specific routes
+router.get('/supervisor-schedule', protect, authorizeRoles('supervisor'), getSupervisorDefenseSchedule);
+
+// Student specific routes
+router.get('/student-schedule', protect, authorizeRoles('student'), getStudentDefenseSchedule);
+
 router.route('/:id')
   .get(protect, authorizeRoles('committee', 'supervisor', 'student'), getDefenseBoardById)
   .put(protect, authorizeRoles('committee'), updateDefenseBoard)
   .delete(protect, authorizeRoles('committee'), deleteDefenseBoard);
 
-// Supervisor specific routes
-router.get('/supervisor-schedule', protect, authorizeRoles('supervisor'), getSupervisorDefenseSchedule);
 router.put('/:id/comments', protect, authorizeRoles('supervisor'), addOrUpdateComment);
-
-// Student specific routes
-router.get('/student-schedule', protect, authorizeRoles('student'), getStudentDefenseSchedule);
 
 export default router;
