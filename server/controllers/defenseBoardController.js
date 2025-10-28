@@ -51,6 +51,12 @@ const createDefenseBoard = asyncHandler(async (req, res) => {
   });
 
   const createdDefenseBoard = await defenseBoard.save();
+
+  // Update defenseBoardId for all proposals in this group
+  for (const proposalId of groups) {
+    await Proposal.findByIdAndUpdate(proposalId, { defenseBoardId: createdDefenseBoard._id });
+  }
+
   res.status(201).json(createdDefenseBoard);
 });
 
@@ -127,6 +133,21 @@ const updateDefenseBoard = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('A defense board must have between 1 and 5 groups.');
       }
+
+      // Find proposals that were removed from the board
+      const removedProposalIds = defenseBoard.groups.filter(oldId => !groups.includes(oldId.toString()));
+      // Set defenseBoardId to null for removed proposals
+      for (const proposalId of removedProposalIds) {
+        await Proposal.findByIdAndUpdate(proposalId, { defenseBoardId: null });
+      }
+
+      // Find proposals that were added to the board
+      const addedProposalIds = groups.filter(newId => !defenseBoard.groups.map(oldId => oldId.toString()).includes(newId));
+      // Set defenseBoardId to this defense board's ID for added proposals
+      for (const proposalId of addedProposalIds) {
+        await Proposal.findByIdAndUpdate(proposalId, { defenseBoardId: defenseBoard._id });
+      }
+
       defenseBoard.groups = groups;
     }
 
@@ -293,6 +314,97 @@ const addOrUpdateComment = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get defense results for a specific supervisor
+// @route   GET /api/defenseboards/supervisor-results
+// @access  Private/Supervisor
+const getSupervisorDefenseResult = asyncHandler(async (req, res) => {
+  const supervisorId = req.user._id;
+
+  // 1. Find proposals directly supervised by the logged-in supervisor
+  const directProposals = await Proposal.find({
+    $or: [
+      { supervisorId: supervisorId },
+      { courseSupervisorId: supervisorId }
+    ]
+  }).select('_id');
+
+  const directProposalIds = directProposals.map(p => p._id);
+
+  // 2. Find proposals supervised by course supervisors under the logged-in supervisor
+  // 2a. Find course supervisors under the logged-in supervisor
+  const courseSupervisorsUnderMe = await User.find({
+    mainSupervisor: supervisorId,
+    isCourseSupervisor: true
+  }).select('_id');
+
+  const courseSupervisorIds = courseSupervisorsUnderMe.map(cs => cs._id);
+
+  // 2b. Find proposals where courseSupervisorId is one of these course supervisor IDs
+  const indirectProposals = await Proposal.find({
+    courseSupervisorId: { $in: courseSupervisorIds }
+  }).select('_id');
+
+  const indirectProposalIds = indirectProposals.map(p => p._id);
+
+  // 3. Combine all unique proposal IDs
+  const allRelevantProposalIds = [...new Set([...directProposalIds, ...indirectProposalIds])];
+
+  if (allRelevantProposalIds.length === 0) {
+    return res.json([]);
+  }
+
+  // 4. Find DefenseBoards associated with these proposals
+  // We need to find boards that contain any of these proposals in their 'groups' array
+  const defenseBoards = await DefenseBoard.find({
+    groups: { $in: allRelevantProposalIds }
+  })
+    .populate('room', 'name')
+    .populate('schedule', 'startTime endTime')
+    .populate('boardMembers', 'name email')
+    .populate('createdBy', 'name email')
+    .lean(); // Use .lean() for performance
+
+  if (!defenseBoards || defenseBoards.length === 0) {
+    return res.json([]);
+  }
+
+  // 5. Manually populate the groups and their nested user fields for each board
+  // and filter to only include relevant groups for this supervisor
+  const finalResults = [];
+
+  for (const board of defenseBoards) {
+    const boardCopy = { ...board }; // Create a copy to modify
+    const populatedGroups = [];
+
+    for (const groupId of board.groups) {
+      // Only process groups that are relevant to this supervisor
+      if (allRelevantProposalIds.includes(groupId.toString())) {
+        const group = await Proposal.findById(groupId)
+          .populate('supervisorId', 'name')
+          .populate('courseSupervisorId', 'name')
+          .populate('members', 'name studentId')
+          .populate('createdBy', 'name studentId')
+          .lean();
+
+        if (group) {
+          populatedGroups.push(group);
+        }
+      }
+    }
+    boardCopy.groups = populatedGroups;
+
+    // Only include the board if it still has relevant groups after filtering
+    if (boardCopy.groups.length > 0) {
+      finalResults.push(boardCopy);
+    }
+  }
+
+  // Filter out boards that might have had their essential references (like room or schedule) deleted
+  const filteredResults = finalResults.filter(board => board.room && board.schedule);
+
+  res.json(filteredResults);
+});
+
 export {
   createDefenseBoard,
   getAllDefenseBoards,
@@ -302,4 +414,5 @@ export {
   getSupervisorDefenseSchedule,
   getStudentDefenseSchedule,
   addOrUpdateComment,
+  getSupervisorDefenseResult,
 };

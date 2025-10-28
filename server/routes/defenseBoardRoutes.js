@@ -8,6 +8,7 @@ import {
   getSupervisorDefenseSchedule,
   getStudentDefenseSchedule,
   addOrUpdateComment,
+  getSupervisorDefenseResult,
 } from '../controllers/defenseBoardController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -20,6 +21,7 @@ router.route('/')
 
 // Supervisor specific routes
 router.get('/supervisor-schedule', protect, authorizeRoles('supervisor'), getSupervisorDefenseSchedule);
+router.get('/supervisor-results', protect, authorizeRoles('supervisor'), getSupervisorDefenseResult);
 
 // Student specific routes
 router.get('/student-schedule', protect, authorizeRoles('student'), getStudentDefenseSchedule);

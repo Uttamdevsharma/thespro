@@ -58,7 +58,7 @@ const DefenseSchedule = () => {
                       <td className="py-2">{group.type}</td>
                       <td className="py-2">{group.supervisorId ? group.supervisorId.name : '-'}</td>
                       <td className="py-2">{group.courseSupervisorId ? group.courseSupervisorId.name : '-'}</td>
-                      <td className="py-2">{board.comments.find(c => c.group === group._id)?.text || ''}</td>
+                      <td className="py-2" style={{ whiteSpace: 'pre-wrap' }}>{board.comments.find(c => c.group === group._id)?.text || ''}</td>
                     </tr>
                   ))}
                 </tbody>

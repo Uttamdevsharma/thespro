@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { logout } from './userSlice';
 
+// RTK Query API Slice for all API interactions
 const baseQuery = fetchBaseQuery({
   baseUrl: 'http://localhost:5005/api',
   prepareHeaders: (headers, { getState }) => {
@@ -224,6 +225,10 @@ export const apiSlice = createApi({
       }),
       getSupervisorDefenseSchedule: builder.query({
         query: () => '/defenseboards/supervisor-schedule',
+        providesTags: ['DefenseBoards'],
+      }),
+      getSupervisorDefenseResults: builder.query({
+        query: () => '/defenseboards/supervisor-results',
         providesTags: ['DefenseBoards'],
       }),
       getStudentDefenseSchedule: builder.query({
