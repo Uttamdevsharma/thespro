@@ -206,9 +206,16 @@ const deleteDefenseBoard = asyncHandler(async (req, res) => {
 // @access  Private/Supervisor
 const getSupervisorDefenseSchedule = asyncHandler(async (req, res) => {
   const supervisorId = req.user._id;
+  const { defenseType } = req.query; // Get defenseType from query parameters
+
+  let query = { boardMembers: supervisorId };
+
+  if (defenseType) {
+    query.defenseType = defenseType; // Add defenseType to the query if provided
+  }
 
   // 1. Find the initial boards and populate top-level fields
-  const defenseBoards = await DefenseBoard.find({ boardMembers: supervisorId })
+  const defenseBoards = await DefenseBoard.find(query)
     .populate('room', 'name')
     .populate('schedule', 'startTime endTime')
     .populate('boardMembers', 'name email')
@@ -350,14 +357,33 @@ const addOrUpdateComment = asyncHandler(async (req, res) => {
 // @access  Private/Supervisor
 const getSupervisorDefenseResult = asyncHandler(async (req, res) => {
   const supervisorId = req.user._id;
+  const { defenseType, filter } = req.query; // Get defenseType and filter from query parameters
+
+  console.log('getSupervisorDefenseResult: supervisorId=', supervisorId, 'defenseType=', defenseType, 'supervisionFilter=', filter);
+
+  let boardQuery = {};
+  if (defenseType) {
+    boardQuery.defenseType = defenseType;
+  }
 
   // 1. Find proposals directly supervised by the logged-in supervisor
-  const directProposals = await Proposal.find({
-    $or: [
+  let proposalQuery = { status: 'Approved' };
+
+  if (filter === 'my_supervision') {
+    proposalQuery.$and = [
       { supervisorId: supervisorId },
-      { courseSupervisorId: supervisorId }
-    ]
-  }).select('_id');
+      { courseSupervisorId: null },
+    ];
+  } else if (filter === 'my_course_supervision') {
+    proposalQuery.courseSupervisorId = supervisorId;
+  } else { // 'all' or no filter
+    proposalQuery.$or = [
+      { supervisorId: supervisorId },
+      { courseSupervisorId: supervisorId },
+    ];
+  }
+
+  const directProposals = await Proposal.find(proposalQuery).select('_id');
 
   const directProposalIds = directProposals.map(p => p._id);
 
@@ -381,14 +407,17 @@ const getSupervisorDefenseResult = asyncHandler(async (req, res) => {
   const allRelevantProposalIds = [...new Set([...directProposalIds, ...indirectProposalIds])];
 
   if (allRelevantProposalIds.length === 0) {
+    console.log('getSupervisorDefenseResult: No relevant proposals found.');
     return res.json([]);
   }
 
   // 4. Find DefenseBoards associated with these proposals
   // We need to find boards that contain any of these proposals in their 'groups' array
-  const defenseBoards = await DefenseBoard.find({
-    groups: { $in: allRelevantProposalIds }
-  })
+  boardQuery.groups = { $in: allRelevantProposalIds };
+
+  console.log('getSupervisorDefenseResult: Final boardQuery=', boardQuery);
+
+  const defenseBoards = await DefenseBoard.find(boardQuery)
     .populate('room', 'name')
     .populate('schedule', 'startTime endTime')
     .populate('boardMembers', 'name email')
@@ -396,6 +425,7 @@ const getSupervisorDefenseResult = asyncHandler(async (req, res) => {
     .lean(); // Use .lean() for performance
 
   if (!defenseBoards || defenseBoards.length === 0) {
+    console.log('getSupervisorDefenseResult: No defense boards found for the query.');
     return res.json([]);
   }
 
@@ -433,6 +463,7 @@ const getSupervisorDefenseResult = asyncHandler(async (req, res) => {
   // Filter out boards that might have had their essential references (like room or schedule) deleted
   const filteredResults = finalResults.filter(board => board.room && board.schedule);
 
+  console.log('getSupervisorDefenseResult: Sending final results count=', filteredResults.length);
   res.json(filteredResults);
 });
 

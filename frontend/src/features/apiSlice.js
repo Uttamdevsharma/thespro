@@ -224,11 +224,23 @@ export const apiSlice = createApi({
         invalidatesTags: ['Notice'],
       }),
       getSupervisorDefenseSchedule: builder.query({
-        query: () => '/defenseboards/supervisor-schedule',
+        query: (defenseType) => {
+          let url = '/defenseboards/supervisor-schedule';
+          if (defenseType) {
+            url += `?defenseType=${defenseType}`;
+          }
+          return url;
+        },
         providesTags: ['DefenseBoards'],
       }),
       getSupervisorDefenseResults: builder.query({
-        query: () => '/defenseboards/supervisor-results',
+        query: (defenseType) => {
+          let url = '/defenseboards/supervisor-results';
+          if (defenseType) {
+            url += `?defenseType=${defenseType}`;
+          }
+          return url;
+        },
         providesTags: ['DefenseBoards'],
       }),
       getStudentDefenseSchedule: builder.query({

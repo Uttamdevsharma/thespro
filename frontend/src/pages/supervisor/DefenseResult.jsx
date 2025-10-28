@@ -9,23 +9,20 @@ const DefenseResult = () => {
   const [defenseResults, setDefenseResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('all'); // Default filter
+  const [supervisionFilter, setSupervisionFilter] = useState('all');
+  const [defenseTypeFilter, setDefenseTypeFilter] = useState('Pre-Defense');
 
   useEffect(() => {
-    console.log('DefenseResult useEffect - user:', user);
     const fetchDefenseResults = async () => {
       try {
         setLoading(true);
         const config = {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-          params: { filter }, // Pass filter as a query parameter
+          headers: { Authorization: `Bearer ${user.token}` },
+          params: { filter: supervisionFilter, defenseType: defenseTypeFilter },
         };
         const { data } = await axios.get('/api/defense-results/supervisor', config);
         setDefenseResults(data);
       } catch (err) {
-        console.error('Error fetching defense results:', err);
         setError(err.response?.data?.message || err.message);
         toast.error(err.response?.data?.message || err.message);
       } finally {
@@ -33,10 +30,8 @@ const DefenseResult = () => {
       }
     };
 
-    if (user) {
-      fetchDefenseResults();
-    }
-  }, [user, filter]);
+    if (user) fetchDefenseResults();
+  }, [user, supervisionFilter, defenseTypeFilter]);
 
   if (loading) return <Loader />;
   if (error) return <p className="text-red-500">Error: {error}</p>;
@@ -45,24 +40,44 @@ const DefenseResult = () => {
     <div className="container mx-auto p-4">
       <h2 className="text-2xl font-bold mb-4">Defense Results</h2>
 
-      {/* Filter Dropdown */}
-      <div className="mb-6">
-        <label htmlFor="filter" className="block text-sm font-medium text-gray-700 mb-2">
-          Filter Groups:
-        </label>
-        <div className="relative w-72">
+      {/* Supervision Filter Dropdown */}
+      <div className="mb-4 max-w-md">
+        <label htmlFor="supervisionFilter" className="block text-sm font-medium text-gray-700 mb-2">Filter by Supervision:</label>
+        <div className="relative">
           <select
-            id="filter"
-            name="filter"
-            className="block w-full appearance-none bg-white border border-gray-300 hover:border-indigo-400 text-gray-700 py-2 px-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition ease-in-out duration-150"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            id="supervisionFilter"
+            name="supervisionFilter"
+            value={supervisionFilter}
+            onChange={(e) => setSupervisionFilter(e.target.value)}
+            className="block w-full appearance-none bg-white border border-gray-300 rounded-md py-2 pl-3 pr-10 text-sm font-medium text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 hover:border-gray-400 transition-colors"
           >
             <option value="all">All Groups (Under my supervision & course supervision)</option>
             <option value="my_supervision">Under my supervision only</option>
             <option value="my_course_supervision">Under my course supervision only</option>
           </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Defense Type Filter Dropdown */}
+      <div className="mb-6 max-w-md">
+        <label htmlFor="defenseTypeFilter" className="block text-sm font-medium text-gray-700 mb-2">Filter by Defense Type:</label>
+        <div className="relative">
+          <select
+            id="defenseTypeFilter"
+            name="defenseTypeFilter"
+            value={defenseTypeFilter}
+            onChange={(e) => setDefenseTypeFilter(e.target.value)}
+            className="block w-full appearance-none bg-white border border-gray-300 rounded-md py-2 pl-3 pr-10 text-sm font-medium text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-500 hover:border-gray-400 transition-colors"
+          >
+            <option value="Pre-Defense">Pre-Defense</option>
+            <option value="Final Defense">Final Defense</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -72,7 +87,7 @@ const DefenseResult = () => {
 
       {/* Table */}
       {defenseResults.length === 0 ? (
-        <p>No defense results found for your supervised groups with the current filter.</p>
+        <p>No {defenseTypeFilter.toLowerCase()} defense results found for your supervised groups with the current filter.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white border border-gray-200">
@@ -91,12 +106,8 @@ const DefenseResult = () => {
               {defenseResults.map((result, index) => (
                 <tr key={result._id} className="hover:bg-gray-50">
                   <td className="py-2 px-4 border-b text-center">{index + 1}</td>
-                  <td className="py-2 px-4 border-b">
-                    {result.students.map((s) => s.studentId).join(', ')}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {result.students.map((s) => s.name).join(', ')}
-                  </td>
+                  <td className="py-2 px-4 border-b">{result.students.map((s) => s.studentId).join(', ')}</td>
+                  <td className="py-2 px-4 border-b">{result.students.map((s) => s.name).join(', ')}</td>
                   <td className="py-2 px-4 border-b">{result.title}</td>
                   <td className="py-2 px-4 border-b">{result.type}</td>
                   <td className="py-2 px-4 border-b">{result.boardMembers.join(', ')}</td>
