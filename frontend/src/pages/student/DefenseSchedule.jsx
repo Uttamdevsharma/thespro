@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useEffect, useContext } from 'react';
 import { useGetStudentDefenseScheduleQuery } from '../../features/apiSlice';
+import { SocketContext } from '../../contexts/SocketContext';
 
 const DefenseSchedule = () => {
-  const { data: defenseBoards, isLoading, isError, error } = useGetStudentDefenseScheduleQuery();
+  const { data: defenseBoards, isLoading, isError, error, refetch } = useGetStudentDefenseScheduleQuery();
+  const { socket } = useContext(SocketContext);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('commentUpdated', (data) => {
+        // Refetch the defense schedule data when a comment is updated
+        refetch();
+      });
+
+      return () => {
+        socket.off('commentUpdated');
+      };
+    }
+  }, [socket, refetch]);
 
   return (
     <div>
@@ -10,7 +25,7 @@ const DefenseSchedule = () => {
       {isLoading ? (
         <p>Loading defense boards...</p>
       ) : isError ? (
-        <p>Error: {error.message}</p>
+        <p className="text-red-500">Error: {error.data?.message || 'An unexpected error occurred'}</p>
       ) : (
         <div>
           {defenseBoards && defenseBoards.map(board => (
@@ -40,7 +55,7 @@ const DefenseSchedule = () => {
                       <td className="py-2">{group.members.map(m => m.studentId).join(', ')}</td>
                       <td className="py-2">{group.members.map(m => m.name).join(', ')}</td>
                       <td className="py-2">{group.title}</td>
-                      <td className="py-2">{group.proposalType}</td>
+                      <td className="py-2">{group.type}</td>
                       <td className="py-2">{group.supervisorId ? group.supervisorId.name : '-'}</td>
                       <td className="py-2">{group.courseSupervisorId ? group.courseSupervisorId.name : '-'}</td>
                       <td className="py-2">{board.comments.find(c => c.group === group._id)?.text || ''}</td>

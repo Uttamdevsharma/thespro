@@ -1,8 +1,42 @@
-import React from 'react';
-import { useGetSupervisorDefenseScheduleQuery } from '../../features/apiSlice';
+import React, { useState, useEffect } from 'react';
+import { useGetSupervisorDefenseScheduleQuery, useAddOrUpdateCommentMutation } from '../../features/apiSlice';
+import { toast } from 'react-toastify';
 
 const DefenseSchedule = () => {
-  const { data: defenseBoards, isLoading, isError, error } = useGetSupervisorDefenseScheduleQuery();
+  const { data: defenseBoards, isLoading, isError, error, refetch } = useGetSupervisorDefenseScheduleQuery();
+  const [addOrUpdateComment] = useAddOrUpdateCommentMutation();
+
+  const [comments, setComments] = useState({}); // State to hold comments for each group
+
+  useEffect(() => {
+    if (defenseBoards) {
+      const initialComments = {};
+      defenseBoards.forEach(board => {
+        board.groups.forEach(group => {
+          const existingComment = board.comments.find(c => c.group === group._id);
+          initialComments[group._id] = existingComment ? existingComment.text : '';
+        });
+      });
+      setComments(initialComments);
+    }
+  }, [defenseBoards]);
+
+  const handleChangeComment = (groupId, text) => {
+    setComments(prevComments => ({
+      ...prevComments,
+      [groupId]: text,
+    }));
+  };
+
+  const handleSaveComment = async (defenseBoardId, groupId) => {
+    try {
+      await addOrUpdateComment({ id: defenseBoardId, groupId, text: comments[groupId] }).unwrap();
+      toast.success('Comment saved successfully!');
+      refetch(); // Refetch data to ensure UI is up-to-date
+    } catch (err) {
+      toast.error(err.data?.message || 'Failed to save comment.');
+    }
+  };
 
   return (
     <div>
@@ -43,7 +77,20 @@ const DefenseSchedule = () => {
                       <td className="py-2">{group.type}</td>
                       <td className="py-2">{group.supervisorId ? group.supervisorId.name : '-'}</td>
                       <td className="py-2">{group.courseSupervisorId ? group.courseSupervisorId.name : '-'}</td>
-                      <td className="py-2">{board.comments.find(c => c.group === group._id)?.text || ''}</td>
+                      <td className="py-2">
+                        <textarea
+                          className="w-full p-1 border rounded-md text-sm"
+                          rows="2"
+                          value={comments[group._id] || ''}
+                          onChange={(e) => handleChangeComment(group._id, e.target.value)}
+                        ></textarea>
+                        <button
+                          onClick={() => handleSaveComment(board._id, group._id)}
+                          className="mt-1 bg-blue-500 text-white px-2 py-1 rounded-md text-xs hover:bg-blue-600"
+                        >
+                          Save
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
