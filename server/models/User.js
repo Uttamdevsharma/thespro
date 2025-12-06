@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: function() { return this.role !== 'student'; } // Name is required for committee and supervisor
+    required: function() { return this.role !== 'student'; } 
   },
   email: {
     type: String,
