@@ -136,31 +136,46 @@ const StudentEvaluationPanel = ({ proposal, existingEvaluations, supervisorId })
         setComments(prev => ({ ...prev, [studentId]: value }));
     };
 
-    const handleSubmit = async (studentId) => {
-        const mark = marks[studentId];
-        const maxMark = defenseType === 'pre-defense' ? 20 : 40;
+    const handleSaveAll = async () => {
+        const submissionPromises = proposal.members.map(async (student) => {
+            const mark = marks[student._id];
+            const comment = comments[student._id] || '';
 
-        if (mark === undefined || mark === '' || Number(mark) < 0 || Number(mark) > maxMark) {
-            alert(`Marks must be a number between 0 and ${maxMark}.`);
-            return;
-        }
+            if (mark === undefined || mark === '' || Number(mark) < 0 || Number(mark) > maxMark) {
+                return { studentId: student._id, status: 'rejected', reason: `Marks for ${student.name} must be a number between 0 and ${maxMark}.` };
+            }
 
-        try {
-            await submitEvaluation({
-                studentId,
-                proposalId: proposal._id,
-                defenseType,
-                evaluationType: 'supervisor',
-                marks: Number(mark),
-                comments: comments[studentId] || '',
-            }).unwrap();
-            alert('Evaluation submitted successfully!');
-        } catch (err) {
-            console.error("Submission failed:", err);
-            alert(`Failed to submit evaluation: ${err.data?.message || 'Server error'}`);
+            try {
+                await submitEvaluation({
+                    studentId: student._id,
+                    proposalId: proposal._id,
+                    defenseType,
+                    evaluationType: 'supervisor',
+                    marks: Number(mark),
+                    comments: comment,
+                }).unwrap();
+                return { studentId: student._id, status: 'fulfilled' };
+            } catch (err) {
+                console.error(`Submission failed for ${student.name}:`, err);
+                return { studentId: student._id, status: 'rejected', reason: `Failed to save evaluation for ${student.name}: ${err.data?.message || 'Server error'}` };
+            }
+        });
+
+        const results = await Promise.allSettled(submissionPromises);
+
+        const successfulSubmissions = results.filter(res => res.status === 'fulfilled');
+        const failedSubmissions = results.filter(res => res.status === 'rejected');
+
+        if (successfulSubmissions.length === proposal.members.length) {
+            alert('All evaluations submitted successfully!');
+        } else if (failedSubmissions.length === proposal.members.length) {
+            alert('Failed to submit all evaluations. Please check console for details.');
+            console.error('Failed submissions:', failedSubmissions);
+        } else {
+            alert(`Submitted ${successfulSubmissions.length} evaluations successfully. Failed to submit ${failedSubmissions.length}.`);
+            console.warn('Mixed submission results:', results);
         }
     };
-
     const maxMark = defenseType === 'pre-defense' ? 20 : 40;
 
     return (
@@ -219,20 +234,19 @@ const StudentEvaluationPanel = ({ proposal, existingEvaluations, supervisorId })
                                 />
                             </div>
                         </div>
-
-                        {/* Submit Button */}
-                        <div className="mt-4 flex justify-end">
-                            <button
-                                onClick={() => handleSubmit(student._id)}
-                                className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-200 disabled:bg-gray-400 flex items-center"
-                                disabled={isSubmitting}
-                            >
-                                <CheckBadgeIcon className="w-5 h-5 mr-2" />
-                                {isSubmitting ? 'Saving...' : 'Save Evaluation'}
-                            </button>
-                        </div>
                     </div>
                 ))}
+            </div>
+            {/* Single Save All Evaluations Button */}
+            <div className="mt-6 flex justify-center">
+                <button
+                    onClick={handleSaveAll}
+                    className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 flex items-center"
+                    disabled={isSubmitting}
+                >
+                    <CheckBadgeIcon className="w-5 h-5 mr-2" />
+                    {isSubmitting ? 'Saving All...' : 'Save All Evaluations'}
+                </button>
             </div>
         </div>
     );
