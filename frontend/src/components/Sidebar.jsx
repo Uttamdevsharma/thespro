@@ -11,6 +11,8 @@ const Sidebar = ({ role }) => {
     { to: '/committee/cell-members', label: 'Cell Members' },
     { to: '/committee/committee-members', label: 'Committee Members' },
     { to: '/committee/defense-schedule', label: 'Defense Schedule' },
+    { to: '/committee/set-submission-dates', label: 'Set Submission Dates' }, // Restored
+    { to: '/committee/manage-course-supervisors', label: 'Manage Course Supervisors' }, // Restored
     { to: '/committee/defense-boards', label: 'Defense Boards' },
   ];
 
