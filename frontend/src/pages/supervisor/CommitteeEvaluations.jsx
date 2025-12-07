@@ -1,38 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useGetMyCommitteeEvaluationsQuery, useGetEvaluationsByProposalQuery, useSubmitOrUpdateEvaluationMutation } from '../../features/apiSlice';
-import { selectUser } from '../../features/userSlice';
+import {
+    useGetMyCommitteeEvaluationsQuery,
+    useGetEvaluationsByProposalQuery,
+    useSubmitOrUpdateEvaluationMutation
+} from '../../features/apiSlice';
+    import { selectUser } from '../../features/userSlice';
 import Loader from '../../components/Loader';
 import { useLocation } from 'react-router-dom';
 
 const CommitteeEvaluations = () => {
-    const location = useLocation(); // Get current location object
-    const { data: boards, isLoading, isError, error, refetch: refetchBoards } = useGetMyCommitteeEvaluationsQuery();
+    const location = useLocation();
+
+    const {
+        data: boards,
+        isLoading,
+        isError,
+        error,
+        refetch: refetchBoards
+    } = useGetMyCommitteeEvaluationsQuery();
+
     const [selectedBoard, setSelectedBoard] = useState(null);
     const [selectedProposal, setSelectedProposal] = useState(null);
+
     const user = useSelector(selectUser);
 
-    const { data: existingEvaluations, refetch } = useGetEvaluationsByProposalQuery(selectedProposal?._id, {
-        skip: !selectedProposal,
-    });
+    const { data: existingEvaluations, refetch } =
+        useGetEvaluationsByProposalQuery(selectedProposal?._id, {
+            skip: !selectedProposal,
+        });
 
-    // This useEffect will run when the component mounts or when the location changes,
-    // ensuring data is refetched and state is reset.
+    // Reset when route changes
     useEffect(() => {
-        refetchBoards(); // Force a refetch of the boards
-        setSelectedBoard(null); // Reset selected board
-        setSelectedProposal(null); // Reset selected proposal
+        refetchBoards();
+        setSelectedBoard(null);
+        setSelectedProposal(null);
     }, [location.pathname, refetchBoards]);
 
     useEffect(() => {
-        if (selectedProposal) {
-            refetch();
-        }
+        if (selectedProposal) refetch();
     }, [selectedProposal, refetch]);
 
     const handleSelectBoard = (board) => {
         setSelectedBoard(board);
-        setSelectedProposal(null); // Reset proposal selection when board changes
+        setSelectedProposal(null);
     };
 
     const handleSelectProposal = (proposal) => {
@@ -44,55 +55,84 @@ const CommitteeEvaluations = () => {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Committee Evaluations</h1>
+            <h1 className="text-3xl font-bold mb-6">Board Evaluations</h1>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-1">
-                    <h2 className="text-xl font-semibold mb-2">My Assigned Boards</h2>
-                    <div className="space-y-2">
-                        {boards && boards.length > 0 ? (
+                {/* LEFT PANEL — Boards List */}
+                <div className="md:col-span-1 bg-white rounded-lg shadow p-4">
+                    <h2 className="text-xl font-semibold mb-4 border-b pb-2">My Assigned Boards</h2>
+
+                    <div className="space-y-3">
+                        {boards?.length > 0 ? (
                             boards.map(board => (
-                                <div key={board._id} onClick={() => handleSelectBoard(board)}
-                                    className={`p-3 rounded cursor-pointer ${selectedBoard?._id === board._id ? 'bg-blue-200 shadow-md' : 'bg-white shadow'}`}>
-                                    <p className="font-bold">{board.defenseType.toUpperCase()} Board</p>
-                                    <p className="text-sm text-gray-600">Room: {board.room.name} | {new Date(board.date).toLocaleDateString()}</p>
+                                <div
+                                    key={board._id}
+                                    onClick={() => handleSelectBoard(board)}
+                                    className={`p-4 rounded cursor-pointer transition border 
+                                        ${selectedBoard?._id === board._id
+                                            ? 'bg-blue-100 border-blue-400'
+                                            : 'bg-gray-50 hover:bg-gray-100 border-gray-300'}`}
+                                >
+                                    <p className="font-bold text-lg">
+                                        {board.defenseType.toUpperCase()} BOARD
+                                    </p>
+                                    <p className="text-sm text-gray-600 mt-1">
+                                        Room: {board.room.name}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                        Date: {new Date(board.date).toLocaleDateString()}
+                                    </p>
                                 </div>
                             ))
                         ) : (
-                            <p>You are not assigned to any defense boards.</p>
+                            <p className="text-gray-500">You are not assigned to any boards.</p>
                         )}
                     </div>
                 </div>
 
-                <div className="md:col-span-2">
-                    {selectedBoard && (
-                        <div>
-                            <h2 className="text-xl font-semibold mb-2">Groups in Board</h2>
-                            <div className="space-y-2 mb-4">
+                {/* RIGHT PANEL — Groups + Evaluation */}
+                <div className="md:col-span-2 space-y-4">
+                    {/* GROUP LIST */}
+                    {selectedBoard ? (
+                        <div className="bg-white rounded-lg shadow p-4">
+                            <h2 className="text-xl font-semibold mb-4 border-b pb-2">
+                                Groups in This Board
+                            </h2>
+
+                            <div className="space-y-3">
                                 {selectedBoard.groups.map(proposal => (
-                                    <div key={proposal._id} onClick={() => handleSelectProposal(proposal)}
-                                        className={`p-3 rounded cursor-pointer ${selectedProposal?._id === proposal._id ? 'bg-green-200 shadow-md' : 'bg-white shadow'}`}>
-                                        <p className="font-bold">{proposal.title}</p>
+                                    <div
+                                        key={proposal._id}
+                                        onClick={() => handleSelectProposal(proposal)}
+                                        className={`p-3 rounded cursor-pointer transition border 
+                                            ${selectedProposal?._id === proposal._id
+                                                ? 'bg-green-100 border-green-400'
+                                                : 'bg-gray-50 hover:bg-gray-100 border-gray-300'}`}
+                                    >
+                                        <p className="font-bold text-lg">{proposal.title}</p>
                                     </div>
                                 ))}
                             </div>
-
-                            {selectedProposal ? (
-                                <StudentEvaluationPanel
-                                    proposal={selectedProposal}
-                                    existingEvaluations={existingEvaluations}
-                                    evaluatorId={user._id}
-                                />
-                            ) : (
-                                <div className="p-6 bg-white rounded-lg shadow flex items-center justify-center h-full">
-                                    <p className="text-gray-500">Select a group to manage evaluations.</p>
-                                </div>
-                            )}
                         </div>
-                    )}
-                    {!selectedBoard && (
-                        <div className="p-6 bg-white rounded-lg shadow flex items-center justify-center h-full">
+                    ) : (
+                        <div className="p-6 bg-white rounded-lg shadow flex items-center justify-center h-40">
                             <p className="text-gray-500">Select a board to view groups.</p>
                         </div>
+                    )}
+
+                    {/* EVALUATION PANEL */}
+                    {selectedBoard && (
+                        selectedProposal ? (
+                            <StudentEvaluationPanel
+                                proposal={selectedProposal}
+                                existingEvaluations={existingEvaluations}
+                                evaluatorId={user._id}
+                            />
+                        ) : (
+                            <div className="p-6 bg-white rounded-lg shadow flex items-center justify-center h-40">
+                                <p className="text-gray-500">Select a group to manage evaluations.</p>
+                            </div>
+                        )
                     )}
                 </div>
             </div>
@@ -104,38 +144,39 @@ const StudentEvaluationPanel = ({ proposal, existingEvaluations, evaluatorId }) 
     const [marks, setMarks] = useState({});
     const [comments, setComments] = useState({});
     const [defenseType, setDefenseType] = useState('pre-defense');
-    const [submitEvaluation, { isLoading: isSubmitting }] = useSubmitOrUpdateEvaluationMutation();
+
+    const [submitEvaluation, { isLoading: isSubmitting }] =
+        useSubmitOrUpdateEvaluationMutation();
 
     useEffect(() => {
         const initialMarks = {};
         const initialComments = {};
+
         if (existingEvaluations) {
             existingEvaluations.forEach(evalGroup => {
                 evalGroup.evaluations.forEach(evaluation => {
-                    // This is for committee evaluation, so filter by role and evaluator
-                    if (evaluation.evaluator._id === evaluatorId && evaluation.defenseType === defenseType && evaluation.evaluationType === 'committee') {
+                    if (
+                        evaluation.evaluator._id === evaluatorId &&
+                        evaluation.defenseType === defenseType &&
+                        evaluation.evaluationType === 'committee'
+                    ) {
                         initialMarks[evalGroup.student._id] = evaluation.marks;
-                        initialComments[evalGroup.student._id] = evaluation.comments || '';
+                        initialComments[evalGroup.student._id] =
+                            evaluation.comments || '';
                     }
                 });
             });
         }
+
         setMarks(initialMarks);
         setComments(initialComments);
     }, [existingEvaluations, defenseType, evaluatorId]);
 
-
-    const handleMarkChange = (studentId, value) => {
-        setMarks(prev => ({ ...prev, [studentId]: value }));
-    };
-
-    const handleCommentChange = (studentId, value) => {
-        setComments(prev => ({ ...prev, [studentId]: value }));
-    };
+    const maxMark = defenseType === 'pre-defense' ? 10 : 30;
 
     const handleSubmit = async (studentId) => {
         const mark = marks[studentId];
-        const maxMark = defenseType === 'pre-defense' ? 10 : 30;
+
         if (mark === undefined || mark < 0 || mark > maxMark) {
             alert(`Marks must be between 0 and ${maxMark}.`);
             return;
@@ -146,60 +187,78 @@ const StudentEvaluationPanel = ({ proposal, existingEvaluations, evaluatorId }) 
                 studentId,
                 proposalId: proposal._id,
                 defenseType,
-                evaluationType: 'committee', // Role is Committee Evaluator
+                evaluationType: 'committee',
                 marks: mark,
                 comments: comments[studentId] || '',
             }).unwrap();
+
             alert('Evaluation submitted successfully!');
         } catch (err) {
             alert(`Failed to submit evaluation: ${err.data?.message || 'Server error'}`);
         }
     };
 
-    const maxMark = defenseType === 'pre-defense' ? 10 : 30;
-
     return (
         <div className="p-6 bg-white rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-2">Students in "{proposal.title}"</h3>
-            <div className="mb-4">
-                <span className="mr-4">Evaluation Type:</span>
-                <select value={defenseType} onChange={(e) => setDefenseType(e.target.value)} className="p-2 border rounded">
-                    <option value="pre-defense">Pre-Defense</option>
-                    <option value="final-defense">Final Defense</option>
+            <h3 className="text-2xl font-semibold mb-4 border-b pb-2">
+                Student Evaluation — {proposal.title}
+            </h3>
+
+            {/* Defense Type Selector */}
+            <div className="mb-4 flex items-center gap-3">
+                <span className="font-semibold">Evaluation Type:</span>
+                <select
+                    value={defenseType}
+                    onChange={(e) => setDefenseType(e.target.value)}
+                    className="p-2 border rounded"
+                >
+                    <option value="pre-defense">Pre-Defense (10 Marks)</option>
+                    <option value="final-defense">Final Defense (30 Marks)</option>
                 </select>
             </div>
 
-            <div className="space-y-4">
+            {/* Student List */}
+            <div className="space-y-5">
                 {proposal.members.map(student => (
-                    <div key={student._id} className="p-3 border rounded-md">
-                        <p className="font-bold">{student.name} ({student.email})</p>
-                        <div className="mt-2 flex items-center gap-4">
-                            <label>Marks (out of {maxMark}):</label>
+                    <div key={student._id} className="p-4 border rounded-lg bg-gray-50">
+                        <p className="font-bold text-lg">{student.name}</p>
+                        <p className="text-sm text-gray-600">{student.email}</p>
+
+                        <div className="mt-3">
+                            <label className="font-medium">Marks (out of {maxMark}):</label>
                             <input
                                 type="number"
                                 value={marks[student._id] || ''}
-                                onChange={(e) => handleMarkChange(student._id, e.target.value)}
-                                className="p-1 border rounded w-24"
-                                max={maxMark}
+                                onChange={(e) => setMarks(prev => ({
+                                    ...prev,
+                                    [student._id]: e.target.value
+                                }))}
+                                className="p-2 border rounded w-32 ml-3"
                                 min="0"
+                                max={maxMark}
                             />
                         </div>
-                        <div className="mt-2 flex items-center gap-4">
-                            <label>Comment:</label>
+
+                        <div className="mt-3">
+                            <label className="font-medium">Comments:</label>
                             <input
                                 type="text"
                                 value={comments[student._id] || ''}
-                                onChange={(e) => handleCommentChange(student._id, e.target.value)}
-                                className="p-1 border rounded w-full"
-                                placeholder="Optional feedback"
+                                onChange={(e) => setComments(prev => ({
+                                    ...prev,
+                                    [student._id]: e.target.value
+                                }))}
+                                className="p-2 border rounded w-full mt-1"
+                                placeholder="Write optional feedback"
                             />
                         </div>
+
                         <button
                             onClick={() => handleSubmit(student._id)}
-                            className="mt-3 px-4 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
+                            className="mt-4 px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? 'Submitting...' : 'Save Evaluation'}
+                            {isSubmitting ? 'Saving...' : 'Save Evaluation'}
                         </button>
                     </div>
                 ))}
