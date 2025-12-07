@@ -26,7 +26,7 @@ const baseQueryWithAuth = async (args, api, extraOptions) => {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithAuth,
-  tagTypes: ['Students', 'Teachers', 'Cells', 'Notices', 'Proposals', 'DefenseBoards', 'Rooms', 'ScheduleSlots'],
+  tagTypes: ['Students', 'Teachers', 'Cells', 'Notices', 'Proposals', 'DefenseBoards', 'Rooms', 'ScheduleSlots', 'Evaluations'],
     endpoints: (builder) => ({
       getStudents: builder.query({
         query: () => '/users/students',
@@ -315,6 +315,31 @@ export const apiSlice = createApi({
         query: () => '/proposals/available-proposals',
         providesTags: ['Proposals'],
       }),
+      // Evaluation Endpoints
+      getMyResults: builder.query({
+        query: () => '/evaluations/my-results',
+        providesTags: ['Evaluations'],
+      }),
+      getEvaluationsByProposal: builder.query({
+        query: (proposalId) => `/evaluations/proposal/${proposalId}`,
+        providesTags: ['Evaluations'],
+      }),
+      submitOrUpdateEvaluation: builder.mutation({
+        query: (evaluationData) => ({
+          url: '/evaluations',
+          method: 'POST',
+          body: evaluationData,
+        }),
+        invalidatesTags: ['Evaluations'],
+      }),
+      getMySupervisions: builder.query({
+        query: () => '/proposals/my-supervisions',
+        providesTags: ['Proposals'],
+      }),
+      getMyCommitteeEvaluations: builder.query({
+        query: () => '/defenseboards/my-committee-evaluations',
+        providesTags: ['DefenseBoards'],
+      }),
     }),
     extraReducers: (builder) => {
       builder.addMatcher(apiSlice.endpoints.logout.match, (state, action) => {
@@ -384,6 +409,11 @@ export const apiSlice = createApi({
     useUpdateScheduleSlotMutation,
     useDeleteScheduleSlotMutation,
     useGetAvailableProposalsQuery,
+    useGetMyResultsQuery,
+    useGetEvaluationsByProposalQuery,
+    useSubmitOrUpdateEvaluationMutation,
+    useGetMySupervisionsQuery,
+    useGetMyCommitteeEvaluationsQuery,
   } = apiSlice;
   
   

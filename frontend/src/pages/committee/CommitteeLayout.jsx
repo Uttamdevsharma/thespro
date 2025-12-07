@@ -1,26 +1,9 @@
-import React, { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import React from 'react';
+import { Outlet } from 'react-router-dom';
 import ProfileIcon from '../../components/ProfileIcon';
+import Sidebar from '../../components/Sidebar';
 
 const CommitteeLayout = () => {
-  const [activeMenu, setActiveMenu] = useState('/committee/dashboard'); // default active
-
-  const menuItems = [
-    { to: '/committee/dashboard', label: 'Dashboard' },
-    { to: '/committee/all-students', label: 'All Students' },
-    { to: '/committee/all-teachers', label: 'All Teachers' },
-    { to: '/committee/research-cells', label: 'Research Cells' },
-    { to: '/committee/cell-members', label: 'Cell Members' },
-    { to: '/committee/committee-members', label: 'Committee Members' },
-    { to: '/committee/pending-proposals', label: 'Pending Proposals' },
-    { to: '/committee/notices', label: 'Notices' },
-    { to: '/committee/manage-course-supervisors', label: 'Manage Course Supervisors' },
-    { to: '/committee/set-submission-dates', label: 'Set Submission Dates' },
-    { to: '/committee/all-groups', label: 'All Groups' },
-    { to: '/committee/defense-schedule', label: 'Current Defense Schedule' },
-    { to: '/committee/all-defense-boards', label: 'All Boards' },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -49,31 +32,7 @@ const CommitteeLayout = () => {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside
-          className="w-64 text-black min-h-screen p-4"
-          style={{ backgroundColor: 'rgb(224, 224, 224)' }}
-        >
-          <nav>
-            <ul>
-              {menuItems.map((item) => (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    onClick={() => setActiveMenu(item.to)}
-                    className={`block py-2 px-4 rounded transition-colors duration-200
-                      ${
-                        activeMenu === item.to
-                          ? 'bg-green-500 text-white' // active menu
-                          : 'hover:bg-white hover:text-black' // hover effect
-                      }`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </aside>
+        <Sidebar role="committee" />
 
         {/* Main Content */}
         <main className="flex-1 p-10">

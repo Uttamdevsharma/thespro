@@ -1,21 +1,10 @@
-import React, { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import React from 'react';
+import { Outlet } from 'react-router-dom';
 import NotificationBell from '../../components/NotificationBell';
 import ProfileIcon from '../../components/ProfileIcon';
+import Sidebar from '../../components/Sidebar';
 
 const SupervisorLayout = () => {
-  const [activeMenu, setActiveMenu] = useState('/supervisor/dashboard'); // default active
-
-  const menuItems = [
-    { to: '/supervisor/dashboard', label: 'Dashboard' },
-    { to: '/supervisor/pending-proposals', label: 'Pending Proposals' },
-    { to: '/supervisor/all-groups', label: 'All Groups' },
-    { to: '/supervisor/chat', label: 'Chat' },
-    { to: '/supervisor/notice', label: 'Notice' },
-    { to: '/supervisor/defense-schedule', label: 'Defense Schedule' },
-    { to: '/supervisor/defense-result', label: 'Defense Result' },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
@@ -45,57 +34,7 @@ const SupervisorLayout = () => {
 
       <div className="flex flex-grow">
         {/* Sidebar */}
-        <aside
-          className="w-64 text-black p-4 flex flex-col"
-          style={{ backgroundColor: 'rgb(224, 224, 224)' }}
-        >
-          <nav className="flex-grow">
-            <ul>
-              {menuItems.map((item, index) => (
-                <li key={index} className="mb-2">
-                  {item.to ? (
-                    <Link
-                      to={item.to}
-                      onClick={() => setActiveMenu(item.to)}
-                      className={`block py-2 px-4 rounded transition-colors duration-200
-                        ${
-                          activeMenu === item.to
-                            ? 'bg-green-500 text-white' // active menu
-                            : 'hover:bg-white hover:text-black' // hover effect
-                        }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <>
-                      <span className="block py-2 px-4 font-semibold text-gray-700">
-                        {item.label}
-                      </span>
-                      <ul className="ml-4">
-                        {item.children.map((child, childIndex) => (
-                          <li key={childIndex} className="mb-1">
-                            <Link
-                              to={child.to}
-                              onClick={() => setActiveMenu(child.to)}
-                              className={`block py-2 px-4 rounded transition-colors duration-200
-                                ${
-                                  activeMenu === child.to
-                                    ? 'bg-green-500 text-white' // active menu
-                                    : 'hover:bg-white hover:text-black' // hover effect
-                                }`}
-                            >
-                              {child.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </aside>
+        <Sidebar role="supervisor" />
 
         {/* Main Content */}
         <main className="flex-grow p-6">

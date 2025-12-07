@@ -432,4 +432,19 @@ const getSupervisorAllGroups = asyncHandler(async (req, res) => {
   });
 });
 
-export { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus, getPendingProposalsByCell, forwardProposalToSupervisor, rejectProposal, getApprovedProposals, getAvailableProposals, getSupervisorAllGroups };
+const getMySupervisions = asyncHandler(async (req, res) => {
+  const supervisorId = req.user._id;
+
+  const proposals = await Proposal.find({
+    $or: [
+      { supervisorId: supervisorId },
+      { coSupervisors: supervisorId }
+    ],
+    status: 'Approved'
+  })
+  .populate('members', 'name email');
+
+  res.json(proposals);
+});
+
+export { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus, getPendingProposalsByCell, forwardProposalToSupervisor, rejectProposal, getApprovedProposals, getAvailableProposals, getSupervisorAllGroups, getMySupervisions };

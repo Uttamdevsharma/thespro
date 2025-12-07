@@ -1,30 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
 import NotificationBell from '../../components/NotificationBell';
 import ProfileIcon from '../../components/ProfileIcon';
+import Sidebar from '../../components/Sidebar';
 
 const StudentLayout = () => {
   const user = useSelector(selectUser);
   const [studentName, setStudentName] = useState('Student');
-  const [activeMenu, setActiveMenu] = useState('/student/dashboard'); // default active
 
   useEffect(() => {
     if (user) {
       setStudentName(user.name || 'Student');
     }
   }, [user]);
-
-  const menuItems = [
-    { to: '/student/dashboard', label: 'Dashboard' },
-    { to: '/student/proposal', label: 'Submit Proposal' },
-    { to: '/student/proposal-status', label: 'Proposal Status' },
-    { to: '/student/chat', label: 'Chat' },
-    { to: '/student/research-cell-info', label: 'Research Cell Info' },
-    { to: '/student/defense-schedule', label: 'Defense Schedule' },
-
-  ];
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -55,31 +45,7 @@ const StudentLayout = () => {
 
       <div className="flex flex-grow">
         {/* Sidebar */}
-        <aside
-          className="w-64 text-black p-4 flex flex-col"
-          style={{ backgroundColor: 'rgb(224, 224, 224)' }}
-        >
-          <nav className="flex-grow">
-            <ul>
-              {menuItems.map((item) => (
-                <li key={item.to} className="mb-2">
-                  <Link
-                    to={item.to}
-                    onClick={() => setActiveMenu(item.to)}
-                    className={`block py-2 px-4 rounded transition-colors duration-200
-                      ${
-                        activeMenu === item.to
-                          ? 'bg-green-500 text-white' // active menu
-                          : 'hover:bg-white hover:text-black' // hover effect
-                      }`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </aside>
+        <Sidebar role="student" />
 
         {/* Main Content */}
         <main className="flex-grow p-6">

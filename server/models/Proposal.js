@@ -24,6 +24,12 @@ const ProposalSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  coSupervisors: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
   courseSupervisorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

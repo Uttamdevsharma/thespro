@@ -19,6 +19,7 @@ import CreateDefenseBoard from '../pages/committee/CreateDefenseBoard';
 import SelectGroups from '../pages/committee/SelectGroups';
 import SelectMembers from '../pages/committee/SelectMembers';
 import AllDefenseBoards from '../pages/committee/AllDefenseBoards';
+import EvaluationManagement from '../pages/committee/EvaluationManagement';
 import SupervisorDashboard from '../pages/supervisor/Dashboard';
 import SupervisorChat from '../pages/supervisor/Chat';
 import Notice from '../pages/supervisor/Notice';
@@ -35,11 +36,14 @@ import StudentChat from '../pages/student/Chat';
 import ResearchCellInfo from '../pages/student/ResearchCellInfo';
 import Profile from '../pages/student/Profile';
 import StudentDefenseSchedule from '../pages/student/DefenseSchedule';
+import MyResults from '../pages/student/MyResults';
 
 import PendingProposals from '../pages/supervisor/PendingProposals';
 import SupervisorAllGroups from '../pages/supervisor/AllGroups'; // New import
 import SupervisorDefenseSchedule from '../pages/supervisor/DefenseSchedule';
 import SupervisorDefenseResult from '../pages/supervisor/DefenseResult';
+import MySupervisions from '../pages/supervisor/MySupervisions';
+import CommitteeEvaluations from '../pages/supervisor/CommitteeEvaluations';
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +65,14 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <CommitteeDashboard />,
+      },
+      {
+        path: 'defense-boards',
+        element: <AllDefenseBoards />,
+      },
+      {
+        path: 'evaluation-management',
+        element: <EvaluationManagement />,
       },
       {
         path: 'all-students',
@@ -129,6 +141,14 @@ export const router = createBrowserRouter([
     element: <PrivateRoute role="supervisor"><SupervisorLayout /></PrivateRoute>,
     children: [
       {
+        path: 'my-supervisions',
+        element: <MySupervisions />,
+      },
+      {
+        path: 'committee-evaluations',
+        element: <CommitteeEvaluations />,
+      },
+      {
         path: 'dashboard',
         element: <SupervisorDashboard />,
       },
@@ -162,6 +182,10 @@ export const router = createBrowserRouter([
     path: '/student',
     element: <PrivateRoute role="student"><StudentLayout /></PrivateRoute>,
     children: [
+      {
+        path: 'my-results',
+        element: <MyResults />,
+      },
       {
         path: 'dashboard',
         element: <StudentDashboard />,

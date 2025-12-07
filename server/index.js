@@ -17,6 +17,7 @@ import defenseBoardRoutes from './routes/defenseBoardRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
 import scheduleSlotRoutes from './routes/scheduleSlotRoutes.js';
 import defenseResultRoutes from './routes/defenseResultRoutes.js';
+import evaluationRoutes from './routes/evaluationRoutes.js';
 
 // Import Chat Models and Controllers
 import Message from './models/Message.js'; // Ensure .js extension
@@ -58,6 +59,7 @@ app.use('/api/defenseboards', defenseBoardRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/schedule-slots', scheduleSlotRoutes);
 app.use('/api/defense-results', defenseResultRoutes);
+app.use('/api/evaluations', evaluationRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

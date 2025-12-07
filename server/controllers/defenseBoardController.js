@@ -467,6 +467,26 @@ const getSupervisorDefenseResult = asyncHandler(async (req, res) => {
   res.json(filteredResults);
 });
 
+// @desc    Get defense boards where the supervisor is a committee member
+// @route   GET /api/defenseboards/my-committee-evaluations
+// @access  Private/Supervisor
+const getMyCommitteeEvaluations = asyncHandler(async (req, res) => {
+  const supervisorId = req.user._id;
+
+  const defenseBoards = await DefenseBoard.find({ boardMembers: supervisorId })
+    .populate({
+      path: 'groups',
+      populate: {
+        path: 'members',
+        select: 'name email'
+      }
+    })
+    .populate('room', 'name')
+    .populate('schedule', 'startTime endTime');
+
+  res.json(defenseBoards);
+});
+
 export {
   createDefenseBoard,
   getAllDefenseBoards,
@@ -477,4 +497,5 @@ export {
   getStudentDefenseSchedule,
   addOrUpdateComment,
   getSupervisorDefenseResult,
+  getMyCommitteeEvaluations,
 };

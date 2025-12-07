@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 // Sidebar component for navigation
 const Sidebar = ({ role }) => {
   const committeeLinks = [
+    { to: '/committee/defense-boards', label: 'Defense Boards' },
+    { to: '/committee/evaluation-management', label: 'Evaluation Management' },
     { to: '/committee/all-students', label: 'All Students' },
     { to: '/committee/all-teachers', label: 'All Teachers' },
     { to: '/committee/research-cells', label: 'Research Cell' },
@@ -13,6 +15,8 @@ const Sidebar = ({ role }) => {
   ];
 
   const supervisorLinks = [
+    { to: '/supervisor/my-supervisions', label: 'My Supervisions' },
+    { to: '/supervisor/committee-evaluations', label: 'Committee Evaluations' },
     { to: '/supervisor/dashboard', label: 'Dashboard' },
     { to: '/supervisor/all-groups', label: 'All Groups' },
     { to: '/supervisor/pending-proposals', label: 'Pending Proposals' },
@@ -23,6 +27,7 @@ const Sidebar = ({ role }) => {
   ];
 
   const studentLinks = [
+    { to: '/student/my-results', label: 'My Results' },
     { to: '/student/dashboard', label: 'Dashboard' },
     { to: '/student/proposal', label: 'Proposal' },
     { to: '/student/proposal-status', label: 'Proposal Status' },
