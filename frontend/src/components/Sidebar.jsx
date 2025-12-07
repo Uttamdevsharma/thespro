@@ -15,23 +15,22 @@ const Sidebar = ({ role }) => {
   ];
 
   const supervisorLinks = [
-    { to: '/supervisor/my-supervisions', label: 'My Supervisions' },
-    { to: '/supervisor/committee-evaluations', label: 'Committee Evaluations' },
     { to: '/supervisor/dashboard', label: 'Dashboard' },
-    { to: '/supervisor/all-groups', label: 'All Groups' },
     { to: '/supervisor/pending-proposals', label: 'Pending Proposals' },
-    { to: '/supervisor/requests', label: 'Request' },
-    { to: '/supervisor/notice', label: 'Notice' },
+    { to: '/supervisor/all-groups', label: 'All Groups' },
+    { to: '/supervisor/my-supervisions', label: 'Group Assessment' },
+    { to: '/supervisor/committee-evaluations', label: 'Board Evaluation' },
     { to: '/supervisor/defense-schedule', label: 'Defense Schedule' },
-    { to: '/supervisor/defense-result', label: 'Defense Result' },
+    { to: '/supervisor/defense-result', label: 'Group Feedback' },
+    { to: '/supervisor/notice', label: 'Notice' },
   ];
 
   const studentLinks = [
-    { to: '/student/my-results', label: 'My Results' },
     { to: '/student/dashboard', label: 'Dashboard' },
     { to: '/student/proposal', label: 'Proposal' },
     { to: '/student/proposal-status', label: 'Proposal Status' },
     { to: '/student/defense-schedule', label: 'Defense Schedule' },
+    { to: '/student/my-results', label: 'My Results' },
   ];
 
   const links = {

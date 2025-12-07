@@ -3,16 +3,26 @@ import { useSelector } from 'react-redux';
 import { useGetMySupervisionsQuery, useGetEvaluationsByProposalQuery, useSubmitOrUpdateEvaluationMutation } from '../../features/apiSlice';
 import { selectUser } from '../../features/userSlice';
 import Loader from '../../components/Loader';
+import { useLocation } from 'react-router-dom';
 
 const MySupervisions = () => {
   const user = useSelector(selectUser);
-  const { data: proposals, isLoading, isError, error } = useGetMySupervisionsQuery();
+  const location = useLocation(); // Get current location object
+  const { data: proposals, isLoading, isError, error, refetch: refetchProposals } = useGetMySupervisionsQuery();
   const [filter, setFilter] = useState('all');
   const [selectedProposal, setSelectedProposal] = useState(null);
 
   const { data: existingEvaluations, refetch } = useGetEvaluationsByProposalQuery(selectedProposal?._id, {
     skip: !selectedProposal,
   });
+
+  // This useEffect will run when the component mounts or when the location changes,
+  // ensuring data is refetched and state is reset.
+  useEffect(() => {
+    refetchProposals(); // Force a refetch of the proposals
+    setSelectedProposal(null); // Reset selected proposal
+    setFilter('all'); // Reset filter
+  }, [location.pathname, refetchProposals]);
 
   useEffect(() => {
     if (selectedProposal) {

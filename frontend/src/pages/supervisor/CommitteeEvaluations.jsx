@@ -3,9 +3,11 @@ import { useSelector } from 'react-redux';
 import { useGetMyCommitteeEvaluationsQuery, useGetEvaluationsByProposalQuery, useSubmitOrUpdateEvaluationMutation } from '../../features/apiSlice';
 import { selectUser } from '../../features/userSlice';
 import Loader from '../../components/Loader';
+import { useLocation } from 'react-router-dom';
 
 const CommitteeEvaluations = () => {
-    const { data: boards, isLoading, isError, error } = useGetMyCommitteeEvaluationsQuery();
+    const location = useLocation(); // Get current location object
+    const { data: boards, isLoading, isError, error, refetch: refetchBoards } = useGetMyCommitteeEvaluationsQuery();
     const [selectedBoard, setSelectedBoard] = useState(null);
     const [selectedProposal, setSelectedProposal] = useState(null);
     const user = useSelector(selectUser);
@@ -13,6 +15,14 @@ const CommitteeEvaluations = () => {
     const { data: existingEvaluations, refetch } = useGetEvaluationsByProposalQuery(selectedProposal?._id, {
         skip: !selectedProposal,
     });
+
+    // This useEffect will run when the component mounts or when the location changes,
+    // ensuring data is refetched and state is reset.
+    useEffect(() => {
+        refetchBoards(); // Force a refetch of the boards
+        setSelectedBoard(null); // Reset selected board
+        setSelectedProposal(null); // Reset selected proposal
+    }, [location.pathname, refetchBoards]);
 
     useEffect(() => {
         if (selectedProposal) {
