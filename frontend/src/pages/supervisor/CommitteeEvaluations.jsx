@@ -174,27 +174,43 @@ const StudentEvaluationPanel = ({ proposal, existingEvaluations, evaluatorId }) 
 
     const maxMark = defenseType === 'pre-defense' ? 10 : 30;
 
-    const handleSubmit = async (studentId) => {
-        const mark = marks[studentId];
+    const handleSaveAll = async () => {
+        const submissionPromises = proposal.members.map(async (student) => {
+            const mark = marks[student._id];
+            const comment = comments[student._id] || '';
 
-        if (mark === undefined || mark < 0 || mark > maxMark) {
-            alert(`Marks must be between 0 and ${maxMark}.`);
-            return;
-        }
+            if (mark === undefined || mark < 0 || mark > maxMark) {
+                return { studentId: student._id, status: 'rejected', reason: `Marks for ${student.name} must be between 0 and ${maxMark}.` };
+            }
 
-        try {
-            await submitEvaluation({
-                studentId,
-                proposalId: proposal._id,
-                defenseType,
-                evaluationType: 'committee',
-                marks: mark,
-                comments: comments[studentId] || '',
-            }).unwrap();
+            try {
+                await submitEvaluation({
+                    studentId: student._id,
+                    proposalId: proposal._id,
+                    defenseType,
+                    evaluationType: 'committee',
+                    marks: mark,
+                    comments: comment,
+                }).unwrap();
+                return { studentId: student._id, status: 'fulfilled' };
+            } catch (err) {
+                return { studentId: student._id, status: 'rejected', reason: `Failed to save evaluation for ${student.name}: ${err.data?.message || 'Server error'}` };
+            }
+        });
 
-            alert('Evaluation submitted successfully!');
-        } catch (err) {
-            alert(`Failed to submit evaluation: ${err.data?.message || 'Server error'}`);
+        const results = await Promise.allSettled(submissionPromises);
+
+        const successfulSubmissions = results.filter(res => res.status === 'fulfilled');
+        const failedSubmissions = results.filter(res => res.status === 'rejected');
+
+        if (successfulSubmissions.length === proposal.members.length) {
+            alert('All evaluations submitted successfully!');
+        } else if (failedSubmissions.length === proposal.members.length) {
+            alert('Failed to submit all evaluations. Please check console for details.');
+            console.error('Failed submissions:', failedSubmissions);
+        } else {
+            alert(`Submitted ${successfulSubmissions.length} evaluations successfully. Failed to submit ${failedSubmissions.length}.`);
+            console.warn('Mixed submission results:', results);
         }
     };
 
@@ -252,17 +268,16 @@ const StudentEvaluationPanel = ({ proposal, existingEvaluations, evaluatorId }) 
                                 placeholder="Write optional feedback"
                             />
                         </div>
-
-                        <button
-                            onClick={() => handleSubmit(student._id)}
-                            className="mt-4 px-5 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? 'Saving...' : 'Save Evaluation'}
-                        </button>
                     </div>
                 ))}
             </div>
+            <button
+                onClick={handleSaveAll} // New single save button
+                className="mt-6 px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
+                disabled={isSubmitting}
+            >
+                {isSubmitting ? 'Saving All...' : 'Save All Evaluations'}
+            </button>
         </div>
     );
 };
