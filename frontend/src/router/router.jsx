@@ -19,7 +19,6 @@ import CreateDefenseBoard from '../pages/committee/CreateDefenseBoard';
 import SelectGroups from '../pages/committee/SelectGroups';
 import SelectMembers from '../pages/committee/SelectMembers';
 import AllDefenseBoards from '../pages/committee/AllDefenseBoards';
-import EvaluationManagement from '../pages/committee/EvaluationManagement';
 import SupervisorDashboard from '../pages/supervisor/Dashboard';
 import SupervisorChat from '../pages/supervisor/Chat';
 import Notice from '../pages/supervisor/Notice';
@@ -69,10 +68,6 @@ export const router = createBrowserRouter([
       {
         path: 'defense-boards',
         element: <AllDefenseBoards />,
-      },
-      {
-        path: 'evaluation-management',
-        element: <EvaluationManagement />,
       },
       {
         path: 'all-students',

@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 // Sidebar component for navigation
 const Sidebar = ({ role }) => {
   const committeeLinks = [
+    { to: '/committee/dashboard', label: 'Dashboard' },
     { to: '/committee/defense-boards', label: 'Defense Boards' },
-    { to: '/committee/evaluation-management', label: 'Evaluation Management' },
     { to: '/committee/all-students', label: 'All Students' },
     { to: '/committee/all-teachers', label: 'All Teachers' },
     { to: '/committee/research-cells', label: 'Research Cell' },
