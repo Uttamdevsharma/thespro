@@ -5,14 +5,15 @@ import { NavLink } from 'react-router-dom';
 const Sidebar = ({ role }) => {
   const committeeLinks = [
     { to: '/committee/dashboard', label: 'Dashboard' },
+    { to: '/committee/pending-proposals', label: 'Pending Proposals' }, // Restored
     { to: '/committee/all-students', label: 'All Students' },
     { to: '/committee/all-teachers', label: 'All Teachers' },
     { to: '/committee/research-cells', label: 'Research Cell' },
     { to: '/committee/cell-members', label: 'Cell Members' },
     { to: '/committee/committee-members', label: 'Committee Members' },
     { to: '/committee/defense-schedule', label: 'Defense Schedule' },
-    { to: '/committee/set-submission-dates', label: 'Set Submission Dates' }, // Restored
-    { to: '/committee/manage-course-supervisors', label: 'Manage Course Supervisors' }, // Restored
+    { to: '/committee/set-submission-dates', label: 'Set Submission Dates' },
+    { to: '/committee/manage-course-supervisors', label: 'Manage Course Supervisors' },
     { to: '/committee/defense-boards', label: 'Defense Boards' },
   ];
 
