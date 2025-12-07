@@ -3,6 +3,9 @@ import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
 import toast from 'react-hot-toast';
+import DefenseSchedule from './DefenseSchedule'; // Import DefenseSchedule component
+import AllDefenseBoards from './AllDefenseBoards'; // Import AllDefenseBoards component
+
 
 const ManageCourseSupervisors = () => {
   const user = useSelector(selectUser);
@@ -154,6 +157,18 @@ const { data } = await axios.get('http://localhost:5005/api/users/supervisors/al
         ) : (
           <p className="text-gray-600">No course supervisors assigned yet.</p>
         )}
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-4">Defense Schedule & Boards</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <DefenseSchedule />
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <AllDefenseBoards />
+          </div>
+        </div>
       </div>
     </div>
   );
