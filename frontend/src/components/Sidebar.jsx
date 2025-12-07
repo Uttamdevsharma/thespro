@@ -5,13 +5,13 @@ import { Link } from 'react-router-dom';
 const Sidebar = ({ role }) => {
   const committeeLinks = [
     { to: '/committee/dashboard', label: 'Dashboard' },
-    { to: '/committee/defense-boards', label: 'Defense Boards' },
     { to: '/committee/all-students', label: 'All Students' },
     { to: '/committee/all-teachers', label: 'All Teachers' },
     { to: '/committee/research-cells', label: 'Research Cell' },
     { to: '/committee/cell-members', label: 'Cell Members' },
     { to: '/committee/committee-members', label: 'Committee Members' },
     { to: '/committee/defense-schedule', label: 'Defense Schedule' },
+    { to: '/committee/defense-boards', label: 'Defense Boards' },
   ];
 
   const supervisorLinks = [
