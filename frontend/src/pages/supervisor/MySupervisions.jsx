@@ -31,9 +31,9 @@ const MySupervisions = () => {
   }, [selectedProposal, refetch]);
 
   const filteredProposals = proposals?.filter(p => {
-    if (filter === 'all') return true;
-    if (filter === 'primary') return p.supervisorId === user._id;
-    if (filter === 'co') return p.coSupervisors.includes(user._id);
+    if (filter === 'all') return p.supervisorId === user._id; // Show all groups where the supervisor is the primary supervisor
+    if (filter === 'primary') return p.supervisorId === user._id; // Show only groups where the supervisor is the primary supervisor
+    if (filter === 'co') return p.supervisorId === user._id && p.coSupervisors && p.coSupervisors.length > 0; // Show groups where supervisor is primary AND a co-supervisor is assigned
     return true;
   });
 
