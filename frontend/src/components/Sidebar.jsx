@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 // Sidebar component for navigation
 const Sidebar = ({ role }) => {
@@ -45,12 +45,16 @@ const Sidebar = ({ role }) => {
         {links &&
           links.map((link, index) => (
             <li key={index} className="mb-2">
-              <Link
+              <NavLink
                 to={link.to}
-                className="block text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md transition-colors duration-200"
+                className={({ isActive }) =>
+                  `block px-3 py-2 rounded-md transition-colors duration-200 ${
+                    isActive ? 'bg-[#50C878] text-white' : 'text-gray-700 hover:text-gray-900'
+                  }`
+                }
               >
                 {link.label}
-              </Link>
+              </NavLink>
             </li>
           ))}
       </ul>
