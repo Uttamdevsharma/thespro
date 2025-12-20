@@ -340,6 +340,21 @@ export const apiSlice = createApi({
         query: () => '/defenseboards/my-committee-evaluations',
         providesTags: ['DefenseBoards'],
       }),
+      getBoardResults: builder.query({
+        query: (defenseType) => `/evaluations/board-results?defenseType=${defenseType}`,
+        providesTags: ['Evaluations', 'DefenseBoards', 'Proposals'],
+      }),
+      getPublishStatus: builder.query({
+        query: () => '/evaluations/publish-status',
+        providesTags: ['Evaluations', 'Proposals'],
+      }),
+      publishAllResults: builder.mutation({
+        query: () => ({
+          url: '/evaluations/publish-all-results',
+          method: 'POST',
+        }),
+        invalidatesTags: ['Proposals', 'Evaluations'],
+      }),
     }),
     extraReducers: (builder) => {
       builder.addMatcher(apiSlice.endpoints.logout.match, (state, action) => {
@@ -414,6 +429,9 @@ export const apiSlice = createApi({
     useSubmitOrUpdateEvaluationMutation,
     useGetMySupervisionsQuery,
     useGetMyCommitteeEvaluationsQuery,
+    useGetBoardResultsQuery,
+    useGetPublishStatusQuery,
+    usePublishAllResultsMutation,
   } = apiSlice;
   
   

@@ -43,6 +43,7 @@ import SupervisorDefenseSchedule from '../pages/supervisor/DefenseSchedule';
 import SupervisorDefenseResult from '../pages/supervisor/DefenseResult';
 import MySupervisions from '../pages/supervisor/MySupervisions';
 import CommitteeEvaluations from '../pages/supervisor/CommitteeEvaluations';
+import AllBoardResults from '../pages/committee/AllBoardResults';
 
 export const router = createBrowserRouter([
   {
@@ -68,6 +69,10 @@ export const router = createBrowserRouter([
       {
         path: 'defense-boards',
         element: <AllDefenseBoards />,
+      },
+      {
+        path: 'all-board-results',
+        element: <AllBoardResults />,
       },
       {
         path: 'all-students',

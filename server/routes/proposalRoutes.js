@@ -1,6 +1,6 @@
 import express from 'express';
-import { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus, getPendingProposalsByCell, forwardProposalToSupervisor, rejectProposal, getApprovedProposals, getSupervisorAllGroups, getAvailableProposals, getMySupervisions } from '../controllers/proposalController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus, getPendingProposalsByCell, forwardProposalToSupervisor, rejectProposal, getApprovedProposals, getSupervisorAllGroups, getAvailableProposals, getMySupervisions, publishResult } from '../controllers/proposalController.js';
+import { protect, committee } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -15,6 +15,7 @@ router.get('/pending-by-cell', protect, authorizeRoles('committee'), getPendingP
 router.put('/:id/status', protect, authorizeRoles('supervisor'), updateProposalStatus);
 router.put('/:id/forward', protect, authorizeRoles('committee'), forwardProposalToSupervisor);
 router.put('/:id/reject', protect, authorizeRoles('committee'), rejectProposal);
+router.put('/:id/publish', protect, committee, publishResult);
 router.get('/approved-proposals', protect, authorizeRoles('committee'), getApprovedProposals);
 router.get('/available-proposals', protect, authorizeRoles('committee'), getAvailableProposals);
 router.get('/my-supervisions', protect, authorizeRoles('supervisor'), getMySupervisions);

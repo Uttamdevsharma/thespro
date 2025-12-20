@@ -38,4 +38,6 @@ const authorizeRoles = (...roles) => {
   };
 };
 
-export { protect, authorizeRoles };
+const committee = authorizeRoles('committee');
+
+export { protect, authorizeRoles, committee };

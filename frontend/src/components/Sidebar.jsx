@@ -15,6 +15,7 @@ const Sidebar = ({ role }) => {
     { to: '/committee/set-submission-dates', label: 'Set Submission Dates' },
     { to: '/committee/manage-course-supervisors', label: 'Manage Course Supervisors' },
     { to: '/committee/defense-boards', label: 'Defense Boards' },
+    { to: '/committee/all-board-results', label: 'All Board Results' },
   ];
 
   const supervisorLinks = [

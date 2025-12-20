@@ -4,6 +4,8 @@ import ResearchCell from '../models/ResearchCell.js';
 import stringSimilarity from 'string-similarity';
 import asyncHandler from 'express-async-handler';
 import DefenseBoard from '../models/DefenseBoard.js';
+import calculateGradeAndPoint from '../utils/gradeCalculator.js';
+import Evaluation from '../models/Evaluation.js';
 
 // @desc    Create a new proposal
 // @route   POST /api/proposals
@@ -296,7 +298,7 @@ const getPendingProposalsByCell = asyncHandler(async (req, res) => {
     {
       $group: {
         _id: '$researchCellId',
-        proposals: { $push: '$$ROOT' },
+        proposals: { $push: '$ROOT' },
         count: { $sum: 1 },
       },
     },
@@ -318,33 +320,33 @@ const getPendingProposalsByCell = asyncHandler(async (req, res) => {
             input: '$proposals',
             as: 'proposal',
             in: {
-              _id: '$$proposal._id',
-              title: '$$proposal.title',
-              abstract: '$$proposal.abstract',
-              type: '$$proposal.type',
-              researchCellId: '$$proposal.researchCellId',
-              supervisorId: '$$proposal.supervisorId',
-              status: '$$proposal.status',
-              feedback: '$$proposal.feedback',
-              reviewedAt: '$$proposal.reviewedAt',
-              department: '$$proposal.department',
-              createdAt: '$$proposal.createdAt',
-              updatedAt: '$$proposal.updatedAt',
+              _id: '$proposal._id',
+              title: '$proposal.title',
+              abstract: '$proposal.abstract',
+              type: '$proposal.type',
+              researchCellId: '$proposal.researchCellId',
+              supervisorId: '$proposal.supervisorId',
+              status: '$proposal.status',
+              feedback: '$proposal.feedback',
+              reviewedAt: '$proposal.reviewedAt',
+              department: '$proposal.department',
+              createdAt: '$proposal.createdAt',
+              updatedAt: '$proposal.updatedAt',
               createdBy: {
-                _id: '$$proposal.createdBy._id',
-                name: '$$proposal.createdBy.name',
-                studentId: '$$proposal.createdBy.studentId',
-                currentCGPA: '$$proposal.createdBy.currentCGPA',
+                _id: '$proposal.createdBy._id',
+                name: '$proposal.createdBy.name',
+                studentId: '$proposal.createdBy.studentId',
+                currentCGPA: '$proposal.createdBy.currentCGPA',
               },
               members: {
                 $map: {
-                  input: '$$proposal.members',
+                  input: '$proposal.members',
                   as: 'member',
                   in: {
-                    _id: '$$member._id',
-                    name: '$$member.name',
-                    studentId: '$$member.studentId',
-                    currentCGPA: '$$member.currentCGPA',
+                    _id: '$member._id',
+                    name: '$member.name',
+                    studentId: '$member.studentId',
+                    currentCGPA: '$member.currentCGPA',
                   },
                 },
               },
@@ -447,4 +449,73 @@ const getMySupervisions = asyncHandler(async (req, res) => {
   res.json(proposals);
 });
 
-export { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus, getPendingProposalsByCell, forwardProposalToSupervisor, rejectProposal, getApprovedProposals, getAvailableProposals, getSupervisorAllGroups, getMySupervisions };
+// @desc    Publish result for a proposal
+// @route   PUT /api/proposals/:id/publish
+// @access  Private (Committee)
+const publishResult = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const proposal = await Proposal.findById(id).populate('members');
+
+  if (!proposal) {
+    res.status(404);
+    throw new Error('Proposal not found');
+  }
+
+  if (proposal.published) {
+    res.status(400);
+    throw new Error('Result already published');
+  }
+
+  const { members } = proposal;
+  const studentResults = [];
+
+  for (const member of members) {
+    const evaluations = await Evaluation.find({
+      proposal: id,
+      student: member._id,
+    });
+
+    const preDefenseSupervisor = evaluations.find(e => e.defenseType === 'pre-defense' && e.evaluationType === 'supervisor');
+    const preDefenseCommittee = evaluations.filter(e => e.defenseType === 'pre-defense' && e.evaluationType === 'committee');
+    const finalDefenseSupervisor = evaluations.find(e => e.defenseType === 'final-defense' && e.evaluationType === 'supervisor');
+    const finalDefenseCommittee = evaluations.filter(e => e.defenseType === 'final-defense' && e.evaluationType === 'committee');
+
+    if (!preDefenseSupervisor || preDefenseCommittee.length === 0 || !finalDefenseSupervisor || finalDefenseCommittee.length === 0) {
+      res.status(400);
+      throw new Error(`Marks for all defense types are not submitted for student ${member.name}`);
+    }
+
+    const preDefenseCommitteeAvg = preDefenseCommittee.reduce((acc, e) => acc + e.marks, 0) / preDefenseCommittee.length;
+    const finalDefenseCommitteeAvg = finalDefenseCommittee.reduce((acc, e) => acc + e.marks, 0) / finalDefenseCommittee.length;
+
+    const totalMarks =
+      preDefenseSupervisor.marks +
+      preDefenseCommitteeAvg +
+      finalDefenseSupervisor.marks +
+      finalDefenseCommitteeAvg;
+
+    const { grade, point } = calculateGradeAndPoint(totalMarks);
+
+    studentResults.push({
+      studentId: member._id,
+      totalMarks,
+      grade,
+      point,
+    });
+  }
+
+  // For now, let's assume all students in a group get the same grade and point.
+  // We will update the proposal with the grade and point of the first student.
+  // A better approach would be to store individual results, but for now this will work.
+  if (studentResults.length > 0) {
+    proposal.published = true;
+    proposal.grade = studentResults[0].grade;
+    proposal.point = studentResults[0].point;
+    await proposal.save();
+  }
+
+  res.status(200).json(proposal);
+});
+
+export { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus, getPendingProposalsByCell, forwardProposalToSupervisor, rejectProposal, getApprovedProposals, getAvailableProposals, getSupervisorAllGroups, getMySupervisions, publishResult };

@@ -1,6 +1,6 @@
 import express from 'express';
-import { submitOrUpdateEvaluation, getEvaluationsByProposal, getMyResults } from '../controllers/evaluationController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { submitOrUpdateEvaluation, getEvaluationsByProposal, getMyResults, getBoardResults, publishAllResults } from '../controllers/evaluationController.js';
+import { protect, committee } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -19,4 +19,15 @@ router.get('/proposal/:proposalId', protect, getEvaluationsByProposal);
 // @access Private (Student)
 router.get('/my-results', protect, getMyResults);
 
+// @desc   Get all board results
+// @route  GET /api/evaluations/board-results
+// @access Private (Committee)
+router.get('/board-results', protect, committee, getBoardResults);
+
+// @desc   Publish all results
+// @route  POST /api/evaluations/publish-all-results
+// @access Private (Committee)
+router.post('/publish-all-results', protect, committee, publishAllResults);
+
 export default router;
+
