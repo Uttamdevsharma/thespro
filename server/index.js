@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 
 import http from 'http';
+
 import { Server } from 'socket.io';
 
 import authRoutes from './routes/authRoutes.js';
