@@ -2,28 +2,59 @@ import React from 'react';
 import { useGetMyResultsQuery } from '../../features/apiSlice';
 import Loader from '../../components/Loader';
 
-const CommentsSection = ({ title, comments }) => (
-  <div className="bg-white shadow-lg rounded-xl border border-gray-200 p-8">
-    <h2 className="text-2xl font-bold text-gray-900 mb-6">{title}</h2>
-    <div>
-      <h3 className="text-lg font-semibold text-indigo-800">Supervisor Comments</h3>
-      {comments.supervisor.length > 0 ? (
-        comments.supervisor.map((c, i) => (
-          <p key={`sup-comment-${i}`} className="text-gray-700 italic">"{c.comment}" - <strong>{c.evaluator}</strong></p>
-        ))
-      ) : (
-        <p className="text-gray-500 italic">No supervisor comments yet.</p>
-      )}
-    </div>
-    <div className="mt-4">
-      <h3 className="text-lg font-semibold text-indigo-800">Board Member Comments</h3>
-      {comments.board.length > 0 ? (
-        comments.board.map((c, i) => (
-          <p key={`board-comment-${i}`} className="text-gray-700 italic">"{c.comment}" - <strong>{c.evaluator}</strong></p>
-        ))
-      ) : (
-        <p className="text-gray-500 italic">No board member comments yet.</p>
-      )}
+const AssessmentTable = ({ title, comments }) => (
+  <div className="mb-12">
+    <h2 className="text-xl font-bold text-gray-800 mb-4">{title}</h2>
+    <div className="overflow-hidden border border-gray-200 rounded shadow-sm">
+      <table className="min-w-full divide-y divide-gray-200">
+        
+        <thead className="bg-[#80a18e]">
+          <tr>
+            <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-white w-1/4">
+              Evaluator
+            </th>
+            <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-white">
+              Comments
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {/* Supervisor Comments */}
+          {comments.supervisor.map((c, i) => (
+            <tr key={`sup-${i}`} className="hover:bg-gray-50 transition-colors">
+              <td className="px-6 py-5 align-top">
+                <div className="text-sm font-bold text-gray-900">{c.evaluator}</div>
+                <div className="text-[10px] text-gray-500 uppercase font-medium">Supervisor</div>
+              </td>
+              <td className="px-6 py-5 text-base text-gray-700 leading-relaxed">
+                {c.comment}
+              </td>
+            </tr>
+          ))}
+
+          {/* Board Member Comments */}
+          {comments.board.map((c, i) => (
+            <tr key={`board-${i}`} className="hover:bg-gray-50 transition-colors">
+              <td className="px-6 py-5 align-top">
+                <div className="text-sm font-bold text-gray-900">{c.evaluator}</div>
+                <div className="text-[10px] text-gray-500 uppercase font-medium">Board Member</div>
+              </td>
+              <td className="px-6 py-5 text-base text-gray-700 leading-relaxed">
+                {c.comment}
+              </td>
+            </tr>
+          ))}
+
+          {/* No Comments State */}
+          {comments.supervisor.length === 0 && comments.board.length === 0 && (
+            <tr>
+              <td colSpan="2" className="px-6 py-8 text-center text-sm text-gray-400 italic">
+                No feedback comments recorded yet.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   </div>
 );
@@ -35,82 +66,69 @@ const MyResults = () => {
 
   if (isError) {
     return (
-      <div className="max-w-4xl mx-auto mt-10 p-6 bg-red-100 border border-red-300 text-red-700 rounded-lg">
-        <p className="font-semibold">Error:</p>
-        <p>{error?.data?.message || 'Failed to fetch results.'}</p>
+      <div className="max-w-4xl mx-auto mt-10 p-6 bg-red-50 border border-red-100 text-red-700 rounded-lg text-center font-medium">
+        Error: {error?.data?.message || 'Failed to fetch results.'}
       </div>
     );
   }
 
-  if (!results) {
-    return (
-      <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow text-center">
-        <p className="text-gray-600 text-lg font-medium">No results available yet.</p>
-      </div>
-    );
-  }
+  if (!results) return null;
 
   return (
-    <div className="p-10 bg-gray-50 min-h-screen">
-      <div className="max-w-5xl mx-auto space-y-14">
-        <header className="pb-5 border-b">
-          <h1 className="text-4xl font-extrabold text-gray-900">My Evaluation Results</h1>
-        </header>
+    <div className="bg-white min-h-screen py-16 px-6">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Page Header */}
+        {/* <div className="mb-14">
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Academic Evaluation Results</h1>
+          <p className="text-gray-500 mt-2">Official feedback and final grade certification summary.</p>
+        </div> */}
 
-        {results.published ? (
-          <>
-            <CommentsSection title="Pre-Defense Feedback" comments={results.preDefenseComments} />
-            <CommentsSection title="Final-Defense Feedback" comments={results.finalDefenseComments} />
+        {/* Pre-Defense Feedback Table */}
+        <AssessmentTable 
+          title="Pre-Defense Feedback" 
+          comments={results.preDefenseComments} 
+        />
 
-            <div className="mt-16 p-8 bg-white border border-gray-200 rounded-xl shadow-xl">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Final Result</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Course Code
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Course Title
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Grade
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Point
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {results.courseCode}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {results.courseTitle}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
-                        {results.grade}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
-                        {results.point.toFixed(2)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <CommentsSection title="Pre-Defense Feedback" comments={results.preDefenseComments} />
-            <CommentsSection title="Final-Defense Feedback" comments={results.finalDefenseComments} />
-            <div className="mt-16 p-8 bg-yellow-100 border border-yellow-300 rounded-xl shadow-xl text-center">
-              <p className="text-yellow-800 font-semibold">Your final result has not been published yet.</p>
-            </div>
-          </>
-        )}
+        {/* Final-Defense Feedback Table */}
+        <AssessmentTable 
+          title="Final-Defense Feedback" 
+          comments={results.finalDefenseComments} 
+        />
+
+        {/* Final Result Summary Table (Matched with Image Style) */}
+        <div className="mt-16">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Final Result Summary</h2>
+          <div className="overflow-hidden border border-gray-200 rounded shadow-sm">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-[#80a18e]">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Course Code</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Course Title</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Grade</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Point</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {results.published ? (
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-5 whitespace-nowrap text-sm font-medium text-gray-900">{results.courseCode}</td>
+                    <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-700">{results.courseTitle}</td>
+                    <td className="px-6 py-5 whitespace-nowrap text-left text-sm font-semibold text-gray-900">{results.grade}</td>
+                    <td className="px-6 py-5 whitespace-nowrap text-left text-sm font-semibold text-gray-900">{results.point.toFixed(2)}</td>
+                  </tr>
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="px-6 py-10 text-center text-sm text-gray-500 font-medium italic bg-gray-50">
+                      Your final grade is currently being processed.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
   );
