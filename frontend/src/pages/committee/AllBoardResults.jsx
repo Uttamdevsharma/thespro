@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGetBoardResultsQuery, usePublishAllResultsMutation } from '../../features/apiSlice';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import Loader from '../../components/Loader';
 
 const AllBoardResults = () => {
@@ -12,20 +12,15 @@ const AllBoardResults = () => {
   const [publishAllResults, { isLoading: isPublishing }] = usePublishAllResultsMutation();
 
   useEffect(() => {
-    setSelectedGroup(null); // Always reset group selection when defenseType or board selection changes
-
-    if (defenseType === 'pre-defense' && boardResults && boardResults.length > 0) {
-      // Auto-select the first board for Pre-Defense initially
-      setSelectedBoard(boardResults[0]);
-    } else {
-      setSelectedBoard(null); // Clear selection if no boards or not pre-defense
-    }
-  }, [defenseType, boardResults]); // Depend on defenseType and boardResults
+    // Reset selections when defense type changes
+    setSelectedBoard(null);
+    setSelectedGroup(null);
+  }, [defenseType]);
 
   const handlePublish = async () => {
     try {
       const response = await publishAllResults().unwrap();
-      toast.success('Result published successfully');
+      toast.success(response.message || 'Results publishing initiated.');
       refetch(); // Refetch board results to update UI
     } catch (err) {
       toast.error(err.data?.message || 'Failed to publish results');
@@ -70,15 +65,6 @@ const AllBoardResults = () => {
     );
   };
 
-  const handleBoardSelect = (boardResult) => {
-    setSelectedBoard(boardResult);
-    setSelectedGroup(null);
-  };
-
-  const handleGroupSelect = (groupResult) => {
-    setSelectedGroup(groupResult);
-  };
-
   if (isLoading) {
     return <Loader />;
   }
@@ -116,22 +102,18 @@ const AllBoardResults = () => {
         <div className="col-span-3">
           <h2 className="text-xl font-semibold mb-4">{defenseType === 'pre-defense' ? 'Pre-Defense Boards' : 'Final Defense Boards'}</h2>
           <div className="space-y-2">
-            {boardResults && boardResults.length > 0 ? (
-              boardResults.map(boardResult => (
-                <div
-                  key={boardResult.board._id}
-                  onClick={() => handleBoardSelect(boardResult)}
-                  className={`p-4 rounded-lg cursor-pointer border ${selectedBoard?.board._id === boardResult.board._id ? 'bg-blue-100 border-blue-400' : 'bg-white'}`}
-                >
-                  <p className="font-bold">{boardResult.board.defenseType}</p>
-                  <p>Room: {boardResult.board.room.name}</p>
-                  <p>Date: {new Date(boardResult.board.date).toLocaleDateString()}</p>
-                  <p>Time: {boardResult.board.schedule.startTime} - {boardResult.board.schedule.endTime}</p>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500">No {defenseType} boards available.</p>
-            )}
+            {boardResults?.map(boardResult => (
+              <div
+                key={boardResult.board._id}
+                onClick={() => handleBoardSelect(boardResult)}
+                className={`p-4 rounded-lg cursor-pointer border ${selectedBoard?.board._id === boardResult.board._id ? 'bg-blue-100 border-blue-400' : 'bg-white'}`}
+              >
+                <p className="font-bold">{boardResult.board.defenseType}</p>
+                <p>Room: {boardResult.board.room.name}</p>
+                <p>Date: {new Date(boardResult.board.date).toLocaleDateString()}</p>
+                <p>Time: {boardResult.board.schedule.startTime} - {boardResult.board.schedule.endTime}</p>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -139,21 +121,17 @@ const AllBoardResults = () => {
         <div className="col-span-4">
           <h2 className="text-xl font-semibold mb-4">Groups Under Selected Board</h2>
           {selectedBoard ? (
-            selectedBoard.proposals && selectedBoard.proposals.length > 0 ? (
-              <div className="space-y-2">
-                {selectedBoard.proposals.map(proposalResult => (
-                  <div
-                    key={proposalResult.proposal._id}
-                    onClick={() => handleGroupSelect(proposalResult)}
-                    className={`p-4 rounded-lg cursor-pointer border ${selectedGroup?.proposal._id === proposalResult.proposal._id ? 'bg-green-100 border-green-400' : 'bg-white'}`}
-                  >
-                    <p className="font-bold">{proposalResult.proposal.title}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p>No groups assigned to this board.</p>
-            )
+            <div className="space-y-2">
+              {selectedBoard.proposals.map(proposalResult => (
+                <div
+                  key={proposalResult.proposal._id}
+                  onClick={() => handleGroupSelect(proposalResult)}
+                  className={`p-4 rounded-lg cursor-pointer border ${selectedGroup?.proposal._id === proposalResult.proposal._id ? 'bg-green-100 border-green-400' : 'bg-white'}`}
+                >
+                  <p className="font-bold">{proposalResult.proposal.title}</p>
+                </div>
+              ))}
+            </div>
           ) : (
             <p>Select a board to see the groups.</p>
           )}
