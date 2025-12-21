@@ -64,15 +64,41 @@ const MyResults = () => {
 
             <div className="mt-16 p-8 bg-white border border-gray-200 rounded-xl shadow-xl">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">Final Result</h2>
-              <div className="grid grid-cols-4 gap-4 items-center">
-                <div className="font-semibold text-lg">Course Code</div>
-                <div className="font-semibold text-lg">Course Title</div>
-                <div className="font-semibold text-lg">Grade</div>
-                <div className="font-semibold text-lg">Point</div>
-                <div>{results.courseCode}</div>
-                <div>{results.courseTitle}</div>
-                <div className="text-xl font-bold text-green-600">{results.grade}</div>
-                <div className="text-xl font-bold text-green-600">{results.point.toFixed(2)}</div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Course Code
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Course Title
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Grade
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Point
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {results.courseCode}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {results.courseTitle}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
+                        {results.grade}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
+                        {results.point.toFixed(2)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </>
