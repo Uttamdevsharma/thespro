@@ -64,15 +64,15 @@ const MyResults = () => {
 
             <div className="mt-16 p-8 bg-white border border-gray-200 rounded-xl shadow-xl">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">Final Result</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="font-semibold">Course Code:</div>
+              <div className="grid grid-cols-4 gap-4 items-center">
+                <div className="font-semibold text-lg">Course Code</div>
+                <div className="font-semibold text-lg">Course Title</div>
+                <div className="font-semibold text-lg">Grade</div>
+                <div className="font-semibold text-lg">Point</div>
                 <div>{results.courseCode}</div>
-                <div className="font-semibold">Course Title:</div>
                 <div>{results.courseTitle}</div>
-                <div className="font-semibold">Grade:</div>
-                <div className="text-2xl font-bold text-green-600">{results.grade}</div>
-                <div className="font-semibold">Point:</div>
-                <div className="text-2xl font-bold text-green-600">{results.point.toFixed(2)}</div>
+                <div className="text-xl font-bold text-green-600">{results.grade}</div>
+                <div className="text-xl font-bold text-green-600">{results.point.toFixed(2)}</div>
               </div>
             </div>
           </>
