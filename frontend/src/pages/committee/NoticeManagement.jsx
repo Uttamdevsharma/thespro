@@ -91,7 +91,6 @@ const NoticeManagement = () => {
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none transition-all"
             >
               <option value="all">All (Students & Supervisors)</option>
-              <option value="student">Students Only</option>
               <option value="supervisor">Supervisors Only</option>
             </select>
           </div>

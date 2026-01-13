@@ -30,4 +30,4 @@ router.get('/board-results', protect, committee, getBoardResults);
 router.post('/publish-all-results', protect, committee, publishAllResults);
 
 export default router;
-
+ 

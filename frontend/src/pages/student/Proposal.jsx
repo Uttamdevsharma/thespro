@@ -4,6 +4,7 @@ import { selectUser } from '../../features/userSlice';
 import toast from 'react-hot-toast';
 import MultiSelectDropdown from '../../components/MultiSelectDropdown';
 import axios from 'axios';
+import { useCreateProposalMutation } from '../../features/apiSlice';
 
 const Proposal = () => {
   const user = useSelector(selectUser);
@@ -16,9 +17,10 @@ const Proposal = () => {
   const [cells, setCells] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionDeadlinePassed, setSubmissionDeadlinePassed] = useState(false); // Placeholder for deadline check
   const [proposalSubmitted, setProposalSubmitted] = useState(false);
+
+  const [createProposal, { isLoading: isSubmitting }] = useCreateProposalMutation();
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -76,12 +78,6 @@ const Proposal = () => {
       return toast.error('Supervisor\'s seat capacity is full. Please choose another supervisor.');
     }
 
-    setIsSubmitting(true);
-
-    const config = {
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user.token}` },
-    };
-
     const proposalData = {
       title,
       abstract,
@@ -92,13 +88,13 @@ const Proposal = () => {
     };
 
     try {
-      await axios.post('http://localhost:5005/api/proposals', proposalData, config);
+      await createProposal(proposalData).unwrap();
       toast.success('Proposal submitted successfully!');
       setTitle(''); setAbstract(''); setType('Thesis'); setResearchCell(''); setSupervisor(''); setMembers([]);
       setProposalSubmitted(prev => !prev);
     } catch (error) {
-      toast.error(`Failed to submit proposal: ${error.response?.data?.message || error.message}`);
-    } finally { setIsSubmitting(false); }
+      toast.error(`Failed to submit proposal: ${error.data?.message || error.message}`);
+    }
   };
 
   return (

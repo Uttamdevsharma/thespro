@@ -6,6 +6,7 @@ import DefenseBoard from '../models/DefenseBoard.js';
 import calculateGradeAndPoint from '../utils/gradeCalculator.js';
 import PublishedResult from '../models/PublishedResult.js';
 
+
 // @desc   Submit or Update an evaluation for a student
 // @route  POST /api/evaluations
 // @access Private (Committee, Supervisor)
@@ -17,6 +18,7 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Please provide all required evaluation fields.');
   }
+
 
   const student = await User.findById(studentId);
   const proposal = await Proposal.findById(proposalId);
@@ -78,6 +80,10 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
   }
 });
 
+
+
+
+
 // @desc   Get all evaluations for a specific proposal
 // @route  GET /api/evaluations/proposal/:proposalId
 // @access Private (Committee, Supervisor)
@@ -105,6 +111,8 @@ const getEvaluationsByProposal = asyncHandler(async (req, res) => {
 });
 
 
+
+
 // @desc   Get results for the logged-in student
 // @route  GET /api/evaluations/my-results
 // @access Private (Student)
@@ -115,7 +123,7 @@ const getMyResults = asyncHandler(async (req, res) => {
   const publishedResult = await PublishedResult.findOne({ student: studentId })
     .populate('proposal', 'title');
 
-  // Fetch all comments for the student regardless of published status
+  // Fetch all comments
   const evaluations = await Evaluation.find({ student: studentId })
     .populate('evaluator', 'name role');
 
@@ -123,6 +131,7 @@ const getMyResults = asyncHandler(async (req, res) => {
     supervisor: [],
     board: [],
   };
+
   const finalDefenseComments = {
     supervisor: [],
     board: [],
@@ -171,6 +180,9 @@ const getMyResults = asyncHandler(async (req, res) => {
   }
 });
 
+
+
+
 // @desc   Get all board results for a specific defense type
 // @route  GET /api/evaluations/board-results
 // @access Private (Committee)
@@ -182,7 +194,7 @@ const getBoardResults = asyncHandler(async (req, res) => {
     throw new Error('Invalid or missing defense type.');
   }
 
-  const boards = await DefenseBoard.find({}).populate('boardMembers', 'name email').populate({
+  const boards = await DefenseBoard.find({ defenseType: { $regex: new RegExp(`^${defenseType}$`, 'i') } }).sort({ boardNumber: 1 }).populate('boardMembers', 'name email').populate({
     path: 'schedule',
     select: 'startTime endTime'
   }).populate('room', 'name');
@@ -190,7 +202,7 @@ const getBoardResults = asyncHandler(async (req, res) => {
   const boardResults = await Promise.all(
     boards.map(async (board) => {
       const proposals = await Proposal.find({ defenseBoardId: board._id })
-        .populate('members', 'name email registrationNumber')
+        .populate('members', 'name email studentId')
         .populate('supervisorId', 'name email'); // Populate name and email for supervisor
 
       const proposalResults = await Promise.all(
@@ -226,6 +238,9 @@ const getBoardResults = asyncHandler(async (req, res) => {
 
   res.status(200).json(boardResults);
 });
+
+
+
 
 // @desc   Publish all results
 // @route  POST /api/evaluations/publish-all-results
@@ -281,7 +296,6 @@ const publishAllResults = asyncHandler(async (req, res) => {
             }
         }
     }
-
     res.status(200).json({
         message: 'Result publishing process completed.',
         published: publishedCount,
@@ -289,6 +303,8 @@ const publishAllResults = asyncHandler(async (req, res) => {
         notPublished: notPublishedCount,
     });
 });
+
+
 
 export {
   submitOrUpdateEvaluation,

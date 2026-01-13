@@ -187,7 +187,7 @@ export const apiSlice = createApi({
       }),
       getNotices: builder.query({
         query: (userId) => `/notices?userId=${userId}`,
-        providesTags: ['Notice'],
+        providesTags: ['Notices'],
       }),
       getNoticeById: builder.query({
         query: (id) => `/notices/${id}`,
@@ -199,7 +199,7 @@ export const apiSlice = createApi({
           method: 'POST',
           body: newNotice,
         }),
-        invalidatesTags: ['Notice'],
+        invalidatesTags: ['Notices'],
       }),
       updateNotice: builder.mutation({
         query: ({ id, updatedNotice }) => ({
@@ -207,21 +207,21 @@ export const apiSlice = createApi({
           method: 'PUT',
           body: updatedNotice,
         }),
-        invalidatesTags: (result, error, { id }) => [{ type: 'Notice', id }],
+        invalidatesTags: ['Notices'],
       }),
       markNoticeAsRead: builder.mutation({
         query: (id) => ({
           url: `/notices/mark-as-read/${id}`,
           method: 'PUT',
         }),
-        invalidatesTags: (result, error, id) => [{ type: 'Notice', id }],
+        invalidatesTags: ['Notices'],
       }),
       deleteNotice: builder.mutation({
         query: (id) => ({
           url: `/notices/${id}`,
           method: 'DELETE',
         }),
-        invalidatesTags: ['Notice'],
+        invalidatesTags: ['Notices'],
       }),
       getSupervisorDefenseSchedule: builder.query({
         query: (defenseType) => {
@@ -337,7 +337,7 @@ export const apiSlice = createApi({
         providesTags: ['Proposals'],
       }),
       getMyCommitteeEvaluations: builder.query({
-        query: () => '/defenseboards/my-committee-evaluations',
+        query: (defenseType) => `/defenseboards/my-committee-evaluations?defenseType=${defenseType}`,
         providesTags: ['DefenseBoards'],
       }),
       getBoardResults: builder.query({

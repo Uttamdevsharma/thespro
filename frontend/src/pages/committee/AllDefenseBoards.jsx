@@ -69,7 +69,7 @@ const AllDefenseBoards = () => {
             <div key={board._id} className="p-4 bg-gray-50 rounded-lg shadow-md border border-gray-200">
               <div className="flex justify-between items-center mb-3">
                 <div className="text-gray-700 font-medium text-lg">
-                  Date: {format(new Date(board.date), 'PPP')} | Room: {board.room?.name || 'N/A'} | Schedule: {board.schedule ? `${board.schedule.startTime} - ${board.schedule.endTime}` : 'N/A'}
+                  Board: {board.boardNumber} | Date: {format(new Date(board.date), 'PPP')} | Room: {board.room?.name || 'N/A'} | Schedule: {board.schedule ? `${board.schedule.startTime} - ${board.schedule.endTime}` : 'N/A'}
                 </div>
                 <button
                   onClick={() => handleDelete(board._id)}

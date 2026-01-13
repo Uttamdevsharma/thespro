@@ -48,6 +48,7 @@ const DefenseSchedule = () => {
               {/* Board Info */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 text-sm text-gray-600">
                 <div className="mb-2 sm:mb-0">
+                  <span className="font-semibold">Board:</span> {board.boardNumber} |{' '}
                   <span className="font-semibold">Date:</span> {new Date(board.date).toLocaleDateString()} |{' '}
                   <span className="font-semibold">Room:</span> {board.room?.name || 'N/A'} |{' '}
                   <span className="font-semibold">Schedule:</span> {board.schedule ? `${board.schedule.startTime} - ${board.schedule.endTime}` : 'N/A'}

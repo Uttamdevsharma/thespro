@@ -2,6 +2,10 @@ import mongoose from 'mongoose';
 
 const DefenseBoardSchema = mongoose.Schema(
   {
+    boardNumber: {
+      type: String,
+      required: true,
+    },
     defenseType: {
       type: String,
       required: true,

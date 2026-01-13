@@ -74,6 +74,7 @@ const DefenseSchedule = () => {
                 {/* Board Info */}
                 <div className="bg-gray-50 p-4 flex flex-col md:flex-row md:justify-between md:items-center border-b border-gray-200">
                   <div className="text-gray-700 font-medium text-sm md:text-base">
+                    <span className="font-bold">Board:</span> {board.boardNumber} |{' '}
                     <span className="font-bold">Date:</span> {new Date(board.date).toLocaleDateString()} |{' '}
                     <span className="font-bold">Room:</span> {board.room?.name || 'N/A'} |{' '}
                     <span className="font-bold">Schedule:</span> {board.schedule ? `${board.schedule.startTime} - ${board.schedule.endTime}` : 'N/A'}

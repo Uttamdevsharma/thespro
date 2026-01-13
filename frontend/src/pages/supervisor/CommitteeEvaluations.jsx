@@ -11,6 +11,7 @@ import { useLocation } from 'react-router-dom';
 
 const CommitteeEvaluations = () => {
     const location = useLocation();
+    const [defenseTypeFilter, setDefenseTypeFilter] = useState('Pre-Defense');
 
     const {
         data: boards,
@@ -18,7 +19,7 @@ const CommitteeEvaluations = () => {
         isError,
         error,
         refetch: refetchBoards
-    } = useGetMyCommitteeEvaluationsQuery();
+    } = useGetMyCommitteeEvaluationsQuery(defenseTypeFilter);
 
     const [selectedBoard, setSelectedBoard] = useState(null);
     const [selectedProposal, setSelectedProposal] = useState(null);
@@ -35,7 +36,7 @@ const CommitteeEvaluations = () => {
         refetchBoards();
         setSelectedBoard(null);
         setSelectedProposal(null);
-    }, [location.pathname, refetchBoards]);
+    }, [location.pathname, refetchBoards, defenseTypeFilter]);
 
     useEffect(() => {
         if (selectedProposal) refetch();
@@ -57,6 +58,21 @@ const CommitteeEvaluations = () => {
         <div className="p-6">
             <h1 className="text-3xl font-bold mb-6">Board Evaluations</h1>
 
+            <div className="mb-6 max-w-sm">
+                <label htmlFor="defenseTypeFilter" className="block text-sm font-medium text-gray-700 mb-1">
+                    Filter by Defense Type:
+                </label>
+                <select
+                    id="defenseTypeFilter"
+                    value={defenseTypeFilter}
+                    onChange={(e) => setDefenseTypeFilter(e.target.value)}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
+                >
+                    <option value="Pre-Defense">Pre-Defense</option>
+                    <option value="Final-Defense">Final-Defense</option>
+                </select>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* LEFT PANEL — Boards List */}
                 <div className="md:col-span-1 bg-white rounded-lg shadow p-4">
@@ -73,10 +89,10 @@ const CommitteeEvaluations = () => {
                                             ? 'bg-blue-100 border-blue-400'
                                             : 'bg-gray-50 hover:bg-gray-100 border-gray-300'}`}
                                 >
-                                    <p className="font-bold text-lg">
-                                        {board.defenseType.toUpperCase()} BOARD
+                                    <p className="font-bold text-xl mb-2">
+                                        Board: {board.boardNumber}
                                     </p>
-                                    <p className="text-sm text-gray-600 mt-1">
+                                    <p className="text-sm text-gray-600">
                                         Room: {board.room.name}
                                     </p>
                                     <p className="text-sm text-gray-600">
@@ -85,7 +101,7 @@ const CommitteeEvaluations = () => {
                                 </div>
                             ))
                         ) : (
-                            <p className="text-gray-500">You are not assigned to any boards.</p>
+                            <p className="text-gray-500">You are not assigned to any boards for {defenseTypeFilter}.</p>
                         )}
                     </div>
                 </div>
@@ -96,7 +112,7 @@ const CommitteeEvaluations = () => {
                     {selectedBoard ? (
                         <div className="bg-white rounded-lg shadow p-4">
                             <h2 className="text-xl font-semibold mb-4 border-b pb-2">
-                                Groups in This Board
+                                Groups in this Board
                             </h2>
 
                             <div className="space-y-3">
@@ -127,6 +143,7 @@ const CommitteeEvaluations = () => {
                                 proposal={selectedProposal}
                                 existingEvaluations={existingEvaluations}
                                 evaluatorId={user._id}
+                                defenseType={selectedBoard.defenseType}
                             />
                         ) : (
                             <div className="p-6 bg-white rounded-lg shadow flex items-center justify-center h-40">
@@ -140,10 +157,9 @@ const CommitteeEvaluations = () => {
     );
 };
 
-const StudentEvaluationPanel = ({ proposal, existingEvaluations, evaluatorId }) => {
+const StudentEvaluationPanel = ({ proposal, existingEvaluations, evaluatorId, defenseType }) => {
     const [marks, setMarks] = useState({});
     const [comments, setComments] = useState({});
-    const [defenseType, setDefenseType] = useState('pre-defense');
 
     const [submitEvaluation, { isLoading: isSubmitting }] =
         useSubmitOrUpdateEvaluationMutation();
@@ -172,7 +188,7 @@ const StudentEvaluationPanel = ({ proposal, existingEvaluations, evaluatorId }) 
         setComments(initialComments);
     }, [existingEvaluations, defenseType, evaluatorId]);
 
-    const maxMark = defenseType === 'pre-defense' ? 10 : 30;
+    const maxMark = defenseType === 'Pre-Defense' ? 10 : 30;
 
     const handleSaveAll = async () => {
         const submissionPromises = proposal.members.map(async (student) => {
@@ -219,19 +235,6 @@ const StudentEvaluationPanel = ({ proposal, existingEvaluations, evaluatorId }) 
             <h3 className="text-2xl font-semibold mb-4 border-b pb-2">
                 Student Evaluation — {proposal.title}
             </h3>
-
-            {/* Defense Type Selector */}
-            <div className="mb-4 flex items-center gap-3">
-                <span className="font-semibold">Evaluation Type:</span>
-                <select
-                    value={defenseType}
-                    onChange={(e) => setDefenseType(e.target.value)}
-                    className="p-2 border rounded"
-                >
-                    <option value="pre-defense">Pre-Defense (10 Marks)</option>
-                    <option value="final-defense">Final Defense (30 Marks)</option>
-                </select>
-            </div>
 
             {/* Student List */}
             <div className="space-y-5">

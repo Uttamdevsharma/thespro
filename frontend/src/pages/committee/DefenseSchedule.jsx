@@ -11,7 +11,7 @@ import {
   useDeleteScheduleSlotMutation,
 } from '../../features/apiSlice';
 
-// RoomManager Component
+// --- RoomManager Component ---
 const RoomManager = () => {
   const { data: rooms, isLoading, isError, error } = useGetRoomsQuery();
   const [addRoom] = useAddRoomMutation();
@@ -37,7 +37,6 @@ const RoomManager = () => {
   };
 
   const handleCloseModal = () => setIsModalOpen(false);
-
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
@@ -47,65 +46,98 @@ const RoomManager = () => {
     handleCloseModal();
   };
 
-  const handleDelete = async (id) => await deleteRoom(id);
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this room?')) {
+      await deleteRoom(id);
+    }
+  };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md mt-4">
-      <h2 className="text-xl font-bold mb-4">Room Manager</h2>
-      <button onClick={() => handleOpenModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md mb-4">
-        Add Room
-      </button>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+      <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">Room Manager</h2>
+          <p className="text-sm text-gray-500 mt-1">Configure available rooms and their group capacity</p>
+        </div>
+        <button 
+          onClick={() => handleOpenModal()} 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-bold transition-all shadow-sm flex items-center gap-2"
+        >
+          <span className="text-lg">+</span> Add Room
+        </button>
+      </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-start pt-20">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 className="text-lg font-bold mb-4">{isEditing ? 'Edit Room' : 'Add Room'}</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-800">{isEditing ? 'Edit Room' : 'Add New Room'}</h3>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div>
-                <label className="block text-gray-700 mb-1">Room Name</label>
-                <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full px-3 py-2 border rounded-md" required />
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Room Name</label>
+                <input 
+                  type="text" name="name" value={formData.name} onChange={handleChange} 
+                  placeholder="e.g. Room 402"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
+                  required 
+                />
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Capacity</label>
-                <input type="number" name="capacity" value={formData.capacity} onChange={handleChange} className="w-full px-3 py-2 border rounded-md" required min={1} />
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Capacity (Groups)</label>
+                <input 
+                  type="number" name="capacity" value={formData.capacity} onChange={handleChange} 
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" 
+                  required min={1} 
+                />
               </div>
-              <div className="flex justify-end space-x-2">
-                <button type="button" onClick={handleCloseModal} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">Cancel</button>
-                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">{isEditing ? 'Update' : 'Add'}</button>
+              <div className="flex justify-end gap-3 pt-4">
+                <button type="button" onClick={handleCloseModal} className="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-all">Cancel</button>
+                <button type="submit" className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-md transition-all">
+                  {isEditing ? 'Update Room' : 'Create Room'}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {isLoading ? <p>Loading rooms...</p> : isError ? <p className="text-red-500">Error: {error.message}</p> : (
-        <table className="min-w-full bg-white border border-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="py-2 px-4 border-b">Name</th>
-              <th className="py-2 px-4 border-b">Capacity</th>
-              <th className="py-2 px-4 border-b">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rooms.map(room => (
-              <tr key={room._id} className="text-center hover:bg-gray-50">
-                <td className="py-2 px-4 border-b">{room.name}</td>
-                <td className="py-2 px-4 border-b">{room.capacity}</td>
-                <td className="py-2 px-4 border-b">
-                  <button onClick={() => handleOpenModal(room)} className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md mr-2">Edit</button>
-                  <button onClick={() => handleDelete(room._id)} className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md">Delete</button>
-                </td>
+      <div className="overflow-x-auto">
+        {isLoading ? (
+          <div className="p-10 text-center text-gray-400 font-bold">Loading rooms...</div>
+        ) : (
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-widest">Room Name</th>
+                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-widest text-center">Capacity</th>
+                <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {rooms?.map(room => (
+                <tr key={room._id} className="hover:bg-blue-50/30 transition-colors">
+                  <td className="py-4 px-6 font-bold text-gray-800">{room.name}</td>
+                  <td className="py-4 px-6 text-center">
+                    <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-md text-xs font-bold border border-indigo-100">
+                      {room.capacity} Groups
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 text-right space-x-4">
+                    <button onClick={() => handleOpenModal(room)} className="text-blue-600 hover:underline font-bold text-sm transition-all">Edit</button>
+                    <button onClick={() => handleDelete(room._id)} className="text-red-500 hover:underline font-bold text-sm transition-all">Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 };
 
-// ScheduleManager Component
+// --- ScheduleManager Component ---
 const ScheduleManager = () => {
   const { data: scheduleSlots, isLoading, isError, error } = useGetScheduleSlotsQuery();
   const [addScheduleSlot] = useAddScheduleSlotMutation();
@@ -135,7 +167,6 @@ const ScheduleManager = () => {
   };
 
   const handleCloseModal = () => setIsModalOpen(false);
-
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
@@ -145,81 +176,115 @@ const ScheduleManager = () => {
     handleCloseModal();
   };
 
-  const handleDelete = async (id) => await deleteScheduleSlot(id);
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this schedule slot?')) {
+      await deleteScheduleSlot(id);
+    }
+  };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md mt-4">
-      <h2 className="text-xl font-bold mb-4">Schedule Manager</h2>
-      <button onClick={() => handleOpenModal()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md mb-4">
-        Add Schedule Slot
-      </button>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800">Schedule Manager</h2>
+          <p className="text-sm text-gray-500 mt-1">Manage time slots for defense boards</p>
+        </div>
+        <button 
+          onClick={() => handleOpenModal()} 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-bold transition-all shadow-sm"
+        >
+          + Add Time Slot
+        </button>
+      </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-start pt-20">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h3 className="text-lg font-bold mb-4">{isEditing ? 'Edit Schedule Slot' : 'Add Schedule Slot'}</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-800">{isEditing ? 'Edit Time Slot' : 'New Schedule Slot'}</h3>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-gray-700 mb-1">Date</label>
-                <input type="date" name="date" value={formData.date} onChange={handleChange} className="w-full px-3 py-2 border rounded-md" required />
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Date</label>
+                <input type="date" name="date" value={formData.date} onChange={handleChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" required />
               </div>
-              <div>
-                <label className="block text-gray-700 mb-1">Start Time</label>
-                <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-3 py-2 border rounded-md" required />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Start Time</label>
+                  <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">End Time</label>
+                  <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" required />
+                </div>
               </div>
-              <div>
-                <label className="block text-gray-700 mb-1">End Time</label>
-                <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-3 py-2 border rounded-md" required />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <button type="button" onClick={handleCloseModal} className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">Cancel</button>
-                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">{isEditing ? 'Update' : 'Add'}</button>
+              <div className="flex justify-end gap-3 pt-6 border-t border-gray-50">
+                <button type="button" onClick={handleCloseModal} className="px-5 py-2.5 text-gray-500 hover:bg-gray-100 rounded-xl transition-all font-bold">Cancel</button>
+                <button type="submit" className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-md transition-all">
+                  {isEditing ? 'Save Changes' : 'Add Slot'}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {isLoading ? <p>Loading schedule slots...</p> : isError ? <p className="text-red-500">Error: {error.message}</p> : (
-        <table className="min-w-full bg-white border border-gray-200">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="py-2 px-4 border-b">Date</th>
-              <th className="py-2 px-4 border-b">Start Time</th>
-              <th className="py-2 px-4 border-b">End Time</th>
-              <th className="py-2 px-4 border-b">Actions</th>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-100">
+              <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-widest">Defense Date</th>
+              <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-widest text-center">Time Duration</th>
+              <th className="py-4 px-6 text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {scheduleSlots.map(slot => (
-              <tr key={slot._id} className="text-center hover:bg-gray-50">
-                <td className="py-2 px-4 border-b">{new Date(slot.date).toLocaleDateString()}</td>
-                <td className="py-2 px-4 border-b">{slot.startTime}</td>
-                <td className="py-2 px-4 border-b">{slot.endTime}</td>
-                <td className="py-2 px-4 border-b">
-                  <button onClick={() => handleOpenModal(slot)} className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md mr-2">Edit</button>
-                  <button onClick={() => handleDelete(slot._id)} className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md">Delete</button>
+          <tbody className="divide-y divide-gray-50">
+            {scheduleSlots?.map(slot => (
+              <tr key={slot._id} className="hover:bg-blue-50/30 transition-colors">
+                <td className="py-4 px-6 text-gray-800 font-bold">
+                  {new Date(slot.date).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </td>
+                <td className="py-4 px-6 text-center">
+                  <span className="inline-flex items-center bg-gray-100 text-gray-700 px-4 py-1 rounded-md text-sm font-bold border border-gray-200">
+                    {slot.startTime} — {slot.endTime}
+                  </span>
+                </td>
+                <td className="py-4 px-6 text-right space-x-4">
+                  <button onClick={() => handleOpenModal(slot)} className="text-blue-600 hover:underline font-bold text-sm transition-all">Edit</button>
+                  <button onClick={() => handleDelete(slot._id)} className="text-red-500 hover:underline font-bold text-sm transition-all">Delete</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      )}
+      </div>
     </div>
   );
 };
 
-// DefenseSchedule Component
+// --- Main DefenseSchedule Component ---
 const DefenseSchedule = () => {
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Current Defense Schedule</h1>
-      <Link to="/committee/defense-schedule/create" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md mb-4 inline-block">
-        Create Defense Board
-      </Link>
+    <div className="min-h-screen bg-gray-50/50 p-6 md:p-10 font-sans">
+      <div className="max-w-7xl mx-auto">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-gray-600 tracking-tight">Current Defense Schedule</h1>
+            <p className="text-gray-500 mt-2 font-medium">Manage rooms and time slots for academic student defenses</p>
+          </div>
+          <Link 
+            to="/committee/defense-schedule/create" 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2"
+          >
+            Create Defense Board <span>→</span>
+          </Link>
+        </header>
 
-      <RoomManager />
-      <ScheduleManager />
+        <div className="space-y-10">
+          <RoomManager />
+          <ScheduleManager />
+        </div>
+      </div>
     </div>
   );
 };

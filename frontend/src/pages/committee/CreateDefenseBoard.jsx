@@ -12,6 +12,7 @@ const CreateDefenseBoard = () => {
 
   const [formData, setFormData] = useState(
     location.state?.defenseBoardDraft || {
+      boardNumber: '',
       defenseType: 'Pre-Defense',
       room: '',
       schedule: '',
@@ -52,6 +53,18 @@ const CreateDefenseBoard = () => {
       <h1 className="text-3xl font-bold mb-6 text-gray-800">Create Defense Board</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Board Number */}
+        <div>
+          <label className="block mb-2 text-gray-700 font-medium">Board Number</label>
+          <input
+            type="text"
+            name="boardNumber"
+            value={formData.boardNumber}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+            required
+          />
+        </div>
         {/* Defense Type */}
         <div>
           <label className="block mb-2 text-gray-700 font-medium">Defense Type</label>

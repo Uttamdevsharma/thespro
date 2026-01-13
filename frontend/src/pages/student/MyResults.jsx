@@ -8,7 +8,7 @@ const AssessmentTable = ({ title, comments }) => (
     <div className="overflow-hidden border border-gray-200 rounded shadow-sm">
       <table className="min-w-full divide-y divide-gray-200">
         
-        <thead className="bg-[#80a18e]">
+        <thead className="bg-[#3bba70]">
           <tr>
             <th scope="col" className="px-6 py-4 text-left text-sm font-semibold text-white w-1/4">
               Evaluator
@@ -101,7 +101,7 @@ const MyResults = () => {
           <h2 className="text-xl font-bold text-gray-800 mb-4">Final Result Summary</h2>
           <div className="overflow-hidden border border-gray-200 rounded shadow-sm">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-[#80a18e]">
+              <thead className="bg-[#3bba70]">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-white">Course Code</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-white">Course Title</th>
