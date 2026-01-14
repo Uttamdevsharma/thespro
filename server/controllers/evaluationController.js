@@ -17,8 +17,9 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
   console.log('[submitOrUpdateEvaluation] Incoming data:', { studentId, proposalId, defenseType, marks, comments, evaluationType, evaluatorId });
 
   // Convert defenseType to canonical form to match Mongoose enum
-  const canonicalDefenseType = defenseType.replace(/^(pre|final)-defense$/i, (match, p1) => {
-    return p1.charAt(0).toUpperCase() + p1.slice(1) + '-Defense';
+  // It handles 'pre-defense', 'pre defense', 'final-defense', 'final defense'
+  const canonicalDefenseType = defenseType.replace(/^(pre|final)[-\s]?defense$/i, (match, p1) => {
+    return p1.charAt(0).toUpperCase() + p1.slice(1) + ' Defense'; // Note the space here
   });
 
   if (defenseType !== canonicalDefenseType) {
@@ -87,6 +88,7 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
     // Update
     existingEvaluation.marks = marks;
     existingEvaluation.comments = comments;
+    console.log('[submitOrUpdateEvaluation] Data for update (before save):', { defenseType: existingEvaluation.defenseType, marks: existingEvaluation.marks });
     try {
       const updatedEvaluation = await existingEvaluation.save();
       console.log('[submitOrUpdateEvaluation] Updated evaluation:', updatedEvaluation);
@@ -102,6 +104,7 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
     }
   } else {
     console.log('[submitOrUpdateEvaluation] Creating new evaluation.');
+    console.log('[submitOrUpdateEvaluation] Data for creation (before create):', { defenseType: evaluationData.defenseType, marks: evaluationData.marks });
     // Create
     try {
       const newEvaluation = await Evaluation.create(evaluationData);
@@ -165,13 +168,19 @@ const getEvaluationsByProposal = asyncHandler(async (req, res) => {
 const getMyResults = asyncHandler(async (req, res) => {
   const studentId = req.user._id;
 
+  console.log(`[getMyResults] Fetching results for student: ${studentId}`);
+
   // Try to find a published result for the student
   const publishedResult = await PublishedResult.findOne({ student: studentId })
     .populate('proposal', 'title');
 
+  console.log(`[getMyResults] PublishedResult found: ${publishedResult ? 'Yes' : 'No'}`);
+
   // Fetch all comments
   const evaluations = await Evaluation.find({ student: studentId })
     .populate('evaluator', 'name role');
+
+  console.log(`[getMyResults] Found ${evaluations.length} evaluations for student: ${studentId}`);
 
   const preDefenseComments = {
     supervisor: [],
@@ -189,13 +198,15 @@ const getMyResults = asyncHandler(async (req, res) => {
         comment: e.comments,
         evaluator: e.evaluator.name,
       };
-      if (e.defenseType === 'pre-defense') {
+      // Use case-insensitive regex to match 'Pre-Defense' or 'pre-defense'
+      if (e.defenseType.match(/^Pre-Defense$/i)) {
         if (e.evaluationType === 'supervisor') {
           preDefenseComments.supervisor.push(comment);
         } else if (e.evaluationType === 'committee') {
           preDefenseComments.board.push(comment);
         }
-      } else if (e.defenseType === 'final-defense') {
+      } // Use case-insensitive regex to match 'Final Defense' or 'final-defense'
+      else if (e.defenseType.match(/^Final Defense$/i)) {
         if (e.evaluationType === 'supervisor') {
           finalDefenseComments.supervisor.push(comment);
         } else if (e.evaluationType === 'committee') {
@@ -304,10 +315,14 @@ const publishAllResults = asyncHandler(async (req, res) => {
     let notPublishedCount = 0;
 
     for (const proposal of proposals) {
+        console.log(`[publishAllResults] Processing Proposal: ${proposal.title} (ID: ${proposal._id}) with ${proposal.members.length} members.`);
         for (const student of proposal.members) {
+            console.log(`[publishAllResults] Processing Student: ${student.name} (ID: ${student._id})`);
+
             // Check if result is already published
             const existingResult = await PublishedResult.findOne({ student: student._id });
             if (existingResult) {
+                console.log(`[publishAllResults] Result for student ${student._id} already published.`);
                 alreadyPublishedCount++;
                 continue;
             }
@@ -317,10 +332,14 @@ const publishAllResults = asyncHandler(async (req, res) => {
                 student: student._id,
             });
 
-            const preDefenseSupervisor = evaluations.find(e => e.defenseType === 'pre-defense' && e.evaluationType === 'supervisor');
-            const preDefenseCommittee = evaluations.filter(e => e.defenseType === 'pre-defense' && e.evaluationType === 'committee');
-            const finalDefenseSupervisor = evaluations.find(e => e.defenseType === 'final-defense' && e.evaluationType === 'supervisor');
-            const finalDefenseCommittee = evaluations.filter(e => e.defenseType === 'final-defense' && e.evaluationType === 'committee');
+            // Using case-insensitive regex for defenseType to match both 'pre-defense' and 'Pre-Defense'
+            const preDefenseSupervisor = evaluations.find(e => e.evaluationType === 'supervisor' && e.defenseType.match(/^Pre-Defense$/i));
+            const preDefenseCommittee = evaluations.filter(e => e.evaluationType === 'committee' && e.defenseType.match(/^Pre-Defense$/i));
+            const finalDefenseSupervisor = evaluations.find(e => e.evaluationType === 'supervisor' && e.defenseType.match(/^Final Defense$/i));
+            const finalDefenseCommittee = evaluations.filter(e => e.evaluationType === 'committee' && e.defenseType.match(/^Final Defense$/i));
+
+            console.log(`[publishAllResults] Eval counts for student ${student._id}: PreSup=${!!preDefenseSupervisor}, PreCom=${preDefenseCommittee.length}, FinalSup=${!!finalDefenseSupervisor}, FinalCom=${finalDefenseCommittee.length}`);
+
 
             if (preDefenseSupervisor && preDefenseCommittee.length > 0 && finalDefenseSupervisor && finalDefenseCommittee.length > 0) {
                 const preDefenseCommitteeAvg = preDefenseCommittee.reduce((acc, e) => acc + e.marks, 0) / preDefenseCommittee.length;
@@ -334,20 +353,32 @@ const publishAllResults = asyncHandler(async (req, res) => {
 
                 const { grade, point } = calculateGradeAndPoint(totalMarks);
 
-                await PublishedResult.create({
-                    student: student._id,
-                    proposal: proposal._id,
-                    grade,
-                    point,
-                    courseCode: 'CSE 400A',
-                    courseTitle: 'Capstone Project / Thesis',
-                });
-                publishedCount++;
+                try {
+                    await PublishedResult.create({
+                        student: student._id,
+                        proposal: proposal._id,
+                        grade,
+                        point,
+                        courseCode: 'CSE 400A',
+                        courseTitle: 'Capstone Project / Thesis',
+                    });
+                    console.log(`[publishAllResults] Successfully published result for student ${student._id} (Grade: ${grade}, Point: ${point}).`);
+                    publishedCount++;
+                } catch (createError) {
+                    console.error(`[publishAllResults] Error creating PublishedResult for student ${student._id}: ${createError.message}`);
+                    if (createError.name === 'ValidationError') {
+                        // This might happen if there's a unique constraint or schema mismatch
+                        console.error(`Validation Error details: ${createError.message}`);
+                    }
+                    notPublishedCount++; // Count as not published due to error
+                }
             } else {
+                console.log(`[publishAllResults] Not enough evaluations for student ${student._id} to publish result.`);
                 notPublishedCount++;
             }
         }
     }
+    console.log(`[publishAllResults] Publishing process finished. Published: ${publishedCount}, Already Published: ${alreadyPublishedCount}, Not Published: ${notPublishedCount}.`);
     res.status(200).json({
         message: 'Result publishing process completed.',
         published: publishedCount,

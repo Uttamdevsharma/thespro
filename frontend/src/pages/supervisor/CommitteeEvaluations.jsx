@@ -69,7 +69,7 @@ const CommitteeEvaluations = () => {
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"
                 >
                     <option value="Pre-Defense">Pre-Defense</option>
-                    <option value="Final-Defense">Final-Defense</option>
+                    <option value="Final Defense">Final Defense</option>
                 </select>
             </div>
 
