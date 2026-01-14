@@ -152,6 +152,10 @@ export const apiSlice = createApi({
         }),
         invalidatesTags: ['DefenseBoards'],
       }),
+      getDefenseBoardById: builder.query({
+        query: (id) => `/defenseboards/${id}`,
+        providesTags: (result, error, id) => [{ type: 'DefenseBoards', id }],
+      }),
       addOrUpdateComment: builder.mutation({
         query: ({ id, ...data }) => ({
           url: `/defenseboards/${id}/comments`,
@@ -432,6 +436,7 @@ export const apiSlice = createApi({
     useGetBoardResultsQuery,
     useGetPublishStatusQuery,
     usePublishAllResultsMutation,
+    useGetDefenseBoardByIdQuery,
   } = apiSlice;
   
   
