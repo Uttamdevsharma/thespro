@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import Loader from '../../components/Loader';
 
 const AllBoardResults = () => {
-  const [defenseType, setDefenseType] = useState('pre-defense');
+  const [defenseType, setDefenseType] = useState('Pre-Defense'); // Use exact enum value
   const [selectedBoard, setSelectedBoard] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
 
@@ -71,8 +71,8 @@ const BoardList = ({ boardResults, defenseType, setDefenseType, onBoardSelect, h
             onChange={(e) => setDefenseType(e.target.value)}
             className="block w-full md:w-48 p-2.5 bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 font-medium transition-all"
           >
-            <option value="pre-defense">Pre-Defense</option>
-            <option value="final-defense">Final Defense</option>
+            <option value="Pre-Defense">Pre-Defense</option>
+            <option value="Final Defense">Final Defense</option>
           </select>
           
           <button
@@ -107,8 +107,8 @@ const BoardList = ({ boardResults, defenseType, setDefenseType, onBoardSelect, h
               <tr key={boardResult.board._id} className="hover:bg-blue-50/40 transition-colors group">
                 <td className="py-4 px-6 font-semibold text-blue-600">Board {boardResult.board.boardNumber}</td>
                 <td className="py-4 px-6 italic text-gray-600">
-                  <span className={`px-2 py-1 rounded-md text-xs font-medium ${defenseType === 'pre-defense' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
-                    {defenseType === 'pre-defense' ? 'Pre-Defense' : 'Final-Defense'}
+                  <span className={`px-2 py-1 rounded-md text-xs font-medium ${boardResult.board.defenseType === 'Pre-Defense' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+                    {boardResult.board.defenseType}
                   </span>
                 </td>
                 <td className="py-4 px-6 text-gray-700">{boardResult.board.room.name}</td>

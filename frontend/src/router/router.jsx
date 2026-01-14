@@ -19,6 +19,8 @@ import CreateDefenseBoard from '../pages/committee/CreateDefenseBoard';
 import SelectGroups from '../pages/committee/SelectGroups';
 import SelectMembers from '../pages/committee/SelectMembers';
 import AllDefenseBoards from '../pages/committee/AllDefenseBoards';
+import DefenseBoardDetail from '../pages/committee/DefenseBoardDetail';
+import GroupResultSummary from '../pages/committee/GroupResultSummary';
 import AddTeacher from '../pages/committee/AddTeacher';
 import AssignCellToTeacherPage from '../pages/committee/AssignCellToTeacherPage';
 import ResearchCellDetail from '../pages/committee/ResearchCellDetail';
@@ -73,6 +75,14 @@ export const router = createBrowserRouter([
       {
         path: 'defense-boards',
         element: <AllDefenseBoards />,
+      },
+      {
+        path: 'defense-boards/:boardId',
+        element: <DefenseBoardDetail />,
+      },
+      {
+        path: 'defense-boards/:boardId/group-result/:proposalId',
+        element: <GroupResultSummary />,
       },
       {
         path: 'all-board-results',

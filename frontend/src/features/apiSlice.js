@@ -15,10 +15,10 @@ const baseQuery = fetchBaseQuery({
 
 const baseQueryWithAuth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
-  if (result.error && (result.error.status === 401 || result.error.status === 403)) {
-    if (result.error.data.message === 'Not authorized, token expired') {
-      api.dispatch(logout());
-    }
+  if (result.error && result.error.status === 401) {
+    // If it's a 401 Unauthorized, log out the user
+    api.dispatch(logout());
+    localStorage.removeItem('userInfo'); // Ensure token is cleared from localStorage
   }
   return result;
 };
@@ -343,7 +343,13 @@ export const apiSlice = createApi({
         providesTags: ['Evaluations'],
       }),
       getEvaluationsByProposal: builder.query({
-        query: (proposalId) => `/evaluations/proposal/${proposalId}`,
+        query: ({ proposalId, defenseType }) => {
+          let url = `/evaluations/proposal/${proposalId}`;
+          if (defenseType) {
+            url += `?defenseType=${defenseType}`;
+          }
+          return url;
+        },
         providesTags: ['Evaluations'],
       }),
       submitOrUpdateEvaluation: builder.mutation({

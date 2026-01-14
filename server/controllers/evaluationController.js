@@ -11,19 +11,31 @@ import PublishedResult from '../models/PublishedResult.js';
 // @route  POST /api/evaluations
 // @access Private (Committee, Supervisor)
 const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
-  const { studentId, proposalId, defenseType, marks, comments, evaluationType } = req.body;
+  let { studentId, proposalId, defenseType, marks, comments, evaluationType } = req.body; // Use let to allow re-assignment
   const evaluatorId = req.user._id;
+
+  console.log('[submitOrUpdateEvaluation] Incoming data:', { studentId, proposalId, defenseType, marks, comments, evaluationType, evaluatorId });
+
+  // Convert defenseType to canonical form to match Mongoose enum
+  const canonicalDefenseType = defenseType.replace(/^(pre|final)-defense$/i, (match, p1) => {
+    return p1.charAt(0).toUpperCase() + p1.slice(1) + '-Defense';
+  });
+
+  if (defenseType !== canonicalDefenseType) {
+    console.log(`[submitOrUpdateEvaluation] Converting defenseType from '${defenseType}' to '${canonicalDefenseType}'`);
+    defenseType = canonicalDefenseType;
+  }
 
   if (!studentId || !proposalId || !defenseType || !evaluationType || marks === undefined) {
     res.status(400);
     throw new Error('Please provide all required evaluation fields.');
   }
 
-
   const student = await User.findById(studentId);
   const proposal = await Proposal.findById(proposalId);
 
   if (!student || !proposal) {
+    console.log('[submitOrUpdateEvaluation] Student or Proposal not found.');
     res.status(404);
     throw new Error('Student or Proposal not found.');
   }
@@ -45,6 +57,7 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
   } else if (evaluationType === 'committee' && (isCommitteeMemberOnBoard || req.user.role === 'committee')) {
     userEvaluationType = 'committee';
   } else {
+    console.log('[submitOrUpdateEvaluation] Not authorized:', { evaluatorRole: req.user.role, evaluationType, isSupervisor, isCommitteeMemberOnBoard });
     res.status(403);
     throw new Error('Not authorized to evaluate this student for the given role.');
   }
@@ -59,6 +72,8 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
     comments,
   };
 
+  console.log('[submitOrUpdateEvaluation] Processed evaluationData:', evaluationData);
+
   const existingEvaluation = await Evaluation.findOne({
     student: studentId,
     evaluator: evaluatorId,
@@ -68,15 +83,39 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
   });
 
   if (existingEvaluation) {
+    console.log('[submitOrUpdateEvaluation] Updating existing evaluation:', existingEvaluation._id);
     // Update
     existingEvaluation.marks = marks;
     existingEvaluation.comments = comments;
-    const updatedEvaluation = await existingEvaluation.save();
-    res.status(200).json(updatedEvaluation);
+    try {
+      const updatedEvaluation = await existingEvaluation.save();
+      console.log('[submitOrUpdateEvaluation] Updated evaluation:', updatedEvaluation);
+      res.status(200).json(updatedEvaluation);
+    } catch (updateError) {
+      console.error('[submitOrUpdateEvaluation] Error updating existing evaluation:', updateError.message);
+      if (updateError.name === 'ValidationError') {
+        res.status(400);
+        throw new Error(`Validation Error: ${updateError.message}`);
+      }
+      res.status(500);
+      throw new Error('Failed to update existing evaluation.');
+    }
   } else {
+    console.log('[submitOrUpdateEvaluation] Creating new evaluation.');
     // Create
-    const newEvaluation = await Evaluation.create(evaluationData);
-    res.status(201).json(newEvaluation);
+    try {
+      const newEvaluation = await Evaluation.create(evaluationData);
+      console.log('[submitOrUpdateEvaluation] Created new evaluation:', newEvaluation);
+      res.status(201).json(newEvaluation);
+    } catch (createError) {
+      console.error('[submitOrUpdateEvaluation] Error creating new evaluation:', createError.message);
+      if (createError.name === 'ValidationError') {
+        res.status(400);
+        throw new Error(`Validation Error: ${createError.message}`);
+      }
+      res.status(500);
+      throw new Error('Failed to create new evaluation.');
+    }
   }
 });
 
@@ -89,14 +128,21 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
 // @access Private (Committee, Supervisor)
 const getEvaluationsByProposal = asyncHandler(async (req, res) => {
     const { proposalId } = req.params;
-    const proposal = await Proposal.findById(proposalId).populate('members', 'name email');
-  
+    const { defenseType } = req.query; // 'Pre-Defense' or 'Final Defense'
+
+    const proposal = await Proposal.findById(proposalId).populate('members', 'name email studentId');
+
     if (!proposal) {
       res.status(404);
       throw new Error('Proposal not found');
     }
+
+    let query = { proposal: proposalId };
+    if (defenseType) {
+        query.defenseType = { $regex: new RegExp(`^${defenseType}$`, 'i') };
+    }
   
-    const evaluations = await Evaluation.find({ proposal: proposalId })
+    const evaluations = await Evaluation.find(query)
       .populate('evaluator', 'name');
   
     const results = proposal.members.map(member => {
@@ -189,24 +235,30 @@ const getMyResults = asyncHandler(async (req, res) => {
 const getBoardResults = asyncHandler(async (req, res) => {
   const { defenseType } = req.query;
 
-  if (!defenseType || !['pre-defense', 'final-defense'].includes(defenseType)) {
+  if (!defenseType || !['Pre-Defense', 'Final Defense'].includes(defenseType)) {
     res.status(400);
-    throw new Error('Invalid or missing defense type.');
+    throw new Error('Invalid or missing defense type. Must be "Pre-Defense" or "Final Defense".');
   }
+
+  console.log(`[getBoardResults] Querying for defenseType: ${defenseType}`);
 
   const boards = await DefenseBoard.find({ defenseType: { $regex: new RegExp(`^${defenseType}$`, 'i') } }).sort({ boardNumber: 1 }).populate('boardMembers', 'name email').populate({
     path: 'schedule',
     select: 'startTime endTime'
   }).populate('room', 'name');
 
-  const boardResults = await Promise.all(
-    boards.map(async (board) => {
-      const proposals = await Proposal.find({ defenseBoardId: board._id })
-        .populate('members', 'name email studentId')
-        .populate('supervisorId', 'name email'); // Populate name and email for supervisor
-
-      const proposalResults = await Promise.all(
-        proposals.map(async (proposal) => {
+        console.log(`[getBoardResults] Found ${boards.length} boards for defenseType: ${defenseType}`);
+  
+        const boardResults = await Promise.all(
+          boards.map(async (board) => {
+            console.log(`[getBoardResults] Processing board ID: ${board._id}`);
+            const proposals = await Proposal.find({ _id: { $in: board.groups } }) // Modified query
+              .populate('members', 'name email studentId')
+              .populate('supervisorId', 'name email'); // Populate name and email for supervisor
+  
+            console.log(`[getBoardResults] Found ${proposals.length} proposals for board ID ${board._id} (using board.groups)`);
+  
+            const proposalResults = await Promise.all(        proposals.map(async (proposal) => {
           const studentResults = await Promise.all(
             proposal.members.map(async (member) => {
               const evaluations = await Evaluation.find({

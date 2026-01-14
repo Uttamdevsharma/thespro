@@ -54,6 +54,7 @@ const createDefenseBoard = asyncHandler(async (req, res) => {
   // Update defenseBoardId for all proposals in this group
   for (const proposalId of groups) {
     await Proposal.findByIdAndUpdate(proposalId, { defenseBoardId: createdDefenseBoard._id });
+    console.log(`[createDefenseBoard] Set defenseBoardId=${createdDefenseBoard._id} for Proposal: ${proposalId}`);
   }
 
   res.status(201).json(createdDefenseBoard);
@@ -120,8 +121,15 @@ const getDefenseBoardById = asyncHandler(async (req, res) => {
     .populate('createdBy', 'name email');
 
   if (defenseBoard) {
+    console.log(`[getDefenseBoardById] Found defense board: ${defenseBoard._id}`);
+    console.log(`[getDefenseBoardById] Defense Type: ${defenseBoard.defenseType}`);
+    console.log(`[getDefenseBoardById] Groups count (after populate): ${defenseBoard.groups.length}`);
+    defenseBoard.groups.forEach((group, index) => {
+      console.log(`[getDefenseBoardById]   Group ${index + 1}: ID=${group._id}, Title=${group.title}, Members=${group.members.map(m => m.name).join(', ')}`);
+    });
     res.json(defenseBoard);
   } else {
+    console.log(`[getDefenseBoardById] Defense board not found for ID: ${req.params.id}`);
     res.status(404);
     throw new Error('Defense board not found');
   }
@@ -155,6 +163,7 @@ const updateDefenseBoard = asyncHandler(async (req, res) => {
       // Set defenseBoardId to null for removed proposals
       for (const proposalId of removedProposalIds) {
         await Proposal.findByIdAndUpdate(proposalId, { defenseBoardId: null });
+        console.log(`[updateDefenseBoard] Set defenseBoardId=null for removed Proposal: ${proposalId}`);
       }
 
       // Find proposals that were added to the board
@@ -162,6 +171,7 @@ const updateDefenseBoard = asyncHandler(async (req, res) => {
       // Set defenseBoardId to this defense board's ID for added proposals
       for (const proposalId of addedProposalIds) {
         await Proposal.findByIdAndUpdate(proposalId, { defenseBoardId: defenseBoard._id });
+        console.log(`[updateDefenseBoard] Set defenseBoardId=${defenseBoard._id} for added Proposal: ${proposalId}`);
       }
 
       defenseBoard.groups = groups;

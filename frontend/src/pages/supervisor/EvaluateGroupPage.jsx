@@ -23,7 +23,7 @@ const EvaluateGroupPage = () => {
 
     const [marks, setMarks] = useState({});
     const [comments, setComments] = useState({});
-    const [defenseType, setDefenseType] = useState('pre-defense'); // Default to pre-defense
+    const [defenseType, setDefenseType] = useState('Pre-Defense'); // Default to Pre-Defense
 
     const [submitEvaluation, { isLoading: isSubmitting }] = useSubmitOrUpdateEvaluationMutation();
 
@@ -137,8 +137,8 @@ const EvaluateGroupPage = () => {
                         onChange={(e) => setDefenseType(e.target.value)} 
                         className="p-2 border border-blue-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150"
                     >
-                        <option value="pre-defense">Pre-Defense (Max: 20)</option>
-                        <option value="final-defense">Final Defense (Max: 40)</option>
+                        <option value="Pre-Defense">Pre-Defense (Max: 20)</option>
+                        <option value="Final Defense">Final Defense (Max: 40)</option>
                     </select>
                     <span className="text-sm text-gray-600 ml-auto">Current Max Mark: <span className="font-bold text-blue-700">{maxMark}</span></span>
                 </div>
