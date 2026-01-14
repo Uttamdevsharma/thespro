@@ -1,5 +1,5 @@
 import express from 'express';
-import { getStudents, getSupervisors, addSupervisor, assignCellToSupervisor, getUserProfile, updateUserProfile, updatePassword, uploadProfilePicture, getAllUsers, getCommitteeMembers, getAllSupervisors, assignCourseSupervisor, getSupervisorsWithCapacity } from '../controllers/userController.js';
+import { getStudents, getSupervisors, addSupervisor, assignCellToSupervisor, getUserProfile, updateUserProfile, updatePassword, uploadProfilePicture, getAllUsers, getCommitteeMembers, getAllSupervisors, assignCourseSupervisor, getSupervisorsWithCapacity, getUserById, removeCellFromSupervisor } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/authMiddleware.js';
 import upload from '../middleware/uploadMiddleware.js';
@@ -18,5 +18,7 @@ router.get('/committee-members', protect, authorizeRoles('committee'), getCommit
 router.get('/supervisors/all', protect, authorizeRoles('committee'), getAllSupervisors);
 router.get('/supervisors/capacity', protect, authorizeRoles('student'), getSupervisorsWithCapacity);
 router.put('/supervisors/:id/assign-course-supervisor', protect, authorizeRoles('committee'), assignCourseSupervisor);
+router.get('/:id', protect, authorizeRoles('committee'), getUserById);
+router.put('/:id/remove-cell', protect, authorizeRoles('committee'), removeCellFromSupervisor);
 
 export default router;

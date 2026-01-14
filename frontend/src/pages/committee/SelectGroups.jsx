@@ -4,10 +4,12 @@ import { useGetAvailableProposalsQuery } from '../../features/apiSlice';
 import { toast } from 'react-toastify';
 
 const SelectGroups = () => {
-  const { data: availableProposals, isLoading } = useGetAvailableProposalsQuery();
   const location = useLocation();
   const navigate = useNavigate();
   const { defenseBoardDraft } = location.state || {};
+  const defenseType = defenseBoardDraft?.defenseType;
+
+  const { data: availableProposals, isLoading } = useGetAvailableProposalsQuery(defenseType);
 
   const [selectedGroups, setSelectedGroups] = useState(defenseBoardDraft?.groups || []);
 

@@ -6,7 +6,7 @@ import { authorizeRoles } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 router.route('/')
-  .get(protect, getResearchCells)
+  .get(protect, authorizeRoles('committee'), getResearchCells)
   .post(protect, authorizeRoles('committee'), addResearchCell);
 
 export default router;

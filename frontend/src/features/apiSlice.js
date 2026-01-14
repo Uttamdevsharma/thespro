@@ -26,7 +26,7 @@ const baseQueryWithAuth = async (args, api, extraOptions) => {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithAuth,
-  tagTypes: ['Students', 'Teachers', 'Cells', 'Notices', 'Proposals', 'DefenseBoards', 'Rooms', 'ScheduleSlots', 'Evaluations'],
+  tagTypes: ['Students', 'Teachers', 'Cells', 'Notices', 'Proposals', 'DefenseBoards', 'Rooms', 'ScheduleSlots', 'Evaluations', 'User'],
     endpoints: (builder) => ({
       getStudents: builder.query({
         query: () => '/users/students',
@@ -44,6 +44,10 @@ export const apiSlice = createApi({
         query: () => '/users/supervisors',
         providesTags: ['Teachers'],
       }),
+      getUserById: builder.query({
+        query: (id) => `/users/${id}`,
+        providesTags: (result, error, id) => [{ type: 'User', id }],
+      }),
       addTeacher: builder.mutation({
         query: (teacher) => ({
           url: '/users/add-supervisor',
@@ -53,12 +57,20 @@ export const apiSlice = createApi({
         invalidatesTags: ['Teachers'],
       }),
       assignCell: builder.mutation({
-        query: ({ id, ...data }) => ({
+        query: ({ id, cellIds }) => ({
           url: `/users/${id}/assign-cell`,
-          method: 'PATCH',
-          body: data,
+          method: 'PUT',
+          body: { cellIds },
         }),
-        invalidatesTags: ['Teachers'],
+        invalidatesTags: ['Teachers', 'User'],
+      }),
+      removeCell: builder.mutation({
+        query: ({ id, cellId }) => ({
+          url: `/users/${id}/remove-cell`,
+          method: 'PUT',
+          body: { cellId },
+        }),
+        invalidatesTags: ['Teachers', 'User'],
       }),
       getResearchCells: builder.query({
         query: () => '/researchcells',
@@ -316,7 +328,13 @@ export const apiSlice = createApi({
         providesTags: ['Proposals'],
       }),
       getAvailableProposals: builder.query({
-        query: () => '/proposals/available-proposals',
+        query: (defenseType) => {
+          let url = '/proposals/available-proposals';
+          if (defenseType) {
+            url += `?defenseType=${defenseType}`;
+          }
+          return url;
+        },
         providesTags: ['Proposals'],
       }),
       // Evaluation Endpoints
@@ -361,32 +379,29 @@ export const apiSlice = createApi({
       }),
     }),
     extraReducers: (builder) => {
-      builder.addMatcher(apiSlice.endpoints.logout.match, (state, action) => {
-        // Clear all cached data when logout occurs
-        // This is handled by api.util.resetApiState() which is dispatched by the logout action itself
-        // No need to do anything here directly, as the logout action already dispatches resetApiState
-      });
+      // builder.addMatcher(apiSlice.endpoints.logout.match, (state, action) => {
+      //   // Clear all cached data when logout occurs
+      //   // This is handled by api.util.resetApiState() which is dispatched by the logout action itself
+      //   // No need to do anything here directly, as the logout action already dispatches resetApiState
+      // });
     },
   });
   
   export const {
-    useLoginMutation,
-    useRegisterMutation,
-    useLogoutMutation,
-    useGetUsersQuery,
-    useGetUserDetailsQuery,
-    useUpdateUserMutation,
-    useDeleteUserMutation,
     useGetStudentsQuery,
+    useUpdateStudentMutation,
     useGetTeachersQuery,
-    useGetProposalsQuery,
-    useGetProposalByIdQuery,
+    useGetUserByIdQuery,
+    useAddTeacherMutation,
+    useAssignCellMutation,
+    useRemoveCellMutation,
+    useGetResearchCellsQuery,
+    useAddResearchCellMutation,
     useCreateProposalMutation,
-    useUpdateProposalMutation,
-    useDeleteProposalMutation,
     useGetProposalsBySupervisorQuery,
     useGetSupervisorPendingProposalsQuery,
     useUpdateProposalStatusMutation,
+    useGetStudentProposalsQuery,
     useForwardProposalMutation,
     useGetPendingProposalsByCellQuery,
     useRejectProposalMutation,
@@ -394,15 +409,8 @@ export const apiSlice = createApi({
     useDeleteDefenseBoardMutation,
     useGetAllDefenseBoardsQuery,
     useUpdateDefenseBoardMutation,
+    useGetDefenseBoardByIdQuery,
     useAddOrUpdateCommentMutation,
-    useGetGroupsQuery,
-    useGetGroupByIdQuery,
-    useCreateGroupMutation,
-    useUpdateGroupMutation,
-    useDeleteGroupMutation,
-    useAssignBoardMembersMutation,
-    useAssignGroupsMutation,
-    useGetResearchCellsQuery,
     useCreateCommitteeNoticeMutation,
     useGetCommitteeSentNoticesQuery,
     useSendNoticeToGroupMutation,
@@ -410,15 +418,12 @@ export const apiSlice = createApi({
     useGetNoticesQuery,
     useGetNoticeByIdQuery,
     useCreateNoticeMutation,
-    useMarkNoticeAsReadMutation,
     useUpdateNoticeMutation,
+    useMarkNoticeAsReadMutation,
     useDeleteNoticeMutation,
     useGetSupervisorDefenseScheduleQuery,
-    useGetSupervisorDefenseResultQuery,
-    useUpdateSupervisorCommentMutation,
+    useGetSupervisorDefenseResultsQuery,
     useGetStudentDefenseScheduleQuery,
-    useGetStudentProposalsQuery,
-    useGetSupervisorProposalsQuery,
     useGetRoomsQuery,
     useAddRoomMutation,
     useUpdateRoomMutation,
@@ -427,6 +432,7 @@ export const apiSlice = createApi({
     useAddScheduleSlotMutation,
     useUpdateScheduleSlotMutation,
     useDeleteScheduleSlotMutation,
+    useGetProposalsQuery,
     useGetAvailableProposalsQuery,
     useGetMyResultsQuery,
     useGetEvaluationsByProposalQuery,
@@ -436,7 +442,4 @@ export const apiSlice = createApi({
     useGetBoardResultsQuery,
     useGetPublishStatusQuery,
     usePublishAllResultsMutation,
-    useGetDefenseBoardByIdQuery,
   } = apiSlice;
-  
-  

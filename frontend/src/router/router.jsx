@@ -19,6 +19,10 @@ import CreateDefenseBoard from '../pages/committee/CreateDefenseBoard';
 import SelectGroups from '../pages/committee/SelectGroups';
 import SelectMembers from '../pages/committee/SelectMembers';
 import AllDefenseBoards from '../pages/committee/AllDefenseBoards';
+import AddTeacher from '../pages/committee/AddTeacher';
+import AssignCellToTeacherPage from '../pages/committee/AssignCellToTeacherPage';
+import ResearchCellDetail from '../pages/committee/ResearchCellDetail';
+import AddMembersToCell from '../pages/committee/AddMembersToCell';
 import SupervisorDashboard from '../pages/supervisor/Dashboard';
 import SupervisorChat from '../pages/supervisor/Chat';
 import Notice from '../pages/supervisor/Notice';
@@ -83,12 +87,28 @@ export const router = createBrowserRouter([
         element: <AllTeachers />,
       },
       {
+        path: 'add-teacher',
+        element: <AddTeacher />,
+      },
+      {
+        path: 'assign-cell-to-teacher/:teacherId',
+        element: <AssignCellToTeacherPage />,
+      },
+      {
         path: 'research-cells',
         element: <ResearchCells />,
       },
       {
         path: 'cell-members',
         element: <CellMembers />,
+      },
+      {
+        path: 'cell-members/:cellId',
+        element: <ResearchCellDetail />,
+      },
+      {
+        path: 'cell-members/:cellId/add-member',
+        element: <AddMembersToCell />,
       },
       {
         path: 'committee-members',

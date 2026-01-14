@@ -374,16 +374,28 @@ const getApprovedProposals = asyncHandler(async (req, res) => {
   res.json(proposals);
 });
 
-// @desc    Get all approved proposals not in any defense board
+// @desc    Get all approved proposals that are available for a new defense board of a specific type
 // @route   GET /api/proposals/available-proposals
 // @access  Private (Committee)
 const getAvailableProposals = asyncHandler(async (req, res) => {
-  const defenseBoards = await DefenseBoard.find({}, 'groups');
-  const assignedProposals = defenseBoards.flatMap(board => board.groups);
+  const { defenseType } = req.query; // 'Pre-Defense' or 'Final Defense'
 
-  const proposals = await Proposal.find({ 
-    status: 'Approved', 
-    _id: { $nin: assignedProposals } 
+  let assignedProposalsInDefenseBoards = [];
+
+  if (defenseType === 'Final Defense') {
+    // For Final Defense, we only exclude proposals already assigned to a Final Defense board
+    const finalDefenseBoards = await DefenseBoard.find({ defenseType: 'Final Defense' }, 'groups');
+    assignedProposalsInDefenseBoards = finalDefenseBoards.flatMap(board => board.groups);
+  } else {
+    // For Pre-Defense or if no type is specified (default to Pre-Defense logic),
+    // exclude proposals already assigned to ANY defense board.
+    const allDefenseBoards = await DefenseBoard.find({}, 'groups');
+    assignedProposalsInDefenseBoards = allDefenseBoards.flatMap(board => board.groups);
+  }
+
+  const proposals = await Proposal.find({
+    status: 'Approved',
+    _id: { $nin: assignedProposalsInDefenseBoards }
   })
     .populate('createdBy', 'name studentId currentCGPA')
     .populate('supervisorId', 'name')

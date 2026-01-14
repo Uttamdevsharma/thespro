@@ -1,15 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
-// Sidebar component for navigation
 const Sidebar = ({ role }) => {
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+  const handleDropdownToggle = (label) => {
+    setOpenDropdown(openDropdown === label ? null : label);
+  };
+
   const committeeLinks = [
     { to: '/committee/dashboard', label: 'Dashboard' },
-    { to: '/committee/pending-proposals', label: 'Pending Proposals' }, // Restored
-    { to: '/committee/all-students', label: 'All Students' },
-    { to: '/committee/all-teachers', label: 'All Teachers' },
-    { to: '/committee/research-cells', label: 'Research Cell' },
+    { to: '/committee/pending-proposals', label: 'Pending Proposals' },
+    {
+      label: 'Teacher Management',
+      subLinks: [
+        { to: '/committee/add-teacher', label: 'Add Teacher' },
+        { to: '/committee/all-teachers', label: 'All Teachers' },
+      ],
+    },
     { to: '/committee/cell-members', label: 'Cell Members' },
+    { to: '/committee/all-students', label: 'All Students' },
+    { to: '/committee/research-cells', label: 'Research Cell' },
     { to: '/committee/committee-members', label: 'Committee Members' },
     { to: '/committee/notices', label: 'Notice Management' },
     { to: '/committee/defense-schedule', label: 'Defense Schedule' },
@@ -44,22 +55,55 @@ const Sidebar = ({ role }) => {
     student: studentLinks,
   }[role];
 
+  const renderLink = (link, isSubLink = false) => {
+    const baseClasses = `block px-3 py-2 rounded-md transition-colors duration-200`;
+    const subLinkClass = isSubLink ? 'pl-8' : '';
+
+    if (link.subLinks) {
+      return (
+        <div key={link.label}>
+          <button
+            onClick={() => handleDropdownToggle(link.label)}
+            className={`${baseClasses} w-full text-left ${
+              openDropdown === link.label ? 'text-gray-900' : 'text-gray-700 hover:text-gray-900'
+            }`}
+          >
+            {link.label}
+          </button>
+          {openDropdown === link.label && (
+            <ul className="pl-4">
+              {link.subLinks.map((subLink) => (
+                <li key={subLink.to} className="mb-2">
+                  {renderLink(subLink, true)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <NavLink
+        to={link.to}
+        className={({ isActive }) =>
+          `${baseClasses} ${subLinkClass} ${
+            isActive ? 'bg-[#50C878] text-white' : 'text-gray-700 hover:text-gray-900'
+          }`
+        }
+      >
+        {link.label}
+      </NavLink>
+    );
+  };
+
   return (
     <div className="h-screen w-64 bg-gray-200">
       <ul className="p-4">
         {links &&
-          links.map((link, index) => (
-            <li key={index} className="mb-2">
-              <NavLink
-                to={link.to}
-                className={({ isActive }) =>
-                  `block px-3 py-2 rounded-md transition-colors duration-200 ${
-                    isActive ? 'bg-[#50C878] text-white' : 'text-gray-700 hover:text-gray-900'
-                  }`
-                }
-              >
-                {link.label}
-              </NavLink>
+          links.map((link) => (
+            <li key={link.label || link.to} className="mb-2">
+              {renderLink(link)}
             </li>
           ))}
       </ul>

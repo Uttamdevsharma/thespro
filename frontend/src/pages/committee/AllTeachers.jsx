@@ -1,185 +1,68 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useSelector } from 'react-redux';
-import { selectUser } from '../../features/userSlice';
-import toast from 'react-hot-toast';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useGetTeachersQuery } from '../../features/apiSlice';
+import Loader from '../../components/Loader';
 
 const AllTeachers = () => {
-  const [teachers, setTeachers] = useState([]);
-  const [cells, setCells] = useState([]);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-  const [selectedCells, setSelectedCells] = useState({});
-  const user = useSelector(selectUser);
+  const { data: teachers, isLoading, isError, error } = useGetTeachersQuery();
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${user?.token}`,
-    },
-  };
-
-  const fetchTeachers = async () => {
-    if (!user || !user.token) return;
-    try {
-      const { data } = await axios.get('http://localhost:5005/api/users/supervisors', config);
-      const teachersList = data.map((teacher) => ({
-        id: teacher._id,
-        ...teacher,
-      }));
-      setTeachers(teachersList);
-    } catch (error) {
-      console.error('Failed to fetch teachers:', error);
-      toast.error('Failed to fetch teachers.');
-    }
-  };
-
-  const fetchCells = async () => {
-    if (!user || !user.token) return;
-    try {
-      const { data } = await axios.get('http://localhost:5005/api/researchcells', config);
-      const cellsList = data.map((cell) => ({
-        id: cell._id,
-        ...cell,
-      }));
-      setCells(cellsList);
-    } catch (error) {
-      console.error('Failed to fetch cells:', error);
-      toast.error('Failed to fetch cells.');
-    }
-  };
-
-  useEffect(() => {
-    if (user && user.token) {
-      fetchTeachers();
-      fetchCells();
-    }
-  }, [user]);
-
-  const handleFormChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleAddTeacher = async (e) => {
-    e.preventDefault();
-    if (!user || !user.token) {
-      toast.error('User not authenticated.');
-      return;
-    }
-    try {
-      await axios.post('http://localhost:5005/api/users/add-supervisor', formData, config);
-      fetchTeachers(); // Re-fetch to ensure full synchronization
-      setFormData({ name: '', email: '', password: '' });
-      toast.success('Teacher added successfully.');
-    } catch (error) {
-      console.error("Error adding teacher: ", error);
-      toast.error(`Failed to add teacher: ${error.response?.data?.message || error.message}`);
-    }
-  };
-
-  const handleAssignCell = async (teacherId) => {
-    if (!user || !user.token) {
-      toast.error('User not authenticated.');
-      return;
-    }
-    const cellId = selectedCells[teacherId];
-    if (!cellId) {
-      toast.error("Please select a cell.");
-      return;
-    }
-
-    try {
-      await axios.put(`http://localhost:5005/api/users/${teacherId}/assign-cell`, { cellId }, config);
-      fetchTeachers(); // Re-fetch to ensure full synchronization
-      setSelectedCells(prev => ({ ...prev, [teacherId]: '' }));
-      toast.success('Cell assigned successfully.');
-    } catch (error) {
-      console.error("Error assigning cell: ", error);
-      toast.error(`Failed to assign cell: ${error.response?.data?.message || error.message}`);
-    }
-  };
-
-  const handleSelectedCellChange = (teacherId, cellId) => {
-    setSelectedCells(prev => ({ ...prev, [teacherId]: cellId }));
-  };
+  if (isLoading) return <Loader />;
+  if (isError) return <div className="text-red-500">Error: {error.message}</div>;
 
   return (
-    <div>
+    <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">All Teachers</h1>
 
-      <div className="mb-8 p-4 border rounded-lg shadow-sm bg-white">
-        <h2 className="text-xl font-semibold mb-4">Add New Teacher</h2>
-        <form onSubmit={handleAddTeacher} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Name"
-            value={formData.name}
-            onChange={handleFormChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleFormChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleFormChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            required
-          />
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline col-span-full"
-          >
-            Add Teacher
-          </button>
-        </form>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {teachers.map((teacher) => (
-          <div key={teacher.id} className="bg-white p-4 rounded-lg shadow flex flex-col">
-            <p className="text-lg font-semibold">{teacher.name}</p>
-            <p className="text-sm text-gray-500 mb-2">{teacher.email}</p>
-            
-            {teacher.researchCells && teacher.researchCells.length > 0 && (
-              <div className="mb-2">
-                <h3 className="text-sm font-medium">Assigned Cells:</h3>
-                {teacher.researchCells.map(cell => (
-                    <span key={cell._id} className="inline-block bg-gray-200 rounded-full px-2 py-1 text-xs font-semibold text-gray-700 mr-1 mt-1">
-                      {cell.title}
-                    </span>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-auto flex items-center">
-              <select
-                value={selectedCells[teacher.id] || ''}
-                onChange={(e) => handleSelectedCellChange(teacher.id, e.target.value)}
-                className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
-              >
-                <option value="">Assign Cell</option>
-                {cells.map((cell) => (
-                  <option key={cell.id} value={cell.id}>
-                    {cell.title}
-                  </option>
-                ))}
-              </select>
-              <button onClick={() => handleAssignCell(teacher.id)} className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-sm">
-                Assign
-              </button>
-            </div>
-          </div>
-        ))}
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Serial
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Name
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Assigned Cells
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {teachers.map((teacher, index) => (
+              <tr key={teacher._id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {index + 1}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {teacher.name}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {teacher.email}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {teacher.researchCells && teacher.researchCells.length > 0
+                    ? teacher.researchCells.map(cell => cell.title).join(', ')
+                    : 'N/A'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <Link
+                    to={`/committee/assign-cell-to-teacher/${teacher._id}`}
+                    className="text-indigo-600 hover:text-indigo-900"
+                  >
+                    Assign Cell
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

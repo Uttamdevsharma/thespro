@@ -1,72 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useSelector } from 'react-redux';
-import { selectUser } from '../../features/userSlice';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useGetResearchCellsQuery } from '../../features/apiSlice';
+import Loader from '../../components/Loader';
+import { Layers } from 'lucide-react';
 
 const CellMembers = () => {
-  const [teachers, setTeachers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const user = useSelector(selectUser);
+  const navigate = useNavigate();
+  const { data: researchCells, isLoading, isError, error } = useGetResearchCellsQuery();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user || !user.token) {
-        setLoading(false);
-        return;
-      }
-
-      const config = {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      };
-
-      try {
-        const { data: teachersData } = await axios.get('http://localhost:5005/api/users/supervisors', config);
-        
-        const teachersList = teachersData
-          .map(teacher => {
-            let researchCells = teacher.researchCells || [];
-            return { id: teacher._id, ...teacher, researchCells: researchCells };
-          })
-          .filter(teacher => teacher.researchCells && teacher.researchCells.length > 0);
-
-        setTeachers(teachersList);
-      } catch (error) {
-        console.error("Error fetching cell members: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (isLoading) return <Loader />;
+  if (isError) return <div className="text-red-500">Error: {error?.data?.message || error?.error}</div>;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Cell Members</h1>
-      {teachers.length === 0 ? (
-        <p>No teachers have been assigned to any research cells yet.</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {teachers.map((teacher) => (
-            <div key={teacher.id} className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-bold mb-2">{teacher.name}</h2>
-              <p className="text-sm text-gray-600 mb-4">{teacher.email}</p>
-              <div>
-                <h3 className="text-md font-semibold mb-2">Assigned Cells:</h3>
-                {teacher.researchCells.map((cell) => (
-                  <div key={cell._id} className="inline-block bg-blue-200 text-blue-800 rounded-full px-3 py-1 text-sm font-semibold mr-2 mb-2">
-                    {cell.title}
-                  </div>
-                ))}
+    <div className="p-6 bg-white min-h-screen">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">Research Cell Overview</h1>
+
+      {researchCells && researchCells.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {researchCells.map(cell => (
+            <div
+              key={cell._id}
+              className="bg-gray-50 border border-gray-200 rounded-lg p-6 flex flex-col items-start hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => navigate(`/committee/cell-members/${cell._id}`)}
+            >
+              <div className="text-indigo-600 mb-3">
+                <Layers size={32} strokeWidth={1.5} />
               </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">{cell.title}</h2>
+              <p className="text-sm text-gray-600 mb-4 flex-grow">{cell.description}</p>
+              {/* Note: Total Members count is not directly available from useGetResearchCellsQuery response.
+                  It would require either modifying the backend to include this, or fetching all teachers
+                  and counting those assigned to this cell. For now, displaying a placeholder or omitting.
+                  I will omit for now.
+              */}
             </div>
           ))}
+        </div>
+      ) : (
+        <div className="p-10 text-center text-gray-500 text-lg font-medium italic">
+          No research cells found.
         </div>
       )}
     </div>
