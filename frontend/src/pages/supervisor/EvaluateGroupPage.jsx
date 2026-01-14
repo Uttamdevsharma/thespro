@@ -1,36 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useGetEvaluationsByProposalQuery, useSubmitOrUpdateEvaluationMutation } from '../../features/apiSlice';
+import {
+    useGetEvaluationsByProposalQuery,
+    useSubmitOrUpdateEvaluationMutation,
+    useGetProposalByIdQuery // Import the new query hook
+} from '../../features/apiSlice';
 import { selectUser } from '../../features/userSlice';
 import Loader from '../../components/Loader';
 import { CheckBadgeIcon } from '@heroicons/react/24/outline';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Use useParams instead of useLocation
 import toast from 'react-hot-toast'; // Assuming toast notifications are used
 
 
 const EvaluateGroupPage = () => {
-    const location = useLocation();
+    const { proposalId } = useParams(); // Get proposalId from URL params
     const navigate = useNavigate();
-    const { proposal } = location.state || {}; // Get proposal from route state
 
     const user = useSelector(selectUser);
     const supervisorId = user._id;
 
-    const { data: existingEvaluations, refetch, isLoading: isLoadingEvaluations } =
-        useGetEvaluationsByProposalQuery(proposal?._id, {
-            skip: !proposal,
-        });
-
     const [marks, setMarks] = useState({});
     const [comments, setComments] = useState({});
-    const [defenseType, setDefenseType] = useState('Pre-Defense'); // Default to Pre-Defense
+    const [defenseType, setDefenseType] = useState('Pre-Defense'); // Default to Pre-Defense, moved to before use
+
+    // Fetch proposal details directly using the ID from params
+    const { data: proposal, isLoading: isLoadingProposal, error: proposalError } =
+        useGetProposalByIdQuery(proposalId, { skip: !proposalId });
+
+    const { data: existingEvaluations, refetch, isLoading: isLoadingEvaluations } =
+        useGetEvaluationsByProposalQuery({ proposalId, defenseType }, {
+            skip: !proposalId, // Skip if proposalId is not yet available
+        });
 
     const [submitEvaluation, { isLoading: isSubmitting }] = useSubmitOrUpdateEvaluationMutation();
 
     useEffect(() => {
-        if (!proposal) {
+        if (!proposalId) { // Check if proposalId is missing from URL
             toast.error('No group selected for evaluation.');
-            navigate('/supervisor/my-supervisions'); // Redirect if no proposal
+            navigate('/supervisor/my-supervisions'); // Redirect if no proposalId
+            return;
+        }
+        if (proposalError) {
+            toast.error(`Error loading proposal: ${proposalError.message || 'Unknown error'}`);
+            navigate('/supervisor/my-supervisions'); // Redirect on proposal fetch error
             return;
         }
 
@@ -54,7 +66,7 @@ const EvaluateGroupPage = () => {
 
         setMarks(marksString);
         setComments(initialComments);
-    }, [existingEvaluations, defenseType, supervisorId, proposal, navigate]);
+    }, [existingEvaluations, defenseType, supervisorId, proposalId, navigate, proposalError]);
 
 
     const handleMarkChange = (studentId, value) => {
@@ -68,6 +80,12 @@ const EvaluateGroupPage = () => {
     };
 
     const handleSaveAll = async () => {
+        // Use the fetched proposal here
+        if (!proposal) {
+            toast.error('Proposal data not available.');
+            return;
+        }
+
         const submissionPromises = proposal.members.map(async (student) => {
             const mark = marks[student._id];
             const comment = comments[student._id] || '';
@@ -111,10 +129,10 @@ const EvaluateGroupPage = () => {
             console.warn('Mixed submission results:', results);
         }
     };
-    const maxMark = defenseType === 'pre-defense' ? 20 : 40; // Max marks depend on defense type
+    const maxMark = defenseType === 'Pre-Defense' ? 20 : 40; // Max marks depend on defense type
 
-    if (isLoadingEvaluations || !proposal) {
-        return <Loader />; // Show loader if evaluations are loading or proposal is not available
+    if (isLoadingProposal || isLoadingEvaluations || !proposal) { // Check for proposal loading and availability
+        return <Loader />;
     }
 
     return (

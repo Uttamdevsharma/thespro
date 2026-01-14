@@ -47,7 +47,8 @@ import PendingProposals from '../pages/supervisor/PendingProposals';
 import SupervisorAllGroups from '../pages/supervisor/AllGroups'; // New import
 import SupervisorDefenseSchedule from '../pages/supervisor/DefenseSchedule';
 import SupervisorDefenseResult from '../pages/supervisor/DefenseResult';
-import MySupervisions from '../pages/supervisor/MySupervisions';
+import SupervisorGroupsOverview from '../pages/supervisor/SupervisorGroupsOverview';
+import EvaluateGroupPage from '../pages/supervisor/EvaluateGroupPage';
 import CommitteeEvaluations from '../pages/supervisor/CommitteeEvaluations';
 import AllBoardResults from '../pages/committee/AllBoardResults';
 
@@ -172,7 +173,11 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'my-supervisions',
-        element: <MySupervisions />,
+        element: <SupervisorGroupsOverview />,
+      },
+      {
+        path: 'evaluate-group/:proposalId',
+        element: <EvaluateGroupPage />,
       },
       {
         path: 'committee-evaluations',

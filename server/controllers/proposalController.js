@@ -461,6 +461,22 @@ const getMySupervisions = asyncHandler(async (req, res) => {
   res.json(proposals);
 });
 
+// @desc    Get single proposal by ID
+// @route   GET /api/proposals/:id
+// @access  Private/Committee, Supervisor, Student
+const getProposalById = asyncHandler(async (req, res) => {
+  const proposal = await Proposal.findById(req.params.id)
+    .populate('members', 'name email studentId')
+    .populate('supervisorId', 'name email');
+
+  if (proposal) {
+    res.json(proposal);
+  } else {
+    res.status(404);
+    throw new Error('Proposal not found');
+  }
+});
+
 // @desc    Publish result for a proposal
 // @route   PUT /api/proposals/:id/publish
 // @access  Private (Committee)
@@ -530,4 +546,4 @@ const publishResult = asyncHandler(async (req, res) => {
   res.status(200).json(proposal);
 });
 
-export { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus, getPendingProposalsByCell, forwardProposalToSupervisor, rejectProposal, getApprovedProposals, getAvailableProposals, getSupervisorAllGroups, getMySupervisions, publishResult };
+export { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus, getPendingProposalsByCell, forwardProposalToSupervisor, rejectProposal, getApprovedProposals, getAvailableProposals, getSupervisorAllGroups, getMySupervisions, publishResult, getProposalById };

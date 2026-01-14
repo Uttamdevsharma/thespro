@@ -18,9 +18,14 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
 
   // Convert defenseType to canonical form to match Mongoose enum
   // It handles 'pre-defense', 'pre defense', 'final-defense', 'final defense'
-  const canonicalDefenseType = defenseType.replace(/^(pre|final)[-\s]?defense$/i, (match, p1) => {
-    return p1.charAt(0).toUpperCase() + p1.slice(1) + ' Defense'; // Note the space here
-  });
+  let canonicalDefenseType;
+  if (defenseType.toLowerCase().includes('pre')) {
+    canonicalDefenseType = 'Pre-Defense';
+  } else if (defenseType.toLowerCase().includes('final')) {
+    canonicalDefenseType = 'Final Defense';
+  } else {
+    canonicalDefenseType = defenseType; // Fallback, should not happen if client sends valid type
+  }
 
   if (defenseType !== canonicalDefenseType) {
     console.log(`[submitOrUpdateEvaluation] Converting defenseType from '${defenseType}' to '${canonicalDefenseType}'`);

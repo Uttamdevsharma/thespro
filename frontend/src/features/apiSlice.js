@@ -92,6 +92,10 @@ export const apiSlice = createApi({
         }),
         invalidatesTags: ['Proposals'],
       }),
+      getProposalById: builder.query({
+        query: (id) => `/proposals/${id}`,
+        providesTags: (result, error, id) => [{ type: 'Proposals', id }],
+      }),
       getProposalsBySupervisor: builder.query({
         query: ({ supervisorId, filter }) => {
           let url = `/proposals/supervisor-proposals`;
@@ -404,6 +408,7 @@ export const apiSlice = createApi({
     useGetResearchCellsQuery,
     useAddResearchCellMutation,
     useCreateProposalMutation,
+    useGetProposalByIdQuery,
     useGetProposalsBySupervisorQuery,
     useGetSupervisorPendingProposalsQuery,
     useUpdateProposalStatusMutation,
