@@ -37,6 +37,13 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
     throw new Error('Please provide all required evaluation fields.');
   }
 
+  // Ensure evaluationType is one of the expected values
+  const validEvaluationTypes = ['supervisor', 'committee'];
+  if (!validEvaluationTypes.includes(evaluationType)) {
+    res.status(400);
+    throw new Error(`Invalid evaluation type provided: ${evaluationType}. Must be one of ${validEvaluationTypes.join(', ')}.`);
+  }
+
   const student = await User.findById(studentId);
   const proposal = await Proposal.findById(proposalId);
 
@@ -57,12 +64,21 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
     }
   }
 
-  let userEvaluationType;
-  if (evaluationType === 'supervisor' && isSupervisor) {
-    userEvaluationType = 'supervisor';
-  } else if (evaluationType === 'committee' && (isCommitteeMemberOnBoard || req.user.role === 'committee')) {
-    userEvaluationType = 'committee';
-  } else {
+  // Authorization Logic
+  let authorized = false;
+  if (evaluationType === 'supervisor') {
+    // Authorize if evaluator is the direct supervisor or co-supervisor
+    if (isSupervisor) {
+      authorized = true;
+    }
+  } else if (evaluationType === 'committee') {
+    // Authorize if evaluator is a committee member (role 'committee') OR a board member for this defense board
+    if (req.user.role === 'committee' || isCommitteeMemberOnBoard) {
+      authorized = true;
+    }
+  }
+
+  if (!authorized) {
     console.log('[submitOrUpdateEvaluation] Not authorized:', { evaluatorRole: req.user.role, evaluationType, isSupervisor, isCommitteeMemberOnBoard });
     res.status(403);
     throw new Error('Not authorized to evaluate this student for the given role.');
@@ -73,7 +89,7 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
     evaluator: evaluatorId,
     proposal: proposalId,
     defenseType,
-    evaluationType: userEvaluationType,
+    evaluationType: evaluationType, // Use the evaluationType directly from request body
     marks,
     comments,
   };
@@ -85,7 +101,7 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
     evaluator: evaluatorId,
     proposal: proposalId,
     defenseType,
-    evaluationType: userEvaluationType,
+    evaluationType: evaluationType, // Use the evaluationType directly from request body
   });
 
   if (existingEvaluation) {

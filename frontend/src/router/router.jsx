@@ -51,6 +51,8 @@ import SupervisorGroupsOverview from '../pages/supervisor/SupervisorGroupsOvervi
 import EvaluateGroupPage from '../pages/supervisor/EvaluateGroupPage';
 import CommitteeEvaluations from '../pages/supervisor/CommitteeEvaluations';
 import AllBoardResults from '../pages/committee/AllBoardResults';
+import BoardEvaluations from '../pages/supervisor/BoardEvaluations';
+import BoardGroups from '../pages/supervisor/BoardGroups';
 
 export const router = createBrowserRouter([
   {
@@ -181,7 +183,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'committee-evaluations',
-        element: <CommitteeEvaluations />,
+        element: <BoardEvaluations />,
+      },
+      {
+        path: 'board-groups/:boardId',
+        element: <BoardGroups />,
       },
       {
         path: 'dashboard',

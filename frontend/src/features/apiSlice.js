@@ -369,7 +369,13 @@ export const apiSlice = createApi({
         providesTags: ['Proposals'],
       }),
       getMyCommitteeEvaluations: builder.query({
-        query: (defenseType) => `/defenseboards/my-committee-evaluations?defenseType=${defenseType}`,
+        query: (defenseType) => {
+          let url = '/defenseboards/my-committee-evaluations';
+          if (defenseType) {
+            url += `?defenseType=${defenseType}`;
+          }
+          return url;
+        },
         providesTags: ['DefenseBoards'],
       }),
       getBoardResults: builder.query({
