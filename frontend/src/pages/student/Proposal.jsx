@@ -49,8 +49,13 @@ const Proposal = () => {
   }, [user]);
 
   useEffect(() => {
-    if (location.state?.members) {
-      setMembers(location.state.members);
+    if (location.state) {
+      setTitle(location.state.title || '');
+      setAbstract(location.state.abstract || '');
+      setType(location.state.type || 'Thesis');
+      setResearchCell(location.state.researchCell || '');
+      setSupervisor(location.state.supervisor || '');
+      setMembers(location.state.members || []);
     }
   }, [location.state]);
 
