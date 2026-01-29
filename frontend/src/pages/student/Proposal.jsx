@@ -2,22 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/userSlice';
 import toast from 'react-hot-toast';
-import MultiSelectDropdown from '../../components/MultiSelectDropdown';
 import axios from 'axios';
 import { useCreateProposalMutation } from '../../features/apiSlice';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Proposal = () => {
   const user = useSelector(selectUser);
-  const [title, setTitle] = useState('');
-  const [abstract, setAbstract] = useState('');
-  const [type, setType] = useState('Thesis');
-  const [researchCell, setResearchCell] = useState('');
-  const [supervisor, setSupervisor] = useState('');
-  const [members, setMembers] = useState([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [title, setTitle] = useState(location.state?.title || '');
+  const [abstract, setAbstract] = useState(location.state?.abstract || '');
+  const [type, setType] = useState(location.state?.type || 'Thesis');
+  const [researchCell, setResearchCell] = useState(location.state?.researchCell || '');
+  const [supervisor, setSupervisor] = useState(location.state?.supervisor || '');
+  const [members, setMembers] = useState(location.state?.members || []);
   const [cells, setCells] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
-  const [allStudents, setAllStudents] = useState([]);
-  const [submissionDeadlinePassed, setSubmissionDeadlinePassed] = useState(false); // Placeholder for deadline check
+  const [submissionDeadlinePassed, setSubmissionDeadlinePassed] = useState(false);
   const [proposalSubmitted, setProposalSubmitted] = useState(false);
 
   const [createProposal, { isLoading: isSubmitting }] = useCreateProposalMutation();
@@ -28,9 +30,6 @@ const Proposal = () => {
       try {
         const { data: cellsData } = await axios.get('http://localhost:5005/api/researchcells', config);
         setCells(cellsData);
-
-        const { data: studentsData } = await axios.get('http://localhost:5005/api/users/students', config);
-        setAllStudents(studentsData);
 
         const { data: deadlineData } = await axios.get('http://localhost:5005/api/committee/submission-dates', config);
         if (deadlineData && new Date() > new Date(deadlineData.endDate)) {
@@ -50,6 +49,12 @@ const Proposal = () => {
   }, [user]);
 
   useEffect(() => {
+    if (location.state?.members) {
+      setMembers(location.state.members);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
     const fetchSupervisorsWithCapacity = async () => {
       if (!researchCell || !user || !user.token) return setSupervisors([]);
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
@@ -66,6 +71,23 @@ const Proposal = () => {
     };
     fetchSupervisorsWithCapacity();
   }, [researchCell, user, proposalSubmitted]);
+
+  const handleSelectMembers = () => {
+    navigate('/student/select-team-members', {
+      state: {
+        title,
+        abstract,
+        type,
+        researchCell,
+        supervisor,
+        members,
+      }
+    });
+  };
+
+  const removeMember = (memberId) => {
+    setMembers(members.filter(m => m._id !== memberId));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,6 +114,7 @@ const Proposal = () => {
       toast.success('Proposal submitted successfully!');
       setTitle(''); setAbstract(''); setType('Thesis'); setResearchCell(''); setSupervisor(''); setMembers([]);
       setProposalSubmitted(prev => !prev);
+      navigate('/student/proposal', { state: {} }); // Clear state on successful submission
     } catch (error) {
       toast.error(`Failed to submit proposal: ${error.data?.message || error.message}`);
     }
@@ -184,12 +207,27 @@ const Proposal = () => {
         {/* Members */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Team Members</label>
-          <MultiSelectDropdown
-            allStudents={allStudents}
-            members={members}
-            setMembers={setMembers}
-            currentUser={user}
-          />
+          <button
+            type="button"
+            onClick={handleSelectMembers}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-left text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-400"
+          >
+            Select Team Members
+          </button>
+          <div className="mt-2 space-y-2">
+            {members.map(member => (
+              <div key={member._id} className="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
+                <span className="text-gray-800">{member.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeMember(member._id)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Submit Button */}

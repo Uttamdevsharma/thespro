@@ -42,6 +42,7 @@ import ResearchCellInfo from '../pages/student/ResearchCellInfo';
 import Profile from '../pages/student/Profile';
 import StudentDefenseSchedule from '../pages/student/DefenseSchedule';
 import MyResults from '../pages/student/MyResults';
+import SelectTeamMembers from '../pages/student/SelectTeamMembers';
 
 import PendingProposals from '../pages/supervisor/PendingProposals';
 import SupervisorAllGroups from '../pages/supervisor/AllGroups'; // New import
@@ -234,6 +235,10 @@ export const router = createBrowserRouter([
       {
         path: 'proposal',
         element: <Proposal />,
+      },
+      {
+        path: 'select-team-members',
+        element: <SelectTeamMembers />,
       },
       {
         path: 'proposal-status',
