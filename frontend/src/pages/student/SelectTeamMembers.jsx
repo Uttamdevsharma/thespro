@@ -9,7 +9,7 @@ const SelectTeamMembers = () => {
   const user = useSelector(selectUser);
   const navigate = useNavigate();
   const location = useLocation();
-  const { proposalData } = location.state || {};
+  const proposalData = location.state || {};
 
   const [allStudents, setAllStudents] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState(proposalData?.members || []);
