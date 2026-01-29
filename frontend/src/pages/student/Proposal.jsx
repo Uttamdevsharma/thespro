@@ -207,12 +207,13 @@ const Proposal = () => {
         {/* Members */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Team Members</label>
+          <p className="text-xs text-gray-500 mb-2">Click to select up to 2 group members</p>
           <button
             type="button"
             onClick={handleSelectMembers}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-left text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-400"
+            className="w-full py-3 px-6 bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg shadow-md hover:from-green-500 hover:to-green-700 transition-colors duration-200"
           >
-            Select Team Members
+            Add Group Members
           </button>
           <div className="mt-2 space-y-2">
             {members.map(member => (
