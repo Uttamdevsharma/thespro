@@ -159,17 +159,7 @@ const { data } = await axios.get('http://localhost:5005/api/users/supervisors/al
         )}
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Defense Schedule & Boards</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <DefenseSchedule />
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <AllDefenseBoards />
-          </div>
-        </div>
-      </div>
+      
     </div>
   );
 };
