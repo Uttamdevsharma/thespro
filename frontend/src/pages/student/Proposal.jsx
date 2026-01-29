@@ -212,7 +212,7 @@ const Proposal = () => {
         {/* Members */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Team Members</label>
-          <p className="text-xs text-gray-500 mb-2">Click to select up to 2 group members</p>
+          <p className="text-xs text-gray-500 mb-2">Click to select up to 2 group member</p>
           <button
             type="button"
             onClick={handleSelectMembers}
