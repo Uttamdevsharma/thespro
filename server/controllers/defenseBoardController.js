@@ -506,10 +506,15 @@ const getMyCommitteeEvaluations = asyncHandler(async (req, res) => {
   const supervisorId = req.user._id;
   const { defenseType } = req.query;
 
+  console.log(`[getMyCommitteeEvaluations] Incoming supervisorId: ${supervisorId}, defenseType: ${defenseType}`);
+
   let query = { boardMembers: supervisorId };
   if (defenseType) {
-    query.defenseType = defenseType;
+    // Use case-insensitive regex for defenseType to match 'Pre-Defense', 'pre-defense', 'Final Defense', etc.
+    query.defenseType = { $regex: new RegExp(`^${defenseType}$`, 'i') };
   }
+
+  console.log(`[getMyCommitteeEvaluations] Constructed query: ${JSON.stringify(query)}`);
 
   const defenseBoards = await DefenseBoard.find(query)
     .populate({
@@ -521,6 +526,8 @@ const getMyCommitteeEvaluations = asyncHandler(async (req, res) => {
     })
     .populate('room', 'name')
     .populate('schedule', 'startTime endTime');
+
+  console.log(`[getMyCommitteeEvaluations] Found ${defenseBoards.length} defense boards for supervisor ${supervisorId} with defenseType ${defenseType || 'all'}.`);
 
   res.json(defenseBoards);
 });

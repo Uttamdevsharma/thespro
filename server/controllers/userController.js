@@ -14,7 +14,10 @@ const getStudents = asyncHandler(async (req, res) => {
 // @access  Private
 const getSupervisors = asyncHandler(async (req, res) => {
   const { researchCellId } = req.query;
-  let query = { role: 'supervisor', department: req.user.department };
+  let query = { 
+    role: { $in: ['supervisor', 'committee'] }, 
+    department: req.user.department 
+  };
   if (researchCellId) {
     query.researchCells = researchCellId;
   }
@@ -71,9 +74,9 @@ const assignCellToSupervisor = asyncHandler(async (req, res) => {
     throw new Error('Supervisor not found');
   }
 
-  if (supervisor.role !== 'supervisor') {
+  if (supervisor.role !== 'supervisor' && supervisor.role !== 'committee') {
     res.status(400);
-    throw new Error('User is not a supervisor');
+    throw new Error('User is not a teacher (supervisor or committee)');
   }
 
   if (!supervisor.researchCells) {
@@ -209,7 +212,7 @@ const getCommitteeMembers = asyncHandler(async (req, res) => {
 // @route   GET /api/users/supervisors/all
 // @access  Private (Committee)
 const getAllSupervisors = asyncHandler(async (req, res) => {
-  const supervisors = await User.find({ role: 'supervisor' })
+  const supervisors = await User.find({ role: { $in: ['supervisor', 'committee'] } })
     .select('-password')
     .populate('mainSupervisor', 'name');
   res.json(supervisors);
@@ -242,7 +245,7 @@ const assignCourseSupervisor = asyncHandler(async (req, res) => {
 // @access  Private (Student)
 const getSupervisorsWithCapacity = asyncHandler(async (req, res) => {
   const { researchCellId } = req.query;
-  let query = { role: 'supervisor' };
+  let query = { role: { $in: ['supervisor', 'committee'] } };
   if (researchCellId) {
     query.researchCells = researchCellId;
   }
@@ -285,9 +288,9 @@ const removeCellFromSupervisor = asyncHandler(async (req, res) => {
     throw new Error('Supervisor not found');
   }
 
-  if (supervisor.role !== 'supervisor') {
+  if (supervisor.role !== 'supervisor' && supervisor.role !== 'committee') {
     res.status(400);
-    throw new Error('User is not a supervisor');
+    throw new Error('User is not a teacher (supervisor or committee)');
   }
 
   if (supervisor.researchCells) {

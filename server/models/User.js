@@ -17,11 +17,12 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'supervisor', 'committee'],
+    enum: ['student', 'supervisor', 'committee', 'admin'],
     default: 'student',
   },
   department: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
     required: true,
   },
   studentId: {
@@ -60,6 +61,19 @@ const UserSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: function() { return this.isCourseSupervisor; },
+  },
+  // Supervisor Profile Fields
+  education: {
+    type: String,
+    default: '',
+  },
+  experience: {
+    type: String,
+    default: '',
+  },
+  research: {
+    type: String,
+    default: '',
   },
 }, { timestamps: true });
 

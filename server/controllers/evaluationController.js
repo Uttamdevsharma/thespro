@@ -15,6 +15,7 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
   const evaluatorId = req.user._id;
 
   console.log('[submitOrUpdateEvaluation] Incoming data:', { studentId, proposalId, defenseType, marks, comments, evaluationType, evaluatorId });
+  console.log('[submitOrUpdateEvaluation] Evaluation Model defenseType enum values:', Evaluation.schema.path('defenseType').enumValues);
 
   // Convert defenseType to canonical form to match Mongoose enum
   // It handles 'pre-defense', 'pre defense', 'final-defense', 'final defense'
@@ -38,7 +39,10 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
   }
 
   const student = await User.findById(studentId);
-  const proposal = await Proposal.findById(proposalId);
+  // Populate supervisorId and coSupervisors when fetching the proposal
+  const proposal = await Proposal.findById(proposalId)
+    .populate('supervisorId', '_id') // Only need ID for comparison
+    .populate('coSupervisors', '_id'); // Only need IDs for comparison
 
   if (!student || !proposal) {
     console.log('[submitOrUpdateEvaluation] Student or Proposal not found.');
@@ -46,13 +50,23 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
     throw new Error('Student or Proposal not found.');
   }
 
+  console.log('[submitOrUpdateEvaluation] Proposal fetched:', {
+    proposalId: proposal._id,
+    proposalSupervisorId: proposal.supervisorId?._id || proposal.supervisorId,
+    evaluatorId: evaluatorId
+  });
+
   // Verify the evaluator has permission
-  const isSupervisor = proposal.supervisorId.equals(evaluatorId) || (proposal.coSupervisors && proposal.coSupervisors.includes(evaluatorId));
+  const proposalSupId = proposal.supervisorId?._id || proposal.supervisorId;
+  const isSupervisor = proposalSupId.equals(evaluatorId) ||
+                       (proposal.coSupervisors && proposal.coSupervisors.some(coSup => (coSup._id || coSup).equals(evaluatorId)));
+
+  console.log(`[submitOrUpdateEvaluation] isSupervisor check: ${isSupervisor}`);
   
   let isCommitteeMemberOnBoard = false;
   if (proposal.defenseBoardId) {
     const board = await DefenseBoard.findById(proposal.defenseBoardId);
-    if (board && board.boardMembers.includes(evaluatorId)) {
+    if (board && board.boardMembers.some(memberId => memberId.equals(evaluatorId))) {
         isCommitteeMemberOnBoard = true;
     }
   }
@@ -63,9 +77,29 @@ const submitOrUpdateEvaluation = asyncHandler(async (req, res) => {
   } else if (evaluationType === 'committee' && (isCommitteeMemberOnBoard || req.user.role === 'committee')) {
     userEvaluationType = 'committee';
   } else {
-    console.log('[submitOrUpdateEvaluation] Not authorized:', { evaluatorRole: req.user.role, evaluationType, isSupervisor, isCommitteeMemberOnBoard });
-    res.status(403);
-    throw new Error('Not authorized to evaluate this student for the given role.');
+    // Fallback: If sent as supervisor but user is only board member, allow if authorized
+    if (evaluationType === 'supervisor' && !isSupervisor && isCommitteeMemberOnBoard) {
+        userEvaluationType = 'committee';
+    } else if (evaluationType === 'committee' && !isCommitteeMemberOnBoard && isSupervisor) {
+        userEvaluationType = 'supervisor';
+    } else {
+        console.log('[submitOrUpdateEvaluation] Not authorized:', { evaluatorRole: req.user.role, evaluationType, isSupervisor, isCommitteeMemberOnBoard });
+        res.status(403);
+        throw new Error('Not authorized to evaluate this student for the given role.');
+    }
+  }
+
+  // MARK LIMIT VALIDATION
+  let maxAllowed = 0;
+  if (userEvaluationType === 'supervisor') {
+    maxAllowed = (defenseType === 'Pre-Defense') ? 20 : 40;
+  } else {
+    maxAllowed = (defenseType === 'Pre-Defense') ? 10 : 30;
+  }
+
+  if (marks < 0 || marks > maxAllowed) {
+    res.status(400);
+    throw new Error(`Invalid marks. For ${userEvaluationType} (${defenseType}), marks must be between 0 and ${maxAllowed}.`);
   }
   
   const evaluationData = {

@@ -8,20 +8,23 @@ import {
 import { selectUser } from '../../features/userSlice';
 import Loader from '../../components/Loader';
 import { CheckBadgeIcon } from '@heroicons/react/24/outline';
-import { useParams, useNavigate } from 'react-router-dom'; // Use useParams instead of useLocation
+import { useParams, useNavigate, useLocation } from 'react-router-dom'; // Use useParams and useLocation
 import toast from 'react-hot-toast'; // Assuming toast notifications are used
 
 
 const EvaluateGroupPage = () => {
     const { proposalId } = useParams(); // Get proposalId from URL params
     const navigate = useNavigate();
+    const location = useLocation(); // Get location object
+    const queryParams = new URLSearchParams(location.search);
+    const initialDefenseType = queryParams.get('defenseType') || 'Pre-Defense'; // Get from URL or default
 
     const user = useSelector(selectUser);
     const supervisorId = user._id;
 
     const [marks, setMarks] = useState({});
     const [comments, setComments] = useState({});
-    const [defenseType, setDefenseType] = useState('Pre-Defense'); // Default to Pre-Defense, moved to before use
+    const [defenseType, setDefenseType] = useState(initialDefenseType); // Initialize with value from URL
 
     // Fetch proposal details directly using the ID from params
     const { data: proposal, isLoading: isLoadingProposal, error: proposalError } =

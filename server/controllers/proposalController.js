@@ -467,11 +467,16 @@ const getMySupervisions = asyncHandler(async (req, res) => {
 const getProposalById = asyncHandler(async (req, res) => {
   const proposal = await Proposal.findById(req.params.id)
     .populate('members', 'name email studentId')
-    .populate('supervisorId', 'name email');
+    .populate('supervisorId', 'name email')
+    .populate('coSupervisors', 'name email'); // Populate coSupervisors
 
   if (proposal) {
+    console.log(`[getProposalById] Fetched proposal ID: ${proposal._id}`);
+    console.log(`[getProposalById] Proposal supervisorId: ${proposal.supervisorId?._id}`);
+    console.log(`[getProposalById] Proposal coSupervisors: ${proposal.coSupervisors?.map(s => s._id)}`);
     res.json(proposal);
   } else {
+    console.log(`[getProposalById] Proposal not found for ID: ${req.params.id}`);
     res.status(404);
     throw new Error('Proposal not found');
   }

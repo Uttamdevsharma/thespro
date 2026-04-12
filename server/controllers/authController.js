@@ -7,7 +7,7 @@ import asyncHandler from 'express-async-handler';
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
   console.log('registerUser called with body:', req.body);
-  const { name, email, password, role, studentId, profilePicture, department, currentCGPA } = req.body;
+  const { name, email, password, role, studentId, profilePicture, departmentId, currentCGPA } = req.body;
 
   const userExists = await User.findOne({ email });
 
@@ -23,7 +23,7 @@ const registerUser = asyncHandler(async (req, res) => {
     role,
     studentId,
     profilePicture,
-    department,
+    department: departmentId,
     currentCGPA
   });
 
@@ -54,7 +54,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   console.log('Login attempt for email:', email);
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).populate('department', 'name');
   console.log('User found:', user);
   
   if (user && (await user.matchPassword(password))) {
@@ -66,7 +66,7 @@ const loginUser = asyncHandler(async (req, res) => {
       role: user.role,
       studentId: user.studentId,
       profilePicture: user.profilePicture,
-      department: user.department || '',
+      department: user.department || null,
       currentCGPA: user.currentCGPA,
       token: generateToken(user._id),
       currentGroupCount: user.currentGroupCount,

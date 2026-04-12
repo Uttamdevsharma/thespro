@@ -49,7 +49,8 @@ import SupervisorDefenseSchedule from '../pages/supervisor/DefenseSchedule';
 import SupervisorDefenseResult from '../pages/supervisor/DefenseResult';
 import SupervisorGroupsOverview from '../pages/supervisor/SupervisorGroupsOverview';
 import EvaluateGroupPage from '../pages/supervisor/EvaluateGroupPage';
-import CommitteeEvaluations from '../pages/supervisor/CommitteeEvaluations';
+import SupervisorBoardOverview from '../pages/supervisor/SupervisorBoardOverview'; // Renamed
+import SupervisorBoardGroups from '../pages/supervisor/SupervisorBoardGroups'; // New
 import AllBoardResults from '../pages/committee/AllBoardResults';
 
 export const router = createBrowserRouter([
@@ -181,7 +182,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'committee-evaluations',
-        element: <CommitteeEvaluations />,
+        element: <SupervisorBoardOverview />,
+      },
+      {
+        path: 'committee-evaluations/:boardId',
+        element: <SupervisorBoardGroups />,
       },
       {
         path: 'dashboard',

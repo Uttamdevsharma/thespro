@@ -14,16 +14,20 @@ import userRoutes from './routes/userRoutes.js';
 import noticeRoutes from './routes/noticeRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import committeeRoutes from './routes/committeeRoutes.js';
+import supervisorRoutes from './routes/supervisorRoutes.js';
 import defenseBoardRoutes from './routes/defenseBoardRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
 import scheduleSlotRoutes from './routes/scheduleSlotRoutes.js';
 import defenseResultRoutes from './routes/defenseResultRoutes.js';
 import evaluationRoutes from './routes/evaluationRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 // Import Chat Models and Controllers
 import Message from './models/Message.js'; // Ensure .js extension
 import Proposal from './models/Proposal.js'; // Ensure .js extension
 import User from './models/User.js'; // Ensure .js extension
+import dns from "dns"
+dns.setServers(["1.1.1.1", "8.8.8.8"])
 
 const app = express();
 const httpServer = http.createServer(app); // Create HTTP server from Express app
@@ -32,7 +36,7 @@ const PORT = process.env.PORT || 5005;
 // Socket.io setup
 const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:5174"], // Allow your frontend to connect
+    origin: process.env.FRONTEND_URL, // Allow your frontend to connect
     methods: ["GET", "POST"]
   }
 });
@@ -40,12 +44,17 @@ const io = new Server(httpServer, {
 app.set('socketio', io);
 
 // Middleware
-app.use(cors({ origin: ["http://localhost:5173", "http://localhost:5174"] }));
+app.use(cors({ origin: ["http://localhost:5173", "http://localhost:3000"] }));
 app.use(express.json());
 
 // MongoDB Connection
+import runSeeds from './utils/seedData.js';
+
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected successfully'))
+  .then(async () => {
+    console.log('MongoDB connected successfully');
+    await runSeeds();
+  })
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
@@ -56,11 +65,13 @@ app.use('/api/users', userRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/committee', committeeRoutes);
+app.use('/api/supervisor', supervisorRoutes);
 app.use('/api/defenseboards', defenseBoardRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/schedule-slots', scheduleSlotRoutes);
 app.use('/api/defense-results', defenseResultRoutes);
 app.use('/api/evaluations', evaluationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

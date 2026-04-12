@@ -11,15 +11,19 @@ const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       req.user = await User.findById(decoded.id).select('-password');
-      console.log('User populated in protect middleware:', req.user);
+      if (!req.user) {
+        console.error('User not found for token id:', decoded.id);
+        return res.status(401).json({ message: 'Not authorized, user not found' });
+      }
+      console.log('User populated in protect middleware:', req.user.email);
 
       next();
     } catch (error) {
+      console.error('JWT Verification Error:', error.message);
       if (error.name === 'TokenExpiredError') {
         return res.status(401).json({ message: 'Not authorized, token expired' });
       }
-      console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      res.status(401).json({ message: 'Not authorized, token failed', detail: error.message });
     }
   }
 
