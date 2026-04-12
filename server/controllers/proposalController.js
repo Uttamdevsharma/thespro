@@ -4,6 +4,8 @@ import ResearchCell from '../models/ResearchCell.js';
 import stringSimilarity from 'string-similarity';
 import asyncHandler from 'express-async-handler';
 import DefenseBoard from '../models/DefenseBoard.js';
+import calculateGradeAndPoint from '../utils/gradeCalculator.js';
+import Evaluation from '../models/Evaluation.js';
 
 // @desc    Create a new proposal
 // @route   POST /api/proposals
@@ -372,16 +374,28 @@ const getApprovedProposals = asyncHandler(async (req, res) => {
   res.json(proposals);
 });
 
-// @desc    Get all approved proposals not in any defense board
+// @desc    Get all approved proposals that are available for a new defense board of a specific type
 // @route   GET /api/proposals/available-proposals
 // @access  Private (Committee)
 const getAvailableProposals = asyncHandler(async (req, res) => {
-  const defenseBoards = await DefenseBoard.find({}, 'groups');
-  const assignedProposals = defenseBoards.flatMap(board => board.groups);
+  const { defenseType } = req.query; // 'Pre-Defense' or 'Final Defense'
 
-  const proposals = await Proposal.find({ 
-    status: 'Approved', 
-    _id: { $nin: assignedProposals } 
+  let assignedProposalsInDefenseBoards = [];
+
+  if (defenseType === 'Final Defense') {
+    // For Final Defense, we only exclude proposals already assigned to a Final Defense board
+    const finalDefenseBoards = await DefenseBoard.find({ defenseType: 'Final Defense' }, 'groups');
+    assignedProposalsInDefenseBoards = finalDefenseBoards.flatMap(board => board.groups);
+  } else {
+    // For Pre-Defense or if no type is specified (default to Pre-Defense logic),
+    // exclude proposals already assigned to ANY defense board.
+    const allDefenseBoards = await DefenseBoard.find({}, 'groups');
+    assignedProposalsInDefenseBoards = allDefenseBoards.flatMap(board => board.groups);
+  }
+
+  const proposals = await Proposal.find({
+    status: 'Approved',
+    _id: { $nin: assignedProposalsInDefenseBoards }
   })
     .populate('createdBy', 'name studentId currentCGPA')
     .populate('supervisorId', 'name')
@@ -447,4 +461,94 @@ const getMySupervisions = asyncHandler(async (req, res) => {
   res.json(proposals);
 });
 
-export { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus, getPendingProposalsByCell, forwardProposalToSupervisor, rejectProposal, getApprovedProposals, getAvailableProposals, getSupervisorAllGroups, getMySupervisions };
+// @desc    Get single proposal by ID
+// @route   GET /api/proposals/:id
+// @access  Private/Committee, Supervisor, Student
+const getProposalById = asyncHandler(async (req, res) => {
+  const proposal = await Proposal.findById(req.params.id)
+    .populate('members', 'name email studentId')
+    .populate('supervisorId', 'name email')
+    .populate('coSupervisors', 'name email'); // Populate coSupervisors
+
+  if (proposal) {
+    console.log(`[getProposalById] Fetched proposal ID: ${proposal._id}`);
+    console.log(`[getProposalById] Proposal supervisorId: ${proposal.supervisorId?._id}`);
+    console.log(`[getProposalById] Proposal coSupervisors: ${proposal.coSupervisors?.map(s => s._id)}`);
+    res.json(proposal);
+  } else {
+    console.log(`[getProposalById] Proposal not found for ID: ${req.params.id}`);
+    res.status(404);
+    throw new Error('Proposal not found');
+  }
+});
+
+// @desc    Publish result for a proposal
+// @route   PUT /api/proposals/:id/publish
+// @access  Private (Committee)
+const publishResult = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const proposal = await Proposal.findById(id).populate('members');
+
+  if (!proposal) {
+    res.status(404);
+    throw new Error('Proposal not found');
+  }
+
+  if (proposal.published) {
+    res.status(400);
+    throw new Error('Result already published');
+  }
+
+  const { members } = proposal;
+  const studentResults = [];
+
+  for (const member of members) {
+    const evaluations = await Evaluation.find({
+      proposal: id,
+      student: member._id,
+    });
+
+    const preDefenseSupervisor = evaluations.find(e => e.defenseType === 'pre-defense' && e.evaluationType === 'supervisor');
+    const preDefenseCommittee = evaluations.filter(e => e.defenseType === 'pre-defense' && e.evaluationType === 'committee');
+    const finalDefenseSupervisor = evaluations.find(e => e.defenseType === 'final-defense' && e.evaluationType === 'supervisor');
+    const finalDefenseCommittee = evaluations.filter(e => e.defenseType === 'final-defense' && e.evaluationType === 'committee');
+
+    if (!preDefenseSupervisor || preDefenseCommittee.length === 0 || !finalDefenseSupervisor || finalDefenseCommittee.length === 0) {
+      res.status(400);
+      throw new Error(`Marks for all defense types are not submitted for student ${member.name}`);
+    }
+
+    const preDefenseCommitteeAvg = preDefenseCommittee.reduce((acc, e) => acc + e.marks, 0) / preDefenseCommittee.length;
+    const finalDefenseCommitteeAvg = finalDefenseCommittee.reduce((acc, e) => acc + e.marks, 0) / finalDefenseCommittee.length;
+
+    const totalMarks =
+      preDefenseSupervisor.marks +
+      preDefenseCommitteeAvg +
+      finalDefenseSupervisor.marks +
+      finalDefenseCommitteeAvg;
+
+    const { grade, point } = calculateGradeAndPoint(totalMarks);
+
+    studentResults.push({
+      studentId: member._id,
+      totalMarks,
+      grade,
+      point,
+    });
+  }
+
+  // For now, let's assume all students in a group get the same grade and point.
+  // We will update the proposal with the grade and point of the first student.
+  // A better approach would be to store individual results, but for now this will work.
+  if (studentResults.length > 0) {
+    proposal.published = true;
+    proposal.grade = studentResults[0].grade;
+    proposal.point = studentResults[0].point;
+    await proposal.save();
+  }
+
+  res.status(200).json(proposal);
+});
+
+export { createProposal, getSupervisorProposals, getSupervisorPendingProposals, getStudentProposals, getCommitteeProposals, updateProposalStatus, getPendingProposalsByCell, forwardProposalToSupervisor, rejectProposal, getApprovedProposals, getAvailableProposals, getSupervisorAllGroups, getMySupervisions, publishResult, getProposalById };

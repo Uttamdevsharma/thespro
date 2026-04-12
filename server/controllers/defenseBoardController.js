@@ -5,13 +5,11 @@ import User from '../models/User.js';
 import Proposal from '../models/Proposal.js';
 import ScheduleSlot from '../models/ScheduleSlot.js';
 
-// @desc    Create a new defense board
-// @route   POST /api/defenseboards
-// @access  Private/Committee
+// Create a new defense board
 const createDefenseBoard = asyncHandler(async (req, res) => {
-  const { defenseType, room, schedule, groups, boardMembers } = req.body;
+  const { defenseType, room, schedule, groups, boardMembers, boardNumber } = req.body;
 
-  if (!defenseType || !room || !schedule || !groups || !boardMembers) {
+  if (!defenseType || !room || !schedule || !groups || !boardMembers || !boardNumber) {
     res.status(400);
     throw new Error('Please fill all required fields');
   }
@@ -40,6 +38,7 @@ const createDefenseBoard = asyncHandler(async (req, res) => {
   }
 
   const defenseBoard = new DefenseBoard({
+    boardNumber,
     defenseType,
     room,
     schedule,
@@ -55,14 +54,14 @@ const createDefenseBoard = asyncHandler(async (req, res) => {
   // Update defenseBoardId for all proposals in this group
   for (const proposalId of groups) {
     await Proposal.findByIdAndUpdate(proposalId, { defenseBoardId: createdDefenseBoard._id });
+    console.log(`[createDefenseBoard] Set defenseBoardId=${createdDefenseBoard._id} for Proposal: ${proposalId}`);
   }
 
   res.status(201).json(createdDefenseBoard);
 });
 
-// @desc    Get all defense boards
-// @route   GET /api/defenseboards
-// @access  Private/Committee, Supervisor, Student
+
+//  Get all defense boards
 const getAllDefenseBoards = asyncHandler(async (req, res) => {
   const { filter } = req.query;
   let query = {};
@@ -98,6 +97,9 @@ const getAllDefenseBoards = asyncHandler(async (req, res) => {
   res.json(defenseBoards);
 });
 
+
+
+
 // @desc    Get single defense board by ID
 // @route   GET /api/defenseboards/:id
 // @access  Private/Committee, Supervisor, Student
@@ -119,12 +121,22 @@ const getDefenseBoardById = asyncHandler(async (req, res) => {
     .populate('createdBy', 'name email');
 
   if (defenseBoard) {
+    console.log(`[getDefenseBoardById] Found defense board: ${defenseBoard._id}`);
+    console.log(`[getDefenseBoardById] Defense Type: ${defenseBoard.defenseType}`);
+    console.log(`[getDefenseBoardById] Groups count (after populate): ${defenseBoard.groups.length}`);
+    defenseBoard.groups.forEach((group, index) => {
+      console.log(`[getDefenseBoardById]   Group ${index + 1}: ID=${group._id}, Title=${group.title}, Members=${group.members.map(m => m.name).join(', ')}`);
+    });
     res.json(defenseBoard);
   } else {
+    console.log(`[getDefenseBoardById] Defense board not found for ID: ${req.params.id}`);
     res.status(404);
     throw new Error('Defense board not found');
   }
 });
+
+
+
 
 // @desc    Update a defense board
 // @route   PUT /api/defenseboards/:id
@@ -151,6 +163,7 @@ const updateDefenseBoard = asyncHandler(async (req, res) => {
       // Set defenseBoardId to null for removed proposals
       for (const proposalId of removedProposalIds) {
         await Proposal.findByIdAndUpdate(proposalId, { defenseBoardId: null });
+        console.log(`[updateDefenseBoard] Set defenseBoardId=null for removed Proposal: ${proposalId}`);
       }
 
       // Find proposals that were added to the board
@@ -158,6 +171,7 @@ const updateDefenseBoard = asyncHandler(async (req, res) => {
       // Set defenseBoardId to this defense board's ID for added proposals
       for (const proposalId of addedProposalIds) {
         await Proposal.findByIdAndUpdate(proposalId, { defenseBoardId: defenseBoard._id });
+        console.log(`[updateDefenseBoard] Set defenseBoardId=${defenseBoard._id} for added Proposal: ${proposalId}`);
       }
 
       defenseBoard.groups = groups;
@@ -181,6 +195,9 @@ const updateDefenseBoard = asyncHandler(async (req, res) => {
   }
 });
 
+
+
+
 // @desc    Delete a defense board
 // @route   DELETE /api/defenseboards/:id
 // @access  Private/Committee
@@ -201,32 +218,35 @@ const deleteDefenseBoard = asyncHandler(async (req, res) => {
   }
 });
 
+
+
+
 // @desc    Get defense boards for a specific supervisor
 // @route   GET /api/defenseboards/supervisor-schedule
 // @access  Private/Supervisor
 const getSupervisorDefenseSchedule = asyncHandler(async (req, res) => {
   const supervisorId = req.user._id;
-  const { defenseType } = req.query; // Get defenseType from query parameters
+  const { defenseType } = req.query; 
 
   let query = { boardMembers: supervisorId };
 
   if (defenseType) {
-    query.defenseType = defenseType; // Add defenseType to the query if provided
+    query.defenseType = defenseType; 
   }
 
-  // 1. Find the initial boards and populate top-level fields
+
   const defenseBoards = await DefenseBoard.find(query)
     .populate('room', 'name')
     .populate('schedule', 'startTime endTime')
     .populate('boardMembers', 'name email')
     .populate('createdBy', 'name email')
-    .lean(); // Use .lean() for performance and easier manipulation
+    .lean(); 
 
   if (!defenseBoards || defenseBoards.length === 0) {
     return res.json([]);
   }
 
-  // 2. Manually populate the groups and their nested user fields for each board
+  // Manually populate the groups and their nested user fields for each board
   for (const board of defenseBoards) {
     if (board.groups && board.groups.length > 0) {
       const populatedGroups = [];
@@ -257,6 +277,8 @@ const getSupervisorDefenseSchedule = asyncHandler(async (req, res) => {
 
 
 
+
+
 // @desc    Get defense boards for a specific student
 // @route   GET /api/defenseboards/student-schedule
 // @access  Private/Student
@@ -267,9 +289,9 @@ const getStudentDefenseSchedule = asyncHandler(async (req, res) => {
   }
 
   const studentId = req.user._id;
-  const { defenseType } = req.query; // Get defenseType from query parameters
+  const { defenseType } = req.query; 
 
-  console.log('getStudentDefenseSchedule: studentId=', studentId, 'defenseType=', defenseType);
+  // console.log('getStudentDefenseSchedule: studentId=', studentId, 'defenseType=', defenseType);
 
   try {
     // Find proposals where the student is either the creator or a member
@@ -284,7 +306,7 @@ const getStudentDefenseSchedule = asyncHandler(async (req, res) => {
     if (defenseType) {
       query.defenseType = defenseType; // Add defenseType to the query if provided
     }
-    console.log('getStudentDefenseSchedule: Constructed query=', query);
+    // console.log('getStudentDefenseSchedule: Constructed query=', query);
 
     let defenseBoards = await DefenseBoard.find(query)
       .populate('room', 'name')
@@ -316,6 +338,10 @@ const getStudentDefenseSchedule = asyncHandler(async (req, res) => {
     throw new Error(`Failed to fetch student defense schedule: ${error.message}`);
   }
 });
+
+
+
+
 
 // @desc    Add/Update comment for a group within a defense board
 // @route   PUT /api/defenseboards/:id/comments
@@ -351,6 +377,8 @@ const addOrUpdateComment = asyncHandler(async (req, res) => {
     throw new Error('Defense board not found');
   }
 });
+
+
 
 // @desc    Get defense results for a specific supervisor
 // @route   GET /api/defenseboards/supervisor-results
@@ -467,13 +495,28 @@ const getSupervisorDefenseResult = asyncHandler(async (req, res) => {
   res.json(filteredResults);
 });
 
+
+
+
+
 // @desc    Get defense boards where the supervisor is a committee member
 // @route   GET /api/defenseboards/my-committee-evaluations
 // @access  Private/Supervisor
 const getMyCommitteeEvaluations = asyncHandler(async (req, res) => {
   const supervisorId = req.user._id;
+  const { defenseType } = req.query;
 
-  const defenseBoards = await DefenseBoard.find({ boardMembers: supervisorId })
+  console.log(`[getMyCommitteeEvaluations] Incoming supervisorId: ${supervisorId}, defenseType: ${defenseType}`);
+
+  let query = { boardMembers: supervisorId };
+  if (defenseType) {
+    // Use case-insensitive regex for defenseType to match 'Pre-Defense', 'pre-defense', 'Final Defense', etc.
+    query.defenseType = { $regex: new RegExp(`^${defenseType}$`, 'i') };
+  }
+
+  console.log(`[getMyCommitteeEvaluations] Constructed query: ${JSON.stringify(query)}`);
+
+  const defenseBoards = await DefenseBoard.find(query)
     .populate({
       path: 'groups',
       populate: {
@@ -484,8 +527,12 @@ const getMyCommitteeEvaluations = asyncHandler(async (req, res) => {
     .populate('room', 'name')
     .populate('schedule', 'startTime endTime');
 
+  console.log(`[getMyCommitteeEvaluations] Found ${defenseBoards.length} defense boards for supervisor ${supervisorId} with defenseType ${defenseType || 'all'}.`);
+
   res.json(defenseBoards);
 });
+
+
 
 export {
   createDefenseBoard,

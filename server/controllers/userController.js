@@ -14,7 +14,10 @@ const getStudents = asyncHandler(async (req, res) => {
 // @access  Private
 const getSupervisors = asyncHandler(async (req, res) => {
   const { researchCellId } = req.query;
-  let query = { role: 'supervisor', department: req.user.department };
+  let query = { 
+    role: { $in: ['supervisor', 'committee'] }, 
+    department: req.user.department 
+  };
   if (researchCellId) {
     query.researchCells = researchCellId;
   }
@@ -57,12 +60,12 @@ const addSupervisor = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Assign a research cell to a supervisor
+// @desc    Assign research cells to a supervisor
 // @route   PUT /api/users/:id/assign-cell
 // @access  Private (Committee)
 const assignCellToSupervisor = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { cellId } = req.body;
+  const { cellIds } = req.body; // Expect an array of cell IDs
 
   const supervisor = await User.findById(id);
 
@@ -71,21 +74,25 @@ const assignCellToSupervisor = asyncHandler(async (req, res) => {
     throw new Error('Supervisor not found');
   }
 
-  if (supervisor.role !== 'supervisor') {
+  if (supervisor.role !== 'supervisor' && supervisor.role !== 'committee') {
     res.status(400);
-    throw new Error('User is not a supervisor');
+    throw new Error('User is not a teacher (supervisor or committee)');
   }
 
   if (!supervisor.researchCells) {
     supervisor.researchCells = [];
   }
 
-  if (!supervisor.researchCells.includes(cellId)) {
-    supervisor.researchCells.push(cellId);
-    await supervisor.save();
-  }
+  // Add new cells, ensuring no duplicates
+  cellIds.forEach(cellId => {
+    if (!supervisor.researchCells.includes(cellId)) {
+      supervisor.researchCells.push(cellId);
+    }
+  });
 
-  res.json({ message: 'Cell assigned successfully', supervisor });
+  await supervisor.save();
+
+  res.json({ message: 'Cells assigned successfully', supervisor });
 });
 
 // @desc    Get user profile
@@ -205,7 +212,7 @@ const getCommitteeMembers = asyncHandler(async (req, res) => {
 // @route   GET /api/users/supervisors/all
 // @access  Private (Committee)
 const getAllSupervisors = asyncHandler(async (req, res) => {
-  const supervisors = await User.find({ role: 'supervisor' })
+  const supervisors = await User.find({ role: { $in: ['supervisor', 'committee'] } })
     .select('-password')
     .populate('mainSupervisor', 'name');
   res.json(supervisors);
@@ -238,7 +245,7 @@ const assignCourseSupervisor = asyncHandler(async (req, res) => {
 // @access  Private (Student)
 const getSupervisorsWithCapacity = asyncHandler(async (req, res) => {
   const { researchCellId } = req.query;
-  let query = { role: 'supervisor' };
+  let query = { role: { $in: ['supervisor', 'committee'] } };
   if (researchCellId) {
     query.researchCells = researchCellId;
   }
@@ -267,4 +274,46 @@ const getSupervisorsWithCapacity = asyncHandler(async (req, res) => {
   res.json(supervisorsWithCapacity);
 });
 
-export { getStudents, getSupervisors, addSupervisor, assignCellToSupervisor, getUserProfile, updateUserProfile, updatePassword, uploadProfilePicture, getAllUsers, getCommitteeMembers, getAllSupervisors, assignCourseSupervisor, getSupervisorsWithCapacity };
+// @desc    Remove a research cell from a supervisor
+// @route   PUT /api/users/:id/remove-cell
+// @access  Private (Committee)
+const removeCellFromSupervisor = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { cellId } = req.body;
+
+  const supervisor = await User.findById(id);
+
+  if (!supervisor) {
+    res.status(404);
+    throw new Error('Supervisor not found');
+  }
+
+  if (supervisor.role !== 'supervisor' && supervisor.role !== 'committee') {
+    res.status(400);
+    throw new Error('User is not a teacher (supervisor or committee)');
+  }
+
+  if (supervisor.researchCells) {
+    supervisor.researchCells = supervisor.researchCells.filter(
+      (cell) => cell.toString() !== cellId
+    );
+    await supervisor.save();
+  }
+
+  res.json({ message: 'Cell removed successfully', supervisor });
+});
+
+// @desc    Get user by ID
+// @route   GET /api/users/:id
+// @access  Private (Committee)
+const getUserById = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id).select('-password').populate('researchCells', 'title');
+  if (user) {
+    res.json(user);
+  } else {
+    res.status(404);
+    throw new Error('User not found');
+  }
+});
+
+export { getStudents, getSupervisors, addSupervisor, assignCellToSupervisor, getUserProfile, updateUserProfile, updatePassword, uploadProfilePicture, getAllUsers, getCommitteeMembers, getAllSupervisors, assignCourseSupervisor, getSupervisorsWithCapacity, getUserById, removeCellFromSupervisor };

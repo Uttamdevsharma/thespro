@@ -18,7 +18,7 @@ const evaluationSchema = new mongoose.Schema({
   },
   defenseType: {
     type: String,
-    enum: ['pre-defense', 'final-defense'],
+    enum: ['Pre-Defense', 'Final Defense'],
     required: true,
   },
   evaluationType: {
@@ -38,7 +38,7 @@ const evaluationSchema = new mongoose.Schema({
 
 // Validation for marks based on defense and evaluation type
 evaluationSchema.path('marks').validate(function (value) {
-  if (this.defenseType === 'pre-defense') {
+  if (this.defenseType === 'Pre-Defense') {
     if (this.evaluationType === 'supervisor') {
       return value <= 20;
     }
@@ -46,7 +46,7 @@ evaluationSchema.path('marks').validate(function (value) {
       return value <= 10;
     }
   }
-  if (this.defenseType === 'final-defense') {
+  if (this.defenseType === 'Final Defense') {
     if (this.evaluationType === 'supervisor') {
       return value <= 40;
     }

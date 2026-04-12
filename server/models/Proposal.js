@@ -71,6 +71,18 @@ const ProposalSchema = new mongoose.Schema({
     ref: 'DefenseBoard',
     default: null,
   },
+  published: {
+    type: Boolean,
+    default: false,
+  },
+  grade: {
+    type: String,
+    default: null,
+  },
+  point: {
+    type: Number,
+    default: null,
+  },
 }, { timestamps: true });
 
 export default mongoose.model('Proposal', ProposalSchema);
